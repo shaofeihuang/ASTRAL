@@ -37,7 +37,7 @@ def get_model_choice():
 
 def get_system_context():
     return st.sidebar.text_input(
-        "Cyber-physical System Context",
+        "Cyber-Physical System Context",
         value="Cyber-Physical System",
         placeholder="e.g. Solar PV inverter, ICS, etc.",
         help="Describe the specific cyber-physical system context for tailored threat modelling."
@@ -451,10 +451,10 @@ def main():
     with tab1:
         st.markdown("""
     A threat model helps identify and evaluate potential security threats to applications / systems. It provides a systematic approach to 
-    understanding possible vulnerabilities and attack vectors. Use this tab to generate a threat model using the STRIDE methodology.
+    understanding possible vulnerabilities and attack vectors. Use this tab to generate a threat model using the STRIDE-LM methodology.
     """)
 
-        st.title("DFD-based Threat Modelling with Mistral AI")
+        st.title("Architecture-based Threat Modelling with Mistral AI")
 
         st.markdown("""---""")
 
@@ -468,7 +468,7 @@ def main():
 
         if uploaded_file is not None:
             image_bytes = uploaded_file.read()
-            st.image(image_bytes, caption="Uploaded DFD Image", width="stretch")
+            st.image(image_bytes, caption="Uploaded Image", width="stretch")
 
             explanation_prompt = f'''
     You are a Senior Solution Architect tasked with explaining the following data flow diagram to a Security Architect to support the threat modelling of the system. In order to complete this task you must:
@@ -502,51 +502,64 @@ def main():
     Do not provide general security recommendations.
     '''
 
-            if st.button("Generate Architectural Explanation"):
-                with st.spinner("Generating architectural explanation..."):
-                    try:
-                        model_output = call_mistral(
-                            api_key, explanation_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
-                        )
-                        st.subheader("Architectural Explanation")
-                        st.session_state['arch_explanation'] = model_output
-                        st.write(model_output)
-                        st.download_button(
-                            label="Download Architectural Explanation",
-                            data=model_output,
-                            file_name="arch_explanation.md",
-                            mime="text/markdown",
-                        )
-                    except Exception as e:
-                        st.error(f"Failed to generate architectural explanation: {str(e)}")
+        # Generate Architectural Explanation Button
+        if st.button("Generate Architectural Explanation", key="gen_arch_exp"):
+            with st.spinner("Generating architectural explanation..."):
+                try:
+                    model_output = call_mistral(
+                        api_key, explanation_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
+                    )
+                    st.session_state['arch_explanation'] = model_output
+                except Exception as e:
+                    st.error(f"Failed to generate architectural explanation: {str(e)}")
 
-            if st.button("Generate STRIDE-LM Threat Model"):
-                with st.spinner("Generating STRIDE-LM threat model..."):
-                    try:
-                        model_output = call_mistral(
-                            api_key, threat_model_prompt, image_bytes, selected_model, max_tokens, response_as_json=True
-                        )
-                        st.subheader("Generated STRIDE-LM Threat Model")
-                        threat_model = model_output.get("threat_model", [])
-                        improvement_suggestions = model_output.get("improvement_suggestions", [])
-                        st.session_state['threat_model'] = threat_model
-                        markdown_output = tm_json_to_markdown(threat_model, improvement_suggestions)
-                        st.markdown(markdown_output)
-                        st.download_button(
-                            label="Download Threat Model",
-                            data=markdown_output,
-                            file_name="threat_model.md",
-                            mime="text/markdown",
-                        )
-                    except Exception as e:
-                        st.error(f"Failed to generate threat model: {str(e)}")
+        # Display Architectural Explanation if available
+        if 'arch_explanation' in st.session_state:
+            st.subheader("Architectural Explanation")
+            st.write(st.session_state['arch_explanation'])
+            st.download_button(
+                label="Download Architectural Explanation",
+                data=st.session_state['arch_explanation'],
+                file_name="arch_explanation.md",
+                mime="text/markdown",
+            )
+
+        # Generate STRIDE-LM Threat Model Button
+        if st.button("Generate STRIDE-LM Threat Model", key="gen_threat_model"):
+            with st.spinner("Generating STRIDE-LM threat model..."):
+                try:
+                    model_output = call_mistral(
+                        api_key, threat_model_prompt, image_bytes, selected_model, max_tokens, response_as_json=True
+                    )
+                    threat_model = model_output.get("threat_model", [])
+                    improvement_suggestions = model_output.get("improvement_suggestions", [])
+                    st.session_state['threat_model'] = threat_model
+                    st.session_state['improvement_suggestions'] = improvement_suggestions
+                except Exception as e:
+                    st.error(f"Failed to generate threat model: {str(e)}")
+
+        # Display Threat Model if available
+        if 'threat_model' in st.session_state:
+            markdown_output = tm_json_to_markdown(
+                st.session_state['threat_model'], 
+                st.session_state.get('improvement_suggestions', [])
+            )
+            st.subheader("Generated STRIDE-LM Threat Model")
+            st.markdown(markdown_output)
+            st.download_button(
+                label="Download Threat Model",
+                data=markdown_output,
+                file_name="threat_model.md",
+                mime="text/markdown",
+            )
+
 
     with tab2:
         st.markdown("""
-    Attack trees are a structured way to analyse the security of a system. They represent potential attack scenarios in a hierarchical format, 
-    with the ultimate goal of an attacker at the root and various paths to achieve that goal as branches. This helps in understanding system 
-    vulnerabilities and prioritising mitigation efforts.
-    """)
+        Attack trees are a structured way to analyse the security of a system. They represent potential attack scenarios in a hierarchical format, 
+        with the ultimate goal of an attacker at the root and various paths to achieve that goal as branches. This helps in understanding system 
+        vulnerabilities and prioritising mitigation efforts.
+        """)
         st.markdown("""---""")
         if selected_model == "mistral-small-latest":
             st.warning("⚠️ Mistral Small doesn't reliably generate syntactically correct Mermaid code. Please use the Mistral Large model for generating attack trees, or select a different model provider.")
@@ -560,36 +573,41 @@ def main():
             with st.spinner("Generating attack tree..."):
                 try:
                     mermaid_code = get_attack_tree(api_key, selected_model, attack_tree_prompt)
-                    st.write("Attack Tree Code:")
-                    st.code(mermaid_code)
-                    st.write("Attack Tree Diagram Preview:")
-                    mermaid(mermaid_code)
                     
-                    col1, col2, col3, col4, col5 = st.columns([1,1,1,1,1])
-                    
-                    with col1:              
-                        st.download_button(
-                            label="Download Diagram Code",
-                            data=mermaid_code,
-                            file_name="attack_tree.md",
-                            mime="text/plain",
-                            help="Download the Mermaid code for the attack tree diagram."
-                        )
-
-                    with col2:
-                        mermaid_live_button = st.link_button("Open Mermaid Live", "https://mermaid.live")
-                    
-                    with col3:
-                        st.write("")
-                    
-                    with col4:
-                        st.write("")
-                    
-                    with col5:
-                        st.write("")
+                    # Save the generated code in session state
+                    st.session_state['mermaid_code'] = mermaid_code
                     
                 except Exception as e:
                     st.error(f"Error generating attack tree: {e}")
+        
+        # Check if we have saved code in session state to display
+        if 'mermaid_code' in st.session_state:
+            st.write("Attack Tree Code:")
+            st.code(st.session_state['mermaid_code'])
+            st.write("Attack Tree Diagram Preview:")
+            mermaid(st.session_state['mermaid_code'])
+            
+            col1, col2, col3, col4, col5 = st.columns([1,1,1,1,1])
+            
+            with col1:              
+                st.download_button(
+                    label="Download Diagram Code",
+                    data=st.session_state['mermaid_code'],
+                    file_name="attack_tree.md",
+                    mime="text/plain",
+                    help="Download the Mermaid code for the attack tree diagram."
+                )
+
+            with col2:
+                mermaid_live_button = st.link_button("Open Mermaid Live", "https://mermaid.live")
+
+            # Empty columns for layout alignment
+            with col3:
+                st.write("")
+            with col4:
+                st.write("")
+            with col5:
+                st.write("")
         else:
             st.error("Please generate an architectural explanation and threat model first before generating an attack tree.")
 
@@ -621,7 +639,12 @@ def main():
                     # Add debug information
                     st.error("Debug: No threats were found in the response. Please try generating the threat model again.")
             dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
-            
+
+            # Restore from session state if available
+            if 'dread_assessment' in st.session_state:
+                dread_assessment = st.session_state['dread_assessment']
+                dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
+
             # Add debug information about the assessment
             if not dread_assessment.get("Risk Assessment"):
                 st.warning("Debug: The DREAD assessment response is empty. Please ensure you have generated a threat model first.")
