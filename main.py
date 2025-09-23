@@ -1,6 +1,8 @@
 import os
 import json
+import re
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 from mistralai import Mistral
 
@@ -28,9 +30,7 @@ def get_model_choice():
         list(model_token_limits.keys()),
         key="selected_model",
         help=(
-            "Magistral models are Mistral's latest flagship models. "
-            "Mistral Large offers premium capabilities, Medium provides balanced performance, "
-            "Small is cost-effective, and Ministral 8B is optimized for efficiency."
+            "Select a suitable model. Larger models may provide better results but can be slower and more costly."
         ),
     )
 
@@ -80,6 +80,23 @@ def tm_json_to_markdown(threat_model, improvement_suggestions):
     markdown_output += "\n\n## Improvement Suggestions\n\n"
     for suggestion in improvement_suggestions:
         markdown_output += f"- {suggestion}\n"
+    
+    return markdown_output
+
+def at_json_to_markdown(arch_explanation, threat_model):
+    markdown_output = "## Architecture Explanation\n\n"
+    
+    markdown_output += arch_explanation + "\n\n"
+    
+    markdown_output += "## Threat Model\n\n"
+    
+    # Start the markdown table with headers
+    markdown_output += "| Threat Type | Scenario | Potential Impact |\n"
+    markdown_output += "|-------------|----------|------------------|\n"
+    
+    # Fill the table rows with the threat model data
+    for threat in threat_model:
+        markdown_output += f"| {threat['Threat Type']} | {threat['Scenario']} | {threat['Potential Impact']} |\n"
     
     return markdown_output
 
@@ -275,9 +292,6 @@ ONLY RESPOND WITH THE JSON STRUCTURE, NO ADDITIONAL TEXT."""
 
 
 def create_attack_tree_schema():
-    """
-    Creates a JSON schema for attack tree structure.
-    """
     return {
         "type": "json_schema",
         "json_schema": {
@@ -449,7 +463,7 @@ def main():
             st.stop()
 
         uploaded_file = st.file_uploader(
-            "Upload DFD Image", type=["png", "jpg", "jpeg", "bmp", "gif"]
+            "Upload Architecture / Data Flow Diagram (DFD) Image", type=["png", "jpg", "jpeg", "bmp", "gif"]
         )
 
         if uploaded_file is not None:
@@ -473,11 +487,11 @@ def main():
             threat_model_prompt = f'''
     Act as a cyber security expert with more than 20 years experience of using the STRIDE-LM threat modelling methodology to produce comprehensive threat models for a wide range of applications. Your task is to analyze the provided DFD to produce a list of specific threats for the application.
 
-    If the DFD includes an "Attacker" entity, whether internal or external, treat it as the starting point for any attack path and list threats accordingly.
+    If the DFD includes an "Attacker" or an "Operator" or an "User" entity, whether internal or external, treat it as the starting point for any attack path and list threats accordingly.
 
     The system context is: {system_context}
 
-    For each of the STRIDE-LM categories, list multiple (3 or 4) credible threats if applicable. Each threat scenario should provide a credible scenario in which the threat could occur in the context of the application. Your responses must reflect the details provided.
+    For each of the STRIDE-LM (Spoofing, Tampering, Information Disclosure, Denial of Service, Elevation of Privilege, and Lateral Movement) categories, list multiple (3 or 4) credible threats if applicable. Each threat scenario should provide a credible scenario in which the threat could occur in the context of the application. Your responses must reflect the details provided.
 
     Your analysis should include threats specific to cyber-physical systems and not be limited to IT-centric threats.
 
@@ -495,6 +509,7 @@ def main():
                             api_key, explanation_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
                         )
                         st.subheader("Architectural Explanation")
+                        st.session_state['arch_explanation'] = model_output
                         st.write(model_output)
                         st.download_button(
                             label="Download Architectural Explanation",
@@ -540,9 +555,8 @@ def main():
         attack_tree_submit_button = st.button(label="Generate Attack Tree")
         
         if attack_tree_submit_button and st.session_state.get('threat_model'):
-            attack_tree_prompt = st.session_state.get('threat_model')
-
-            # Show a spinner while generating the attack tree
+            attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_explanation'), st.session_state.get('threat_model'))
+            #  Show a spinner while generating the attack tree
             with st.spinner("Generating attack tree..."):
                 try:
                     mermaid_code = get_attack_tree(api_key, selected_model, attack_tree_prompt)
@@ -577,7 +591,7 @@ def main():
                 except Exception as e:
                     st.error(f"Error generating attack tree: {e}")
         else:
-            st.error("Please generate a threat model first before generating an attack tree.")
+            st.error("Please generate an architectural explanation and threat model first before generating an attack tree.")
 
     with tab3:
         st.markdown("""
@@ -606,8 +620,6 @@ def main():
                     dread_assessment = {"Risk Assessment": []}
                     # Add debug information
                     st.error("Debug: No threats were found in the response. Please try generating the threat model again.")
-                else:
-                    st.warning(f"Error generating DREAD risk assessment. Retrying attempt {retry_count+1}/{max_retries}...")
             dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
             
             # Add debug information about the assessment
