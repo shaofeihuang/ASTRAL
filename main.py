@@ -83,6 +83,7 @@ def tm_json_to_markdown(threat_model, improvement_suggestions):
     
     return markdown_output
 
+
 def at_json_to_markdown(arch_explanation, threat_model):
     markdown_output = "## Architecture Explanation\n\n"
     
@@ -151,10 +152,10 @@ def dread_json_to_markdown(dread_assessment):
 
 
 # Function to create a prompt to generate mitigating controls
-def create_dread_assessment_prompt(threats):
+def create_dread_assessment_prompt(threats, system_context):
     prompt = f"""
-Act as a cyber security expert with more than 20 years of experience in threat modeling using STRIDE-LM and DREAD methodologies.
-Your task is to produce a DREAD risk assessment for the threats identified in a threat model.
+You are a cyber security expert with more than 20 years of experience in threat modeling using STRIDE-LM and DREAD methodologies.
+Your task is to produce a DREAD risk assessment for the threats identified in a threat model, relevant to the following system context: {system_context}.
 Below is the list of identified threats:
 {threats}
 When providing the risk assessment, use a JSON formatted response with a top-level key "Risk Assessment" and a list of threats, each with the following sub-keys:
@@ -211,6 +212,7 @@ def clean_json_response(response_text):
     
     # If no code blocks, return the original text stripped
     return response_text.strip()
+
 
 def get_dread_assessment(api_key, selected_model, prompt):
     client = Mistral(api_key=api_key)
@@ -505,37 +507,38 @@ def main():
             st.image(image_bytes, caption="Uploaded Image", width="stretch")
 
             explanation_prompt = f'''
-    You are a Senior Solution Architect tasked with explaining the following data flow diagram to a Security Architect to support the threat modelling of the system. In order to complete this task you must:
-        1. Analyse the diagram, particularly identifying if an "Attacker" (whether internal or external) exists and treat it as the starting point for any attack path.
-        2. Explain the system architecture to the Security Architect. Your explanation should cover the key components, trust boundaries, their interactions, and any technologies used.
-        3. The specific system context is: {system_context}
+You are a Senior Solution Architect tasked with explaining a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your explanation supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
 
-    Provide a direct explanation of the diagram in a clear, structured text formatted format, suitable for a professional discussion.
+System context: {system_context}
 
-    IMPORTANT INSTRUCTIONS:
-        - Do not start or end with any commentary.
-        - Do not include any words before or after the explanation itself.
-        - Do not infer or speculate about information that is not visible in the diagram. Only provide information that can be directly determined from the diagram itself.
-    '''
+Thoroughly analyze the diagram and provide a structured explanation strictly based on visible content, covering:
 
-            threat_model_prompt = f'''
-    Act as a cyber security expert with more than 20 years experience of using the STRIDE-LM threat modelling methodology to produce comprehensive threat models for a wide range of applications. Your task is to analyze the provided DFD to produce a list of specific threats for the application.
+1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
+2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
+3. Trust Boundaries and Purdue Zones
+4. Data Flows and Interactions (including protocols, data types, communication links)
+5. Technologies, Platforms, and Standards
+6. Assets and Functions with cyber-physical significance (PLCs, controllers, field devices, routers, meters, etc.)
+7. Attack Entry Points (explicit or implied entities that could initiate attacks)
+8. Any other architectural details supporting threat modeling and attack tree development
 
-    If the DFD includes an "Attacker" or an "Operator" or an "User" entity, whether internal or external, treat it as the starting point for any attack path and list threats accordingly.
+Structure your response using these exact section headers only:
 
-    The system context is: {system_context}
+- Attacker or Attack-Capable Entities  
+- Key Components  
+- Trust Boundaries and Purdue Zones  
+- Data Flows & Interactions  
+- Technologies and Protocols  
+- Assets and Functions  
+- Attack Entry Points  
 
-    For each of the STRIDE-LM (Spoofing, Tampering, Information Disclosure, Denial of Service, Elevation of Privilege, and Lateral Movement) categories, list multiple (3 or 4) credible threats if applicable. Each threat scenario should provide a credible scenario in which the threat could occur in the context of the application. Your responses must reflect the details provided.
-
-    Your analysis should include threats specific to cyber-physical systems and not be limited to IT-centric threats.
-
-    When providing the threat model, use a JSON formatted response with keys "threat_model" and "improvement_suggestions". Under "threat_model", include an array of objects with keys "Threat Type", "Scenario", and "Potential Impact". Under "improvement_suggestions", list specific lacking information or gaps that would help create a more precise threat analysis (e.g., architectural details, authentication flows, data flow descriptions, technical stack, system boundaries, sensitive data handling).
-
-    Do NOT start or end with any non-JSON text or commentary.
-
-    Do not provide general security recommendations.
-    '''
-
+IMPORTANT:
+- Base your explanation solely on the provided diagram; do not infer or assume details beyond what is visible.
+- Do not start or end with commentary or extra text.
+- Do not infer or guess beyond what is visibly present.
+- Do not provide recommendations—only factual explanation.
+- Use only the specified headers and no additional formatting.
+'''
         # Generate Architectural Explanation Button
         if st.button("Generate Architectural Explanation", key="gen_arch_exp"):
             with st.spinner("Generating architectural explanation..."):
@@ -566,6 +569,33 @@ def main():
         understanding possible vulnerabilities and attack vectors. Use this tab to generate a threat model using the STRIDE-LM methodology.
         """)
         st.markdown("""---""")
+        threat_model_prompt = f'''
+You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modeling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
+
+Your task is to analyze the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
+
+System context: {system_context}
+
+Instructions:
+1. If the diagram includes an "Attacker" entity—whether internal, external, explicit, or implicit—treat it as the origin for possible attack paths and enumerate realistic threats accordingly.
+2. For each STRIDE-LM category, identify 3 to 4 credible threat scenarios if applicable. Each scenario must describe a concrete, context-specific attack, avoiding generic descriptions.
+3. Focus your analysis on cyber-physical systems. Address system-level impacts such as disruption of physical processes, loss of control, cascading failures, or safety hazards rather than purely IT-centric threats.
+4. Consider multiple potential attacker objectives (e.g., power disruption, asset damage, persistent foothold in isolated OT environments, bypassing safety controls).
+5. Leverage and extract from the accompanying documentation to reflect the assets, vulnerabilities (both CVE-linked and non-CVE-linked), hazards, and objectives in each scenario.
+6. Identify and list CVEs specific to the vulnerabilities visible in the accompanying documentation. For each CVE, provide the CVE identifier and a brief description. Indicate if the CVE has been observed in known attack campaigns (e.g., BlackEnergy, FrostyGoop), with references.
+7. Apply FMECA-style reasoning where applicable to identify failure modes, their effects, and potential cascading consequences.
+8. Format your response strictly as JSON with these top-level keys:
+   - `"threat_model"`: an array of threat scenario objects.
+   - `"improvement_suggestions"`: a list of missing information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modeling.
+9. Each threat scenario object must contain the following keys:
+   - `"Threat Type"`, based on STRIDE-LM categories (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege, Lateral Movement).
+   - `"Scenario"`: a detailed narrative integrating information about assets, vulnerabilities (including CVE and non-CVE), hazards, and attacker objectives. Include references to any CVEs mentioned, and highlight if they were employed in known attack campaigns.
+   - `"Potential Impact"`
+10. Do NOT include general security recommendations or any commentary.
+11. Provide no text outside the JSON structure.
+
+This format ensures each threat scenario provides a clear, integrated explanation of the threat elements in a single narrative field, suitable for detailed CPS threat analysis.
+'''
         # Generate STRIDE-LM Threat Model Button
         if st.button("Generate STRIDE-LM Threat Model", key="gen_threat_model"):
             with st.spinner("Generating STRIDE-LM threat model..."):
@@ -573,17 +603,15 @@ def main():
                     model_output = call_mistral(
                         api_key, threat_model_prompt, image_bytes, selected_model, max_tokens, response_as_json=True
                     )
-                    threat_model = model_output.get("threat_model", [])
-                    improvement_suggestions = model_output.get("improvement_suggestions", [])
-                    st.session_state['threat_model'] = threat_model
-                    st.session_state['improvement_suggestions'] = improvement_suggestions
+                    st.session_state['threat_model'] = model_output.get("threat_model", [])
+                    st.session_state['improvement_suggestions'] = model_output.get("improvement_suggestions", [])
                 except Exception as e:
                     st.error(f"Failed to generate threat model: {str(e)}")
 
         # Display Threat Model if available
         if 'threat_model' in st.session_state:
             markdown_output = tm_json_to_markdown(
-                st.session_state['threat_model'], 
+                st.session_state['threat_model'],
                 st.session_state.get('improvement_suggestions', [])
             )
             st.subheader("Generated STRIDE-LM Threat Model")
@@ -707,7 +735,7 @@ def main():
         dread_assessment_submit_button = st.button(label="Generate DREAD Risk Assessment")
         if dread_assessment_submit_button and st.session_state['threat_model']:
             threats_markdown = tm_json_to_markdown(st.session_state['threat_model'], [])
-            dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown)
+            dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown, system_context)
 
             with st.spinner("Generating DREAD Risk Assessment..."):
                 max_retries = 3
