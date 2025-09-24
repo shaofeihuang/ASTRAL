@@ -457,36 +457,126 @@ def main():
             st.image(image_bytes, caption="Uploaded DFD Image", width="stretch")
 
             explanation_prompt = f'''
-    You are a Senior Solution Architect tasked with explaining the following data flow diagram to a Security Architect to support the threat modelling of the system. In order to complete this task you must:
-        1. Analyse the diagram, particularly identifying if an "Attacker" (whether internal or external) exists and treat it as the starting point for any attack path.
-        2. Explain the system architecture to the Security Architect. Your explanation should cover the key components, trust boundaries, their interactions, and any technologies used.
-        3. The specific system context is: {system_context}
+You are a Senior Solution Architect tasked with explaining the following system architectural diagram (which may be a Data Flow Diagram or similar) to a Senior Security Architect with expertise in IEC 62443 and the Purdue model. Your explanation is intended to directly support threat modeling and attack tree development for a cyber-physical system, even if the depicted architecture appears IT-centric. To complete this task:
 
-    Provide a direct explanation of the diagram in a clear, structured text formatted format, suitable for a professional discussion.
+Thoroughly analyze the diagram, identifying any explicit "Attacker" entity, as well as any entity that could plausibly act as an attacker (for example, operator workstations, engineering stations, or remote access terminals).
 
-    IMPORTANT INSTRUCTIONS:
-        - Do not start or end with any commentary.
-        - Do not include any words before or after the explanation itself.
-        - Do not infer or speculate about information that is not visible in the diagram. Only provide information that can be directly determined from the diagram itself.
-    '''
+Provide a structured explanation of the system architecture, covering:
+
+All key components shown, including systems, devices, applications, network infrastructure, sensors, actuators, or other OT assets.
+
+All trust boundaries, zones, or layers, referencing Purdue model concepts if visible or indicated.
+
+The interactions and data flows between components, including protocols, data types, and communication links where specified.
+
+Any technologies, platforms, or standards explicitly present in the diagram.
+
+The specific system context is: {system_context}
+
+Enumerate all assets and functions as portrayed, highlighting any devices or components with cyber-physical significance (e.g., PLCs, process controllers, field devices).
+
+Clearly indicate all present or implied attack entry points or entities that could plausibly initiate an attack path.
+
+Structure your response under these plain section headings (using only information visible in the diagram; never infer or embellish):
+
+Attacker or Attack-Capable Entities
+
+Key Components
+
+Trust Boundaries and Purdue Zones
+
+Data Flows & Interactions
+
+Technologies and Protocols
+
+Assets and Functions
+
+Attack Entry Points
+
+IMPORTANT INSTRUCTIONS:
+
+Do not start or end with any commentary or extra text.
+
+Do not include any words before or after the architectural explanation itself.
+
+Do not infer, guess, or add any detail not directly represented in the diagram.
+
+Do not include recommendations—only explain what is visibly present.
+
+Format your response using the specified section headers only, with no introduction or conclusion.
+
+This structure ensures the explanation supports precise threat modeling and attack tree development in the context of cyber-physical systems, referencing IEC 62443 and Purdue model concepts when applicable.
+'''
 
             threat_model_prompt = f'''
-    Act as a cyber security expert with more than 20 years experience of using the STRIDE-LM threat modelling methodology to produce comprehensive threat models for a wide range of applications. Your task is to analyze the provided DFD to produce a list of specific threats for the application.
+You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modeling, including expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM methodology extensively to ICS, SCADA, and other CPS domains.
 
-    If the DFD includes an "Attacker" entity, whether internal or external, treat it as the starting point for any attack path and list threats accordingly.
+Your task is to analyze the provided system architectural diagram (which may be in the form of a Data Flow Diagram or similar) to produce a comprehensive list of specific threat scenarios for the application.
 
-    The system context is: {system_context}
+System context: {system_context}
 
-    For each of the STRIDE-LM categories, list multiple (3 or 4) credible threats if applicable. Each threat scenario should provide a credible scenario in which the threat could occur in the context of the application. Your responses must reflect the details provided.
+Instructions:
+1. If the diagram includes an "Attacker" entity (internal or external), treat it as a starting point for possible attack paths and enumerate realistic threats from that origin.
+2. For each STRIDE-LM category, list 3–4 credible threats (if applicable). Each should describe a concrete attack scenario in the provided context, not generic formulations.
+3. Your analysis must be specific to cyber-physical systems. Incorporate system-level consequences, such as disruption of physical processes, denial of control functions, cascading failures, or safety hazards. Do not restrict analysis to IT-centric threats.
+4. Consider multiple possible attacker objectives (e.g., causing power disruption, damaging equipment, creating a foothold in an isolated OT environment, or bypassing safety controls).
+5. Reflect the assets–vulnerabilities–hazards–objectives structure in each scenario:
+   - **Assets**: CPS components (applications, PLCs, sensors, actuators, network devices, HMI, etc.)
+   - **Vulnerabilities**: Known weaknesses (linked to CVEs where possible) and CPS-specific attack surfaces (e.g., insecure protocols, safety system bypass).
+   - **Hazards**: Safety or reliability hazards, distinct from vulnerabilities (e.g., uncontrolled valve operation, loss of situational awareness, overheating).
+   - **Objectives**: Attacker intent or larger operational aim.
+6. Identify and list CVEs relevant to vulnerabilities, inferred from assets or other architecture details. For each CVE:
+   - Rank by criticality.
+   - Indicate if the CVE was exploited in known attack campaigns (e.g., BlackEnergy, FrostyGoop), including references to those campaigns.
+7. Identify and list cyber-physical vulnerabilities that are not CVE-linked, including non-software and non-IT weaknesses.
+8. Where applicable, apply FMECA-style reasoning: identify the failure mode, potential effects, and cascading or systemic consequences of the threat.
+9. Format your response strictly as JSON.
+   - Use top-level keys `"threat_model"`, `"cve_summary"`, `"cyber_physical_vulnerabilities"`, and `"improvement_suggestions"`.
+   - `"threat_model"` should contain an array of objects, each with keys `"Threat Type"`, `"Scenario"`, `"Assets"`, `"Vulnerabilities"`, `"Hazards"`, `"Objectives"`, and `"Potential Impact"`.
+   - `"cve_summary"` should be an array listing CVEs with keys `"CVE_ID"`, `"Criticality_Rank"`, `"Description"`, `"Exploited_In"`, and `"Reference"`.
+   - `"cyber_physical_vulnerabilities"` should be an array of identified CPS-specific vulnerabilities not linked to CVEs, described with keys `"Vulnerability"` and `"Description"`.
+   - `"improvement_suggestions"` should list precisely what missing details (e.g., authentication flows, data flow descriptions, ICS protocol details, safety system integration, network segmentation, technical stack) would allow refinement of the threat analysis.
+10. Do NOT include general security best practices or recommendations.
+11. Do NOT include any commentary or non-JSON text in your output.
 
-    Your analysis should include threats specific to cyber-physical systems and not be limited to IT-centric threats.
+Example output:
 
-    When providing the threat model, use a JSON formatted response with keys "threat_model" and "improvement_suggestions". Under "threat_model", include an array of objects with keys "Threat Type", "Scenario", and "Potential Impact". Under "improvement_suggestions", list specific lacking information or gaps that would help create a more precise threat analysis (e.g., architectural details, authentication flows, data flow descriptions, technical stack, system boundaries, sensitive data handling).
-
-    Do NOT start or end with any non-JSON text or commentary.
-
-    Do not provide general security recommendations.
-    '''
+{
+  "threat_model": [
+    {
+      "Threat Type": "Repudiation",
+      "Scenario": "An attacker with access to the HMI manipulates process setpoints but then clears all audit logs to remove traces of the change.",
+      "Assets": ["HMI", "Historian", "Process Controller"],
+      "Vulnerabilities": ["Weak logging mechanism (no remote log backup)", "Default credentials on HMI", "Lack of user accountability"],
+      "Hazards": ["Incorrect process operation", "Failure to reconstruct incident timeline"],
+      "Objectives": "Obscure malicious actions to delay response and investigation.",
+      "Potential Impact": "Delayed detection of process manipulation, regulatory non-compliance, and safety system misconfiguration."
+    }
+  ],
+  "cve_summary": [
+    {
+      "CVE_ID": "CVE-2017-0144",
+      "Criticality_Rank": 1,
+      "Description": "SMBv1 remote code execution vulnerability (EternalBlue exploit)",
+      "Exploited_In": ["BlackEnergy", "NotPetya"],
+      "Reference": "https://nvd.nist.gov/vuln/detail/CVE-2017-0144"
+    }
+  ],
+  "cyber_physical_vulnerabilities": [
+    {
+      "Vulnerability": "Lack of physical tamper detection",
+      "Description": "Sensors and actuators are physically accessible without tamper sensors or alarms, allowing undetected manual manipulation."
+    }
+  ],
+  "improvement_suggestions": [
+    "Clarify network segmentation and trust zones between IT/OT assets.",
+    "Provide list and configuration of authentication and access control mechanisms for each component.",
+    "Detail communication protocols and encryption used across networks.",
+    "Describe how safety systems are monitored and integrated with cyber systems.",
+    "List specific vulnerabilities (CVE, CWE, or others) for critical components if available."
+  ]
+}
+'''
 
             if st.button("Generate Architectural Explanation"):
                 with st.spinner("Generating architectural explanation..."):
