@@ -262,11 +262,13 @@ There is only one start node, which is Attacker. The start node is then linked t
 
 Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal, with child nodes representing related Assets, Vulnerabilities, or Hazards that lead to achieving the parent goal.
 
-All attack paths must lead to a single, common ultimate Goal node representing disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analyzed:  {system_context}. This ultimate Goal node should be the leaf node(s) (i.e., have no children).
+All attack paths must lead to a single, common ultimate Goal node representing disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analyzed. This ultimate Goal node should be the leaf node(s) (i.e., have no children).
 
 Multiple intermediate Goals should be modeled as Hazards and may appear as child nodes under Assets or Hazards, converging ultimately on the single ultimate Goal node.
 
 The tree should include all relevant attack paths and sub-paths based on the threat model.
+
+Also analyse if assets, hazards, or vulnerabilities may be linked to other assets, hazards, or vulnerabilities in other attack paths, and if so, represent these relationships appropriately in the tree structure.
 
 Each node label must begin with a prefix indicating its type:
 - `[A##]` for Asset nodes
@@ -312,7 +314,7 @@ The JSON structure must follow this format:
 }
 
 Rules:
-- Use simple IDs (e.g., root, auth, haz1, ultimate).
+- Use simple IDs (e.g., root, vul1, haz1, ultimate).
 - Make labels clear, descriptive, and correctly prefixed.
 - Include all relevant attack paths and sub-paths.
 - Maintain parent-child relationships strictly according to the rules above.
