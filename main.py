@@ -198,19 +198,16 @@ Ensure the JSON response is correctly formatted and does not contain any additio
 
 
 def clean_json_response(response_text):
-    # Remove markdown JSON code block if present
     json_pattern = r'```json\s*(.*?)\s*```'
     match = re.search(json_pattern, response_text, re.DOTALL)
     if match:
         return match.group(1).strip()
     
-    # If no JSON code block, try to find content between any code blocks
     code_pattern = r'```\s*(.*?)\s*```'
     match = re.search(code_pattern, response_text, re.DOTALL)
     if match:
         return match.group(1).strip()
     
-    # If no code blocks, return the original text stripped
     return response_text.strip()
 
 
@@ -226,7 +223,6 @@ def get_dread_assessment(api_key, selected_model, prompt):
     )
 
     try:
-        # Convert the JSON string in the 'content' field to a Python dictionary
         dread_assessment = json.loads(response.choices[0].message.content)
     except json.JSONDecodeError:
         dread_assessment = {}
@@ -258,23 +254,55 @@ def convert_tree_to_mermaid(tree_data):
     
     return "\n".join(mermaid_lines)
 
-def create_json_structure_prompt():
-    return """Your task is to analyze the threat model and create an attack tree structure in JSON format. If an attacker entity is present, use it as the starting point for the attack paths. Each node in the tree should represent a specific attack vector or goal, with child nodes representing sub-goals or methods to achieve the parent goal.
+def create_attack_tree_structure_prompt(system_context):
+    return """
+Your task is to analyze the threat model and create an attack tree structure in JSON format.
 
-The JSON structure should follow this format:
+There is only one start node, which is Attacker. The start node is then linked to an internal or external attacker entity. If the architectural explanation does not include such an entity, create a node representing either an internal or external attacker.
+
+Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal, with child nodes representing related Assets, Vulnerabilities, or Hazards that lead to achieving the parent goal.
+
+All attack paths must lead to a single, common ultimate Goal node representing disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analyzed:  {system_context}. This ultimate Goal node should be the leaf node(s) (i.e., have no children).
+
+Multiple intermediate Goals should be modeled as Hazards and may appear as child nodes under Assets or Hazards, converging ultimately on the single ultimate Goal node.
+
+The tree should include all relevant attack paths and sub-paths based on the threat model.
+
+Each node label must begin with a prefix indicating its type:
+- `[A##]` for Asset nodes
+- `[V##]` for Vulnerability nodes
+- `[H##]` for Hazard nodes (including intermediate objectives or sub-goals)
+- `[G##]` for the single ultimate Goal node(s)
+
+Relationships between nodes must obey these rules:
+- Asset nodes may have children that are Vulnerabilities, Hazards, or other Assets.
+- Asset or Hazard nodes may have children that are Goal nodes.
+- Goal nodes are leaf nodes and do not have children.
+- Vulnerability nodes may have children that are Vulnerabilities or Assets, but never Hazards.
+- Hazard nodes may have children that are Hazards or Assets, but never Vulnerabilities.
+- Multiple Hazard nodes (sub-goals) can converge and connect to the same ultimate Goal node.
+
+The JSON structure must follow this format:
+
 {
     "nodes": [
         {
             "id": "root",
-            "label": "Compromise Application",
+            "label": "[A01] Compromise Application",
             "children": [
                 {
                     "id": "auth",
-                    "label": "Gain Unauthorized Access",
+                    "label": "[V01] Gain Unauthorized Access",
                     "children": [
                         {
-                            "id": "auth1",
-                            "label": "Exploit OAuth2 Vulnerabilities"
+                            "id": "hazard1",
+                            "label": "[H01] Cause Process Disruption",
+                            "children": [
+                                {
+                                    "id": "ultimate",
+                                    "label": "[G01] Disrupt or Stop CPS Operations"
+                                }
+                            ]
                         }
                     ]
                 }
@@ -284,13 +312,15 @@ The JSON structure should follow this format:
 }
 
 Rules:
-- Use simple IDs (root, auth, auth1, data, etc.)
-- Make labels clear and descriptive
-- Include all attack paths and sub-paths
-- Maintain proper parent-child relationships
-- Ensure the JSON is properly formatted
+- Use simple IDs (e.g., root, auth, haz1, ultimate).
+- Make labels clear, descriptive, and correctly prefixed.
+- Include all relevant attack paths and sub-paths.
+- Maintain parent-child relationships strictly according to the rules above.
+- Show convergence of multiple Hazards or sub-goals on the single ultimate Goal node.
+- Ensure the JSON is properly formatted.
 
-ONLY RESPOND WITH THE JSON STRUCTURE, NO ADDITIONAL TEXT."""
+ONLY RESPOND WITH THE JSON STRUCTURE, NO ADDITIONAL TEXT.
+"""
 
 
 def create_attack_tree_schema():
@@ -340,9 +370,9 @@ def create_attack_tree_schema():
     }
 
 
-def get_attack_tree(api_key, selected_model, prompt):
+def get_attack_tree(api_key, selected_model, prompt, system_context):
     client = Mistral(api_key=api_key)
-    system_prompt = create_json_structure_prompt()
+    system_prompt = create_attack_tree_structure_prompt(system_context)
     response = client.chat.complete(
         model=selected_model,
         messages=[
@@ -385,7 +415,6 @@ def extract_mermaid_code(text):
 def clean_mermaid_syntax(code):
     code = re.sub(r'(\w+|\]|\)|\})(-->|==>|-.->)(\w+|\[|\(|\{)', r'\1 \2 \3', code)
     
-    # Fix missing brackets around node labels
     def fix_node_brackets(match):
         node_id = match.group(1)
         if not any(c in node_id for c in '[](){}'):
@@ -393,7 +422,6 @@ def clean_mermaid_syntax(code):
         return node_id
     code = re.sub(r'(?:^|\s)(\w+)(?:\s|$)', fix_node_brackets, code)
     
-    # Ensure node IDs with spaces are properly quoted
     def quote_node_labels(match):
         label = match.group(1)
         if ' ' in label and not label.startswith('"'):
@@ -401,7 +429,6 @@ def clean_mermaid_syntax(code):
         return f'[{label}]'
     code = re.sub(r'\[(.*?)\]', quote_node_labels, code)
     
-    # Fix parentheses in node labels
     def fix_parentheses(match):
         label = match.group(1)
         if '(' in label or ')' in label:
@@ -409,13 +436,11 @@ def clean_mermaid_syntax(code):
         return f'[{label}]'
     code = re.sub(r'\[(.*?)\]', fix_parentheses, code)
     
-    # Ensure proper line endings
     code = code.replace('\r\n', '\n').strip()
     
     return code
 
 
-# Function to render Mermaid diagram
 def mermaid(code: str, height: int = 500) -> None:
     components.html(
         f"""
@@ -430,6 +455,7 @@ def mermaid(code: str, height: int = 500) -> None:
         """,
         height=height,
     )
+
 
 def load_text_file(filepath):
     try:
@@ -685,7 +711,7 @@ This format ensures each threat scenario provides a clear, integrated explanatio
             #  Show a spinner while generating the attack tree
             with st.spinner("Generating attack tree..."):
                 try:
-                    mermaid_code = get_attack_tree(api_key, selected_model, attack_tree_prompt)
+                    mermaid_code = get_attack_tree(api_key, selected_model, attack_tree_prompt, system_context)
                     
                     # Save the generated code in session state
                     st.session_state['mermaid_code'] = mermaid_code
