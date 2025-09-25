@@ -1,6 +1,6 @@
 import re
 import streamlit.components.v1 as components
-
+import xml.etree.ElementTree as ET
 
 def clean_json_response(response_text):
     json_pattern = r'```json\s*(.*?)\s*```'
@@ -241,3 +241,66 @@ def mermaid(code: str, height: int = 500) -> None:
         """,
         height=height,
     )
+
+
+def extract_attributes_from_aml(aml_content):
+    ns = {'caex': 'http://www.dke.de/CAEX'}
+    root = ET.fromstring(aml_content)
+
+    def parse_attribute(attr):
+        # If this attribute has nested attributes, parse them recursively with parent key prefix
+        attr_dict = {}
+        name = attr.attrib.get('Name', '')
+        value_elem = attr.find('caex:Value', ns)
+        
+        # If value exists and no nested attributes, return simple key-value
+        if value_elem is not None:
+            attr_dict[name] = value_elem.text
+        else:
+            # Nested attributes exist, parse each and prefix keys
+            nested_attrs = attr.findall('caex:Attribute', ns)
+            for nested_attr in nested_attrs:
+                nested_parsed = parse_attribute(nested_attr)
+                for k, v in nested_parsed.items():
+                    # Prefix nested attribute names with parent attribute name
+                    attr_dict[f"{name}.{k}"] = v
+        return attr_dict
+
+    def extract_elements_starting_with(root, prefix, ns):
+        all_nodes = root.findall(".//caex:InternalElement", ns)
+        filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
+        items = []
+        for node in filtered_nodes:
+            data = {
+                'Name': node.attrib.get('Name', ''),
+                'ID': node.attrib.get('ID', '')
+            }
+
+            for attr in node.findall('caex:Attribute', ns):
+                parsed_attr = parse_attribute(attr)
+                data.update(parsed_attr)
+
+            items.append(data)
+        return items
+
+    def extract_elements(ref_path):
+        nodes = root.findall(f".//caex:InternalElement[@RefBaseSystemUnitPath='{ref_path}']", ns)
+        items = []
+        for node in nodes:
+            data = {
+                'Name': node.attrib.get('Name', ''),
+                'ID': node.attrib.get('ID', '')
+            }
+
+            for attr in node.findall('caex:Attribute', ns):
+                parsed_attr = parse_attribute(attr)
+                data.update(parsed_attr)
+
+            items.append(data)
+        return items
+
+    assets = extract_elements_starting_with(root, 'AssetOfICS', ns)
+    vulnerabilities = extract_elements('VulnerabilityforSystem/Vulnerability')
+    hazards = extract_elements('HazardforSystem/Hazard')
+
+    return assets, vulnerabilities, hazards

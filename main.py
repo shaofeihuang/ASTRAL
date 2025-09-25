@@ -1,6 +1,7 @@
 import os
 import json
 import streamlit as st
+import pandas as pd
 from dotenv import load_dotenv
 from mistralai import Mistral
 from prompts import *
@@ -69,7 +70,6 @@ def get_dread_assessment(api_key, selected_model, prompt):
             {"role": "user", "content": prompt}
         ]
     )
-
     try:
         dread_assessment = json.loads(response.choices[0].message.content)
     except json.JSONDecodeError:
@@ -97,10 +97,10 @@ def main():
         help="Describe the specific cyber-physical system context for tailored threat modelling."
     )
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "AutomationML", "DREAD", "Mitigation"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "AutomationML Model", "Attributes", "DREAD", "Mitigation"])
 
     with tab1:
-        st.title("Architecture-based Threat Modelling with Mistral AI")
+        st.title("LLM-Powered Real-Time Cyber-Physical System Decision Support")
 
         st.markdown("""---""")
 
@@ -159,8 +159,7 @@ def main():
 
     with tab2:
         st.markdown("""
-        A threat model helps identify and evaluate potential security threats to applications / systems. It provides a systematic approach to 
-        understanding possible vulnerabilities and attack vectors. Use this tab to generate a threat model using the STRIDE-LM methodology.
+        A threat model helps identify and evaluate potential security threats to applications and systems. It provides a systematic approach to understanding possible vulnerabilities and attack vectors. The STRIDE-LM methodology expands upon the classic STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Using this method, you can comprehensively analyse your system to identify and prioritise security risks, enabling proactive mitigation. Use this tab to generate a threat model tailored to the CPS system using STRIDE-LM.
         """)
         st.markdown("""---""")
         threat_model_prompt = create_threat_model_prompt(system_context)
@@ -191,34 +190,28 @@ def main():
                 file_name="threat_model.md",
                 mime="text/markdown",
             )
+        else:
+            st.error("Please generate an architectural explanation first.")
 
     with tab3:
         st.markdown("""
-        Attack trees are a structured way to analyse the security of a system. They represent potential attack scenarios in a hierarchical format, 
-        with the ultimate goal of an attacker at the root and various paths to achieve that goal as branches. This helps in understanding system 
-        vulnerabilities and prioritising mitigation efforts.
+        Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.
         """)
         st.markdown("""---""")
         if selected_model == "mistral-small-latest":
             st.warning("⚠️ Mistral Small doesn't reliably generate syntactically correct Mermaid code. Please use the Mistral Large model for generating attack trees, or select a different model provider.")
             
-        # Create a submit button for Attack Tree
         attack_tree_submit_button = st.button(label="Generate Attack Tree")
         
         if attack_tree_submit_button and st.session_state.get('threat_model'):
             attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_explanation'), st.session_state.get('threat_model'))
-            #  Show a spinner while generating the attack tree
             with st.spinner("Generating attack tree..."):
                 try:
                     attack_tree = get_attack_tree(api_key, selected_model, attack_tree_prompt, system_context)
-                    
-                    # Save the generated code in session state
                     st.session_state['attack_tree'] = attack_tree
-                    
                 except Exception as e:
                     st.error(f"Error generating attack tree: {e}")
         
-        # Check if we have saved code in session state to display
         if 'attack_tree' in st.session_state:
             st.write("Attack Tree Code:")
             st.code(st.session_state['attack_tree'])
@@ -252,19 +245,41 @@ def main():
 
     with tab4:
         st.markdown("""
-        Automation Markup Language (AutomationML) is an XML-based standard for representing industrial automation systems. It enables the exchange of information about system components,
-        their relationships, and configurations. Generating an AutomationML file helps in documenting the system architecture and security considerations in a structured format.
+        Automation Markup Language (AutomationML) is an XML-based open standard for representing industrial automation systems. It builds upon the CAEX (Computer Aided Engineering Exchange) format defined in IEC 62424, which provides an object-oriented data model for system components and their hierarchical relationships. AutomationML facilitates semantic interoperability across diverse CPS domains by enabling standardised, meaningful exchange of data about physical and cyber components, their configurations, and interrelations. Use this tab to generate an AutomationML representation of the CPS system.
         """)
         st.markdown("""---""")
-        if st.button("Generate AutomationML File"):
+
+        # Container to hold buttons side by side
+        with st.container():
+            col1, col2 = st.columns(2)
+
+            with col1:
+                generate_clicked = st.button("Generate AutomationML File")
+
+            with col2:
+                upload_clicked = st.button("Upload AutomationML File")
+
+        # Show file uploader only if upload button clicked or previously clicked
+        if upload_clicked or st.session_state.get("upload_clicked", False):
+            st.session_state["upload_clicked"] = True
+            uploaded_aml = st.file_uploader(
+                "Upload your AutomationML file", type=["xml", "aml"], key="upload_aml_file"
+            )
+            if uploaded_aml is not None:
+                aml_content = uploaded_aml.read().decode("utf-8")
+                st.session_state['aml_file'] = aml_content
+                st.success("AutomationML file uploaded successfully.")
+                st.code(st.session_state['aml_file'], language='xml')
+
+        # Handle generate button outside container to avoid reruns on upload
+        if generate_clicked:
+            st.session_state["upload_clicked"] = False
             if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_tree' in st.session_state:
-                
                 prompt = create_aml_prompt(
                     st.session_state['arch_explanation'],
                     st.session_state['threat_model'],
                     st.session_state['attack_tree']
                 )
-                
                 with st.spinner("Generating AutomationML file..."):
                     try:
                         aml_content = call_mistral(
@@ -272,15 +287,14 @@ def main():
                             prompt,
                             image_bytes if 'image_bytes' in locals() else b'',
                             selected_model,
-                            max_tokens=max_tokens,  # adjust as needed
+                            max_tokens=max_tokens,
                             response_as_json=False
                         )
                         st.session_state['aml_file'] = aml_content
                     except Exception as e:
                         st.error(f"Failed to generate AutomationML file: {str(e)}")
-            else:
-                st.error("Please generate an architectural explanation, threat model, and attack tree first.")
 
+        # Show generated AML file and download button if it exists
         if 'aml_file' in st.session_state:
             st.subheader("Generated AutomationML File")
             st.code(st.session_state['aml_file'], language='xml')
@@ -290,14 +304,65 @@ def main():
                 file_name="system_model.aml",
                 mime="application/xml",
             )
+        elif not (upload_clicked or st.session_state.get("upload_clicked", False)):
+            st.error("Please generate an architectural explanation, threat model, and attack tree first.")
 
 
     with tab5:
         st.markdown("""
-    DREAD is a method for evaluating and prioritising risks associated with security threats. It assesses threats based on **D**amage potential, 
-    **R**eproducibility, **E**xploitability, **A**ffected users, and **D**iscoverability. This helps in determining the overall risk level and 
-    focusing on the most critical threats first. Use this tab to perform a DREAD risk assessment for your application / system.
-    """)
+
+        """)
+        st.markdown("""---""")
+        
+        if st.button("Extract Attributes"):
+            if 'aml_file' in st.session_state:
+                aml_content = st.session_state['aml_file']
+                aml_content = aml_content.strip()
+                if aml_content.startswith("```xml"):
+                    aml_content = aml_content[len("```xml"):].strip()
+                if aml_content.endswith("```"):
+                    aml_content = aml_content[:-len("```")].strip()
+                assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
+                st.session_state['aml_attributes'] = {
+                    'assets': assets,
+                    'vulnerabilities': vulnerabilities,
+                    'hazards': hazards
+                }
+                st.success("Attributes extracted successfully.")
+            else:
+                st.error("Please generate an AutomationML model first.")
+
+        if 'aml_attributes' in st.session_state:
+            st.subheader("Asset Attributes")
+            assets = st.session_state['aml_attributes']['assets']
+            df = pd.DataFrame(assets)
+            st.dataframe(df)
+
+            st.subheader("Vulnerability Attributes")
+            vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
+            df = pd.DataFrame(vulnerabilities)
+            cols = df.columns.tolist()
+            if 'Attack Name' in cols:
+                cols.remove('Attack Name')
+                new_cols = ['Attack Name'] + cols
+                df = df[new_cols]
+            st.dataframe(df)
+
+            st.subheader("Hazard Attributes")
+            hazards = st.session_state['aml_attributes']['hazards']
+            df = pd.DataFrame(hazards)
+            st.dataframe(df)
+
+        else:
+            st.info("No attributes extracted yet or no vulnerability nodes in model.")
+
+
+
+
+    with tab6:
+        st.markdown("""
+        DREAD is a structured methodology for evaluating and prioritising risks associated with security threats. It assesses each threat based on five criteria: **D**amage potential, **R**eproducibility, **E**xploitability, **A**ffected users, and **D**iscoverability. By scoring threats on these factors, organisations can calculate an overall risk level, which enables them to focus mitigation efforts on the most critical vulnerabilities first. This method supports consistent risk assessment, improves communication across teams, and helps allocate resources efficiently to protect systems effectively. Use this tab to perform a DREAD risk assessment for your application or system.
+        """)
         st.markdown("""---""")
         
         dread_assessment_submit_button = st.button(label="Generate DREAD Risk Assessment")
@@ -319,7 +384,6 @@ def main():
 
             dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
 
-            # Restore from session state if available
             if 'dread_assessment' in st.session_state:
                 dread_assessment = st.session_state['dread_assessment']
                 dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
@@ -337,10 +401,10 @@ def main():
         else:
             st.error("Please generate a threat model first before requesting a DREAD risk assessment.")
 
-    with tab6:
+    with tab7:
         st.markdown("""
-    Placeholder for mitigation strategies using real-time recommendations.
-    """)
+        Placeholder for mitigation strategies using real-time recommendations.
+        """)
         st.markdown("""---""")
 
 
