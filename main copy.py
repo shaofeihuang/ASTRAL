@@ -118,7 +118,7 @@ def main():
             arch_expl_prompt = create_arch_expl_prompt(system_context)
 
         # Generate Architectural Explanation Button
-        if st.button("Generate Architectural Explanation", key="gen_arch_exp") and uploaded_file is not None:
+        if st.button("Generate Architectural Explanation", key="gen_arch_exp"):
             with st.spinner("Generating architectural explanation..."):
                 try:
                     model_output = call_mistral(
@@ -165,7 +165,7 @@ def main():
         threat_model_prompt = create_threat_model_prompt(system_context)
         
         # Generate STRIDE-LM Threat Model Button
-        if st.button("Generate STRIDE-LM Threat Model", key="gen_threat_model") and st.session_state.get('arch_explanation'):
+        if st.button("Generate STRIDE-LM Threat Model", key="gen_threat_model"):
             with st.spinner("Generating STRIDE-LM threat model..."):
                 try:
                     model_output = call_mistral(
@@ -191,7 +191,7 @@ def main():
                 mime="text/markdown",
             )
         else:
-            st.info("Please generate an architectural explanation first.")
+            st.error("Please generate an architectural explanation first.")
 
     with tab3:
         st.markdown("""
@@ -240,7 +240,7 @@ def main():
             with col5:
                 st.write("")
         else:
-            st.info("Please generate an architectural explanation and threat model first.")
+            st.error("Please generate an architectural explanation and threat model first.")
 
 
     with tab4:
@@ -249,47 +249,52 @@ def main():
         """)
         st.markdown("""---""")
 
+        # Container to hold buttons side by side
         with st.container():
             col1, col2 = st.columns(2)
 
-        with col1:
-            if st.button("Generate AutomationML File"):
-                st.session_state["upload_clicked"] = False
-                if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_tree' in st.session_state:
-                    prompt = create_aml_prompt(
-                        st.session_state['arch_explanation'],
-                        st.session_state['threat_model'],
-                        st.session_state['attack_tree']
-                    )
-                    with st.spinner("Generating AutomationML file..."):
-                        try:
-                            aml_content = call_mistral(
-                                api_key,
-                                prompt,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                max_tokens=max_tokens,
-                                response_as_json=False
-                            )
-                            st.session_state['aml_file'] = aml_content
-                        except Exception as e:
-                            st.error(f"Failed to generate AutomationML file: {str(e)}")
+            with col1:
+                generate_clicked = st.button("Generate AutomationML File")
 
-        with col2:
-            if st.button("Upload AutomationML File"):
-                st.session_state["upload_clicked"] = True
+            with col2:
+                upload_clicked = st.button("Upload AutomationML File")
 
-        if st.session_state.get("upload_clicked", False):
+        # Show file uploader only if upload button clicked or previously clicked
+        if upload_clicked or st.session_state.get("upload_clicked", False):
+            st.session_state["upload_clicked"] = True
             uploaded_aml = st.file_uploader(
                 "Upload your AutomationML file", type=["xml", "aml"], key="upload_aml_file"
             )
-
             if uploaded_aml is not None:
                 aml_content = uploaded_aml.read().decode("utf-8")
                 st.session_state['aml_file'] = aml_content
                 st.success("AutomationML file uploaded successfully.")
                 st.code(st.session_state['aml_file'], language='xml')
 
+        # Handle generate button outside container to avoid reruns on upload
+        if generate_clicked:
+            st.session_state["upload_clicked"] = False
+            if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_tree' in st.session_state:
+                prompt = create_aml_prompt(
+                    st.session_state['arch_explanation'],
+                    st.session_state['threat_model'],
+                    st.session_state['attack_tree']
+                )
+                with st.spinner("Generating AutomationML file..."):
+                    try:
+                        aml_content = call_mistral(
+                            api_key,
+                            prompt,
+                            image_bytes if 'image_bytes' in locals() else b'',
+                            selected_model,
+                            max_tokens=max_tokens,
+                            response_as_json=False
+                        )
+                        st.session_state['aml_file'] = aml_content
+                    except Exception as e:
+                        st.error(f"Failed to generate AutomationML file: {str(e)}")
+
+        # Show generated AML file and download button if it exists
         if 'aml_file' in st.session_state:
             st.subheader("Generated AutomationML File")
             st.code(st.session_state['aml_file'], language='xml')
@@ -299,8 +304,8 @@ def main():
                 file_name="system_model.aml",
                 mime="application/xml",
             )
-        elif not st.session_state.get("upload_clicked", False):
-            st.info("Please generate an architectural explanation, threat model, and attack tree first.")
+        elif not (upload_clicked or st.session_state.get("upload_clicked", False)):
+            st.error("Please generate an architectural explanation, threat model, and attack tree first.")
 
 
     with tab5:
@@ -308,59 +313,48 @@ def main():
 
         """)
         st.markdown("""---""")
-
-        with st.container():
-            col1, col2 = st.columns(2)
-
-            with col1:
-                if st.button("Load Model Attributes"):
-                    if st.session_state.get('aml_file'):
-                        aml_content = clean_aml_content(st.session_state['aml_file'])
-                        assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
-                        st.session_state['aml_attributes'] = {
-                            'assets': assets,
-                            'vulnerabilities': vulnerabilities,
-                            'hazards': hazards
-                        }
-                        st.success("Attributes extracted successfully.")
-                    else:
-                        st.info("You have unsaved edits. Please save them before reloading.")
-            with col2:
-                if st.button("Save Model Attributes"):
-                    if st.session_state.get('aml_attributes'):
-                        aml_content = clean_aml_content(st.session_state['aml_file'])
-                        updated_aml = update_aml_from_attributes(aml_content, st.session_state['aml_attributes'])
-                        st.session_state['aml_file'] = updated_aml
-                        st.success("Attributes saved successfully.")
+        
+        if st.button("Extract Attributes"):
+            if 'aml_file' in st.session_state:
+                aml_content = st.session_state['aml_file']
+                aml_content = aml_content.strip()
+                if aml_content.startswith("```xml"):
+                    aml_content = aml_content[len("```xml"):].strip()
+                if aml_content.endswith("```"):
+                    aml_content = aml_content[:-len("```")].strip()
+                assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
+                st.session_state['aml_attributes'] = {
+                    'assets': assets,
+                    'vulnerabilities': vulnerabilities,
+                    'hazards': hazards
+                }
+                st.success("Attributes extracted successfully.")
+            else:
+                st.error("Please generate an AutomationML model first.")
 
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
             assets = st.session_state['aml_attributes']['assets']
-            df_assets = pd.DataFrame(assets)
-            edited_assets = st.data_editor(df_assets, num_rows="dynamic")
-            st.session_state['aml_attributes']['assets'] = edited_assets.to_dict(orient='records')
+            df = pd.DataFrame(assets)
+            st.dataframe(df)
 
             st.subheader("Vulnerability Attributes")
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
-            df_vuln = pd.DataFrame(vulnerabilities)
-            cols = df_vuln.columns.tolist()
+            df = pd.DataFrame(vulnerabilities)
+            cols = df.columns.tolist()
             if 'Attack Name' in cols:
                 cols.remove('Attack Name')
                 new_cols = ['Attack Name'] + cols
-                df_vuln = df_vuln[new_cols]
-            edited_vuln = st.data_editor(df_vuln, num_rows="dynamic")
-            st.session_state['aml_attributes']['vulnerabilities'] = edited_vuln.to_dict(orient='records')
+                df = df[new_cols]
+            st.dataframe(df)
 
             st.subheader("Hazard Attributes")
             hazards = st.session_state['aml_attributes']['hazards']
-            df_hazards = pd.DataFrame(hazards)
-            edited_hazards = st.data_editor(df_hazards, num_rows="dynamic")
-            st.session_state['aml_attributes']['hazards'] = edited_hazards.to_dict(orient='records')
-            #if st.button("Compute Impact Ratings"):
-                #code to compute impact ratings
+            df = pd.DataFrame(hazards)
+            st.dataframe(df)
 
         else:
-            st.info("Please upload or generate an AutomationML model first.")
+            st.info("No attributes extracted yet or no vulnerability nodes in model.")
 
 
 
