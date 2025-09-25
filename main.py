@@ -65,6 +65,19 @@ def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str,
     else:
         return content
 
+def clean_json_response(response_text):
+    json_pattern = r'```json\s*(.*?)\s*```'
+    match = re.search(json_pattern, response_text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    
+    code_pattern = r'```\s*(.*?)\s*```'
+    match = re.search(code_pattern, response_text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    
+    return response_text.strip()
+
 
 def tm_json_to_markdown(threat_model, improvement_suggestions):
     markdown_output = "## Threat Model\n\n"
@@ -151,112 +164,76 @@ def dread_json_to_markdown(dread_assessment):
     return markdown_output
 
 
-# Function to create a prompt to generate mitigating controls
-def create_dread_assessment_prompt(threats, system_context):
-    prompt = f"""
-You are a cyber security expert with more than 20 years of experience in threat modeling using STRIDE-LM and DREAD methodologies.
-Your task is to produce a DREAD risk assessment for the threats identified in a threat model, relevant to the following system context: {system_context}.
-Below is the list of identified threats:
-{threats}
-When providing the risk assessment, use a JSON formatted response with a top-level key "Risk Assessment" and a list of threats, each with the following sub-keys:
-- "Threat Type": A string representing the type of threat (e.g., "Spoofing").
-- "Scenario": A string describing the threat scenario.
-- "Damage Potential": An integer between 1 and 10.
-- "Reproducibility": An integer between 1 and 10.
-- "Exploitability": An integer between 1 and 10.
-- "Affected Users": An integer between 1 and 10.
-- "Discoverability": An integer between 1 and 10.
-Assign a value between 1 and 10 for each sub-key based on the DREAD methodology. Use the following scale:
-- 1-3: Low
-- 4-6: Medium
-- 7-10: High
-Ensure the JSON response is correctly formatted and does not contain any additional text. Here is an example of the expected JSON response format:
-{{
-  "Risk Assessment": [
-    {{
-      "Threat Type": "Spoofing",
-      "Scenario": "An attacker could create a fake OAuth2 provider and trick users into logging in through it.",
-      "Damage Potential": 8,
-      "Reproducibility": 6,
-      "Exploitability": 5,
-      "Affected Users": 9,
-      "Discoverability": 7
-    }},
-    {{
-      "Threat Type": "Spoofing",
-      "Scenario": "An attacker could intercept the OAuth2 token exchange process through a Man-in-the-Middle (MitM) attack.",
-      "Damage Potential": 8,
-      "Reproducibility": 7,
-      "Exploitability": 6,
-      "Affected Users": 8,
-      "Discoverability": 6
-    }}
-  ]
-}}
-"""
+def create_arch_expl_prompt(system_context):
+    prompt = f'''
+You are a Senior Solution Architect tasked with explaining a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your explanation supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
+
+System context: {system_context}
+
+Thoroughly analyze the diagram and provide a structured explanation strictly based on visible content, covering:
+
+1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
+2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
+3. Trust Boundaries and Purdue Zones
+4. Data Flows and Interactions (including protocols, data types, communication links)
+5. Technologies, Platforms, and Standards
+6. Assets and Functions with cyber-physical significance (PLCs, controllers, field devices, routers, meters, etc.)
+7. Attack Entry Points (explicit or implied entities that could initiate attacks)
+8. Any other architectural details supporting threat modeling and attack tree development
+
+Structure your response using these exact section headers only:
+
+- Attacker or Attack-Capable Entities  
+- Key Components  
+- Trust Boundaries and Purdue Zones  
+- Data Flows & Interactions  
+- Technologies and Protocols  
+- Assets and Functions  
+- Attack Entry Points  
+
+IMPORTANT:
+- Base your explanation solely on the provided diagram; do not infer or assume details beyond what is visible.
+- Do not start or end with commentary or extra text.
+- Do not infer or guess beyond what is visibly present.
+- Do not provide recommendations—only factual explanation.
+- Use only the specified headers and no additional formatting.
+'''
     return prompt
 
 
-def clean_json_response(response_text):
-    json_pattern = r'```json\s*(.*?)\s*```'
-    match = re.search(json_pattern, response_text, re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    
-    code_pattern = r'```\s*(.*?)\s*```'
-    match = re.search(code_pattern, response_text, re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    
-    return response_text.strip()
+def create_threat_model_prompt(system_context):
+    prompt = f'''
+You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modeling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
 
+Your task is to analyze the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
 
-def get_dread_assessment(api_key, selected_model, prompt):
-    client = Mistral(api_key=api_key)
+System context: {system_context}
 
-    response = client.chat.complete(
-        model=selected_model,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
+Instructions:
+1. If the diagram includes an "Attacker" entity—whether internal, external, explicit, or implicit—treat it as the origin for possible attack paths and enumerate realistic threats accordingly.
+2. For each STRIDE-LM category, identify 3 to 4 credible threat scenarios if applicable. Each scenario must describe a concrete, context-specific attack, avoiding generic descriptions.
+3. Focus your analysis on cyber-physical systems. Address system-level impacts such as disruption of physical processes, loss of control, cascading failures, or safety hazards rather than purely IT-centric threats.
+4. Consider multiple potential attacker objectives (e.g., power disruption, asset damage, persistent foothold in isolated OT environments, bypassing safety controls).
+5. Leverage and extract from the accompanying documentation to reflect the assets, vulnerabilities (both CVE-linked and non-CVE-linked), hazards, and objectives in each scenario.
+6. Identify and list CVEs specific to the vulnerabilities visible in the accompanying documentation. For each CVE, provide the CVE identifier and a brief description. Indicate if the CVE has been observed in known attack campaigns (e.g., BlackEnergy, FrostyGoop), with references.
+7. Apply FMECA-style reasoning where applicable to identify failure modes, their effects, and potential cascading consequences.
+8. Format your response strictly as JSON with these top-level keys:
+   - `"threat_model"`: an array of threat scenario objects.
+   - `"improvement_suggestions"`: a list of missing information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modeling.
+9. Each threat scenario object must contain the following keys:
+   - `"Threat Type"`, based on STRIDE-LM categories (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege, Lateral Movement).
+   - `"Scenario"`: a detailed narrative integrating information about assets, vulnerabilities (including CVE and non-CVE), hazards, and attacker objectives. Include references to any CVEs mentioned, and highlight if they were employed in known attack campaigns.
+   - `"Potential Impact"`
+10. Do NOT include general security recommendations or any commentary.
+11. Provide no text outside the JSON structure.
 
-    try:
-        dread_assessment = json.loads(response.choices[0].message.content)
-    except json.JSONDecodeError:
-        dread_assessment = {}
+This format ensures each threat scenario provides a clear, integrated explanation of the threat elements in a single narrative field, suitable for detailed CPS threat analysis.
+'''
+    return prompt
 
-    return dread_assessment
-
-
-def convert_tree_to_mermaid(tree_data):
-    mermaid_lines = ["graph BT"]
-    
-    def process_node(node, parent_id=None):
-        node_id = node["id"]
-        node_label = node["label"]
-        
-        if " " in node_label or "(" in node_label or ")" in node_label:
-            node_label = f'"{node_label}"'
-        
-        mermaid_lines.append(f'    {node_id}[{node_label}]')
-        
-        if parent_id:
-#            mermaid_lines.append(f'    {parent_id} --> {node_id}')
-            mermaid_lines.append(f'    {node_id} --> {parent_id}')
-        
-        if "children" in node:
-            for child in node["children"]:
-                process_node(child, node_id)
-    
-    for root_node in tree_data["nodes"]:
-        process_node(root_node)
-    
-    return "\n".join(mermaid_lines)
 
 def create_attack_tree_prompt(system_context):
-    return """
+    prompt = """
 Your task is to analyze the threat model and create an attack tree structure in JSON format.
 The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analyzed.
 Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal.
@@ -315,153 +292,11 @@ Rules:
 
 ONLY RESPOND WITH THE JSON STRUCTURE, NO ADDITIONAL TEXT.
 """
+    return prompt
 
 
-def create_attack_tree_schema():
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "attack_tree",
-            "description": "A structured representation of an attack tree",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "nodes": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/$defs/node"
-                        }
-                    }
-                },
-                "$defs": {
-                    "node": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "string",
-                                "description": "Simple alphanumeric identifier for the node"
-                            },
-                            "label": {
-                                "type": "string",
-                                "description": "Description of the attack vector or goal"
-                            },
-                            "children": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/$defs/node"
-                                }
-                            }
-                        },
-                        "required": ["id", "label", "children"],
-                        "additionalProperties": False
-                    }
-                },
-                "required": ["nodes"],
-                "additionalProperties": False
-            },
-            "strict": True
-        }
-    }
-
-
-def get_attack_tree(api_key, selected_model, prompt, system_context):
-    client = Mistral(api_key=api_key)
-    system_prompt = create_attack_tree_prompt(system_context)
-    response = client.chat.complete(
-        model=selected_model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
-        ]
-    )
-    try:
-        cleaned_response = clean_json_response(response.choices[0].message.content)
-        tree_data = json.loads(cleaned_response)
-        return convert_tree_to_mermaid(tree_data)
-    except json.JSONDecodeError:
-        # Fallback: try to extract Mermaid code if JSON parsing fails
-        return extract_mermaid_code(response.choices[0].message.content)
-
-
-def extract_mermaid_code(text):
-    mermaid_pattern = r'```mermaid\s*(graph[\s\S]*?)```'
-    match = re.search(mermaid_pattern, text, re.MULTILINE)
-    
-    if not match:
-        code_pattern = r'```\s*(graph[\s\S]*?)```'
-        match = re.search(code_pattern, text, re.MULTILINE)
-    
-    if match:
-        code = match.group(1).strip()
-    else:
-        code = text.strip()
-    
-    if not code.startswith('graph '):
-        if 'graph ' in code:
-            code = code[code.find('graph '):]
-        else:
-            return text
-
-    code = clean_mermaid_syntax(code)
-    
-    return code
-
-def clean_mermaid_syntax(code):
-    code = re.sub(r'(\w+|\]|\)|\})(-->|==>|-.->)(\w+|\[|\(|\{)', r'\1 \2 \3', code)
-    
-    def fix_node_brackets(match):
-        node_id = match.group(1)
-        if not any(c in node_id for c in '[](){}'):
-            return f'{node_id}[{node_id}]'
-        return node_id
-    code = re.sub(r'(?:^|\s)(\w+)(?:\s|$)', fix_node_brackets, code)
-    
-    def quote_node_labels(match):
-        label = match.group(1)
-        if ' ' in label and not label.startswith('"'):
-            return f'["{label}"]'
-        return f'[{label}]'
-    code = re.sub(r'\[(.*?)\]', quote_node_labels, code)
-    
-    def fix_parentheses(match):
-        label = match.group(1)
-        if '(' in label or ')' in label:
-            return f'["{label}"]'
-        return f'[{label}]'
-    code = re.sub(r'\[(.*?)\]', fix_parentheses, code)
-    
-    code = code.replace('\r\n', '\n').strip()
-    
-    return code
-
-
-def mermaid(code: str, height: int = 500) -> None:
-    components.html(
-        f"""
-        <pre class="mermaid" style="height: {height}px;">
-            {code}
-        </pre>
-
-        <script type="module">
-            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-            mermaid.initialize({{ startOnLoad: true }});
-        </script>
-        """,
-        height=height,
-    )
-
-
-def load_text_file(filepath):
-    try:
-        with open(filepath, "r", encoding="utf-8") as file:
-            return file.read()
-    except Exception as e:
-        st.error(f"Failed to load file {filepath}: {str(e)}")
-        return ""
-    
-
-def create_automationml_prompt_from_files(arch_explanation, threat_model, attack_tree):
-    return f"""
+def create_aml_prompt(arch_explanation, threat_model, attack_tree):
+    prompt = f"""
 You are an expert in AutomationML (AML) file generation according to the IEC 62714 standard.
 
 Your task is to generate an AutomationML representation of the cyber-physical system architecture with integrated security modelling elements based on the provided architectural explanation, threat model, and attack tree.
@@ -987,6 +822,234 @@ Output requirements:
 
 Generate the AutomationML file now.
 """
+    return prompt
+
+
+def create_dread_assessment_prompt(threats, system_context):
+    prompt = f"""
+You are a cyber security expert with more than 20 years of experience in threat modeling using STRIDE-LM and DREAD methodologies.
+Your task is to produce a DREAD risk assessment for the threats identified in a threat model, relevant to the following system context: {system_context}.
+Below is the list of identified threats:
+{threats}
+When providing the risk assessment, use a JSON formatted response with a top-level key "Risk Assessment" and a list of threats, each with the following sub-keys:
+- "Threat Type": A string representing the type of threat (e.g., "Spoofing").
+- "Scenario": A string describing the threat scenario.
+- "Damage Potential": An integer between 1 and 10.
+- "Reproducibility": An integer between 1 and 10.
+- "Exploitability": An integer between 1 and 10.
+- "Affected Users": An integer between 1 and 10.
+- "Discoverability": An integer between 1 and 10.
+Assign a value between 1 and 10 for each sub-key based on the DREAD methodology. Use the following scale:
+- 1-3: Low
+- 4-6: Medium
+- 7-10: High
+Ensure the JSON response is correctly formatted and does not contain any additional text. Here is an example of the expected JSON response format:
+{{
+  "Risk Assessment": [
+    {{
+      "Threat Type": "Spoofing",
+      "Scenario": "An attacker could create a fake OAuth2 provider and trick users into logging in through it.",
+      "Damage Potential": 8,
+      "Reproducibility": 6,
+      "Exploitability": 5,
+      "Affected Users": 9,
+      "Discoverability": 7
+    }},
+    {{
+      "Threat Type": "Spoofing",
+      "Scenario": "An attacker could intercept the OAuth2 token exchange process through a Man-in-the-Middle (MitM) attack.",
+      "Damage Potential": 8,
+      "Reproducibility": 7,
+      "Exploitability": 6,
+      "Affected Users": 8,
+      "Discoverability": 6
+    }}
+  ]
+}}
+"""
+    return prompt
+
+
+
+def convert_tree_to_mermaid(tree_data):
+    mermaid_lines = ["graph BT"]
+    
+    def process_node(node, parent_id=None):
+        node_id = node["id"]
+        node_label = node["label"]
+        
+        if " " in node_label or "(" in node_label or ")" in node_label:
+            node_label = f'"{node_label}"'
+        
+        mermaid_lines.append(f'    {node_id}[{node_label}]')
+        
+        if parent_id:
+#            mermaid_lines.append(f'    {parent_id} --> {node_id}')
+            mermaid_lines.append(f'    {node_id} --> {parent_id}')
+        
+        if "children" in node:
+            for child in node["children"]:
+                process_node(child, node_id)
+    
+    for root_node in tree_data["nodes"]:
+        process_node(root_node)
+    
+    return "\n".join(mermaid_lines)
+
+
+def create_attack_tree_schema():
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "attack_tree",
+            "description": "A structured representation of an attack tree",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "nodes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/$defs/node"
+                        }
+                    }
+                },
+                "$defs": {
+                    "node": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "Simple alphanumeric identifier for the node"
+                            },
+                            "label": {
+                                "type": "string",
+                                "description": "Description of the attack vector or goal"
+                            },
+                            "children": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/$defs/node"
+                                }
+                            }
+                        },
+                        "required": ["id", "label", "children"],
+                        "additionalProperties": False
+                    }
+                },
+                "required": ["nodes"],
+                "additionalProperties": False
+            },
+            "strict": True
+        }
+    }
+
+
+def get_attack_tree(api_key, selected_model, prompt, system_context):
+    client = Mistral(api_key=api_key)
+    system_prompt = create_attack_tree_prompt(system_context)
+    response = client.chat.complete(
+        model=selected_model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    try:
+        cleaned_response = clean_json_response(response.choices[0].message.content)
+        tree_data = json.loads(cleaned_response)
+        return convert_tree_to_mermaid(tree_data)
+    except json.JSONDecodeError:
+        # Fallback: try to extract Mermaid code if JSON parsing fails
+        return extract_mermaid_code(response.choices[0].message.content)
+
+
+def extract_mermaid_code(text):
+    mermaid_pattern = r'```mermaid\s*(graph[\s\S]*?)```'
+    match = re.search(mermaid_pattern, text, re.MULTILINE)
+    
+    if not match:
+        code_pattern = r'```\s*(graph[\s\S]*?)```'
+        match = re.search(code_pattern, text, re.MULTILINE)
+    
+    if match:
+        code = match.group(1).strip()
+    else:
+        code = text.strip()
+    
+    if not code.startswith('graph '):
+        if 'graph ' in code:
+            code = code[code.find('graph '):]
+        else:
+            return text
+
+    code = clean_mermaid_syntax(code)
+    
+    return code
+
+def clean_mermaid_syntax(code):
+    code = re.sub(r'(\w+|\]|\)|\})(-->|==>|-.->)(\w+|\[|\(|\{)', r'\1 \2 \3', code)
+    
+    def fix_node_brackets(match):
+        node_id = match.group(1)
+        if not any(c in node_id for c in '[](){}'):
+            return f'{node_id}[{node_id}]'
+        return node_id
+    code = re.sub(r'(?:^|\s)(\w+)(?:\s|$)', fix_node_brackets, code)
+    
+    def quote_node_labels(match):
+        label = match.group(1)
+        if ' ' in label and not label.startswith('"'):
+            return f'["{label}"]'
+        return f'[{label}]'
+    code = re.sub(r'\[(.*?)\]', quote_node_labels, code)
+    
+    def fix_parentheses(match):
+        label = match.group(1)
+        if '(' in label or ')' in label:
+            return f'["{label}"]'
+        return f'[{label}]'
+    code = re.sub(r'\[(.*?)\]', fix_parentheses, code)
+    
+    code = code.replace('\r\n', '\n').strip()
+    
+    return code
+
+
+def mermaid(code: str, height: int = 500) -> None:
+    components.html(
+        f"""
+        <pre class="mermaid" style="height: {height}px;">
+            {code}
+        </pre>
+
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({{ startOnLoad: true }});
+        </script>
+        """,
+        height=height,
+    )
+
+
+def get_dread_assessment(api_key, selected_model, prompt):
+    client = Mistral(api_key=api_key)
+
+    response = client.chat.complete(
+        model=selected_model,
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    try:
+        dread_assessment = json.loads(response.choices[0].message.content)
+    except json.JSONDecodeError:
+        dread_assessment = {}
+
+    return dread_assessment
+
+    
 
 
 
@@ -1020,46 +1083,14 @@ def main():
         if uploaded_file is not None:
             image_bytes = uploaded_file.read()
             st.image(image_bytes, caption="Uploaded Image", width="stretch")
+            arch_expl_prompt = create_arch_expl_prompt(system_context)
 
-            explanation_prompt = f'''
-You are a Senior Solution Architect tasked with explaining a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your explanation supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
-
-System context: {system_context}
-
-Thoroughly analyze the diagram and provide a structured explanation strictly based on visible content, covering:
-
-1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
-2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
-3. Trust Boundaries and Purdue Zones
-4. Data Flows and Interactions (including protocols, data types, communication links)
-5. Technologies, Platforms, and Standards
-6. Assets and Functions with cyber-physical significance (PLCs, controllers, field devices, routers, meters, etc.)
-7. Attack Entry Points (explicit or implied entities that could initiate attacks)
-8. Any other architectural details supporting threat modeling and attack tree development
-
-Structure your response using these exact section headers only:
-
-- Attacker or Attack-Capable Entities  
-- Key Components  
-- Trust Boundaries and Purdue Zones  
-- Data Flows & Interactions  
-- Technologies and Protocols  
-- Assets and Functions  
-- Attack Entry Points  
-
-IMPORTANT:
-- Base your explanation solely on the provided diagram; do not infer or assume details beyond what is visible.
-- Do not start or end with commentary or extra text.
-- Do not infer or guess beyond what is visibly present.
-- Do not provide recommendations—only factual explanation.
-- Use only the specified headers and no additional formatting.
-'''
         # Generate Architectural Explanation Button
         if st.button("Generate Architectural Explanation", key="gen_arch_exp"):
             with st.spinner("Generating architectural explanation..."):
                 try:
                     model_output = call_mistral(
-                        api_key, explanation_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
+                        api_key, arch_expl_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
                     )
                     st.session_state['arch_explanation'] = model_output
                 except Exception as e:
@@ -1075,7 +1106,23 @@ IMPORTANT:
                 file_name="arch_explanation.md",
                 mime="text/markdown",
             )
-
+            additional_detail = st.text_area(
+                "Add Additional Details (Optional)",
+                value="",
+                placeholder="Type extra architectural specifics here...",
+                height=150,
+            )
+            # Re-Generate Architectural Explanation Button
+            if st.button("Re-Generate Architectural Explanation", key="regen_arch_exp"):
+                with st.spinner("Generating architectural explanation..."):
+                    try:
+                        model_output = call_mistral(
+                            api_key, arch_expl_prompt + "\n" + additional_detail.strip(), image_bytes, selected_model, max_tokens, response_as_json=False
+                        )
+                        st.session_state['arch_explanation'] = model_output
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Failed to generate architectural explanation: {str(e)}")
 
 
     with tab2:
@@ -1084,33 +1131,8 @@ IMPORTANT:
         understanding possible vulnerabilities and attack vectors. Use this tab to generate a threat model using the STRIDE-LM methodology.
         """)
         st.markdown("""---""")
-        threat_model_prompt = f'''
-You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modeling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
-
-Your task is to analyze the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
-
-System context: {system_context}
-
-Instructions:
-1. If the diagram includes an "Attacker" entity—whether internal, external, explicit, or implicit—treat it as the origin for possible attack paths and enumerate realistic threats accordingly.
-2. For each STRIDE-LM category, identify 3 to 4 credible threat scenarios if applicable. Each scenario must describe a concrete, context-specific attack, avoiding generic descriptions.
-3. Focus your analysis on cyber-physical systems. Address system-level impacts such as disruption of physical processes, loss of control, cascading failures, or safety hazards rather than purely IT-centric threats.
-4. Consider multiple potential attacker objectives (e.g., power disruption, asset damage, persistent foothold in isolated OT environments, bypassing safety controls).
-5. Leverage and extract from the accompanying documentation to reflect the assets, vulnerabilities (both CVE-linked and non-CVE-linked), hazards, and objectives in each scenario.
-6. Identify and list CVEs specific to the vulnerabilities visible in the accompanying documentation. For each CVE, provide the CVE identifier and a brief description. Indicate if the CVE has been observed in known attack campaigns (e.g., BlackEnergy, FrostyGoop), with references.
-7. Apply FMECA-style reasoning where applicable to identify failure modes, their effects, and potential cascading consequences.
-8. Format your response strictly as JSON with these top-level keys:
-   - `"threat_model"`: an array of threat scenario objects.
-   - `"improvement_suggestions"`: a list of missing information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modeling.
-9. Each threat scenario object must contain the following keys:
-   - `"Threat Type"`, based on STRIDE-LM categories (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege, Lateral Movement).
-   - `"Scenario"`: a detailed narrative integrating information about assets, vulnerabilities (including CVE and non-CVE), hazards, and attacker objectives. Include references to any CVEs mentioned, and highlight if they were employed in known attack campaigns.
-   - `"Potential Impact"`
-10. Do NOT include general security recommendations or any commentary.
-11. Provide no text outside the JSON structure.
-
-This format ensures each threat scenario provides a clear, integrated explanation of the threat elements in a single narrative field, suitable for detailed CPS threat analysis.
-'''
+        threat_model_prompt = create_threat_model_prompt(system_context)
+        
         # Generate STRIDE-LM Threat Model Button
         if st.button("Generate STRIDE-LM Threat Model", key="gen_threat_model"):
             with st.spinner("Generating STRIDE-LM threat model..."):
@@ -1205,7 +1227,7 @@ This format ensures each threat scenario provides a clear, integrated explanatio
         if st.button("Generate AutomationML File"):
             if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_tree' in st.session_state:
                 
-                prompt = create_automationml_prompt_from_files(
+                prompt = create_aml_prompt(
                     st.session_state['arch_explanation'],
                     st.session_state['threat_model'],
                     st.session_state['attack_tree']
