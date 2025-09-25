@@ -338,11 +338,18 @@ def update_aml_from_attributes(aml_content, attr_sets):
             update_attribute_recursive(child, updated_attrs, full_key)
 
     def update_internal_element(node, updated_attrs):
+        print("------------------\n")
+        print("node:", node)
+        print("------------------\n")
+        print("attr", updated_attrs.items())
+        print("------------------\n")
+
         # Update direct attributes and nested attributes under AutomationEquipments (or similar)
         for key, val in updated_attrs.items():
+            print("[*] key:", key, "val", val, "\n")
             # Skip root keys
-            if key in ['ID', 'Name']:
-                continue
+            #if key in ['ID', 'Name']:
+            #    continue
             if '.' in key:
                 # Nested attribute, skip here and update recursively below
                 continue
@@ -353,6 +360,7 @@ def update_aml_from_attributes(aml_content, attr_sets):
                 if a.attrib.get('Name') == key:
                     attr_elem = a
                     break
+            print("key:", key, "attr_elem:", attr_elem, "\n")
             if attr_elem is not None:
                 value_node = attr_elem.find('caex:Value', ns)
                 if value_node is None:

@@ -329,15 +329,21 @@ def main():
                 if st.button("Save Model Attributes"):
                     if st.session_state.get('aml_attributes'):
                         aml_content = clean_aml_content(st.session_state['aml_file'])
+                        #print("AML Attributes\n--------------\n")
+                        #print(st.session_state['aml_attributes'])
+                        #print("\n\nAML File\n--------------\n")
+                        #print(aml_content)
                         updated_aml = update_aml_from_attributes(aml_content, st.session_state['aml_attributes'])
                         st.session_state['aml_file'] = updated_aml
+                        #print("Updated AML\n=================\n")
+                        #print(updated_aml)
                         st.success("Attributes saved successfully.")
 
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)
-            edited_assets = st.data_editor(df_assets, num_rows="dynamic")
+            edited_assets = st.data_editor(df_assets, num_rows="dynamic")          
             st.session_state['aml_attributes']['assets'] = edited_assets.to_dict(orient='records')
 
             st.subheader("Vulnerability Attributes")
