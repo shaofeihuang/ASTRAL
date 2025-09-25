@@ -231,7 +231,7 @@ def get_dread_assessment(api_key, selected_model, prompt):
 
 
 def convert_tree_to_mermaid(tree_data):
-    mermaid_lines = ["graph TD"]
+    mermaid_lines = ["graph BT"]
     
     def process_node(node, parent_id=None):
         node_id = node["id"]
@@ -243,7 +243,8 @@ def convert_tree_to_mermaid(tree_data):
         mermaid_lines.append(f'    {node_id}[{node_label}]')
         
         if parent_id:
-            mermaid_lines.append(f'    {parent_id} --> {node_id}')
+#            mermaid_lines.append(f'    {parent_id} --> {node_id}')
+            mermaid_lines.append(f'    {node_id} --> {parent_id}')
         
         if "children" in node:
             for child in node["children"]:
@@ -273,6 +274,11 @@ Relationships between nodes must obey these rules:
 - Vulnerability nodes may have children that are Vulnerabilities or Assets, but never Hazards.
 - Hazard nodes may have children that are Hazards or Assets, but never Vulnerabilities.
 
+Additionally, include a single attacker node at the bottom of the tree structure:
+- The attacker node should be labeled with the prefix `[U01] Attacker`.
+- This attacker node must have children links (edges) to all leaf nodes (the last nodes) in every attack path in the tree.
+- This represents the attacker as the origin of all end-stage threats in the attack tree.
+
 The JSON structure should follow this format:
 {
     "nodes": [
@@ -286,7 +292,12 @@ The JSON structure should follow this format:
                     "children": [
                         {
                             "id": "auth1",
-                            "label": "Exploit OAuth2 Vulnerabilities"
+                            "label": "Exploit OAuth2 Vulnerabilities",
+                            "children": [
+                                {
+                                    "id": "attacker",
+                                    "label": "[U01] Attacker"
+                                }
                         }
                     ]
                 }
