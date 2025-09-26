@@ -1,13 +1,12 @@
-import os
+from mistralai import Mistral
 import json
+import os
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
-from mistralai import Mistral
 from prompts import *
 from utils import *
-
-load_dotenv()
+from bayesian import *
 
 model_token_limits = {
     "pixtral-12b-latest": {"default": 64000, "max": 128000},
@@ -18,7 +17,6 @@ model_token_limits = {
     "magistral-small-latest": {"default": 32000, "max": 40000},
     "magistral-medium-latest": {"default": 32000, "max": 40000},
 }
-
 
 def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
     client = Mistral(api_key=api_key)
@@ -39,7 +37,6 @@ def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str,
         return json.loads(content)
     else:
         return content
-
 
 def get_attack_tree(api_key, selected_model, prompt, system_context):
     client = Mistral(api_key=api_key)
@@ -77,8 +74,9 @@ def get_dread_assessment(api_key, selected_model, prompt):
 
     return dread_assessment
 
-
 def main():
+    load_dotenv()
+    st.sidebar.image("logo.png")
     default_key = os.getenv("MISTRAL_API_KEY", "")
     api_key = st.sidebar.text_input("Mistral API Key", value=default_key, type="password")
     selected_model = st.sidebar.selectbox(
@@ -90,14 +88,16 @@ def main():
         ),
     )
     max_tokens = model_token_limits[selected_model]["default"]
-    system_context = st.sidebar.text_input(
-        "Cyber-Physical System Context",
-        value="Cyber-Physical System",
-        placeholder="e.g. Solar PV inverter, ICS, etc.",
-        help="Describe the specific cyber-physical system context for tailored threat modelling."
-    )
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "AutomationML Model", "Attributes", "DREAD", "Mitigation"])
+    system_context = st.sidebar.selectbox(
+        "System Context",
+        ["Cyber-Physical System", "Heating System", "Automotive IVI System", "Solar PV Inverter Panel"],
+        index=None,
+        placeholder="Select or enter a custom description",
+        accept_new_options=True,
+    )  
+
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Analysis", "DREAD", "Mitigation"])
 
     with tab1:
         st.title("LLM-Powered Real-Time Cyber-Physical System Decision Support")
@@ -118,7 +118,7 @@ def main():
             arch_expl_prompt = create_arch_expl_prompt(system_context)
 
         # Generate Architectural Explanation Button
-        if st.button("Generate Architectural Explanation", key="gen_arch_exp") and uploaded_file is not None:
+        if st.button("Generate Architectural Explanation") and uploaded_file is not None:
             with st.spinner("Generating architectural explanation..."):
                 try:
                     model_output = call_mistral(
@@ -165,7 +165,7 @@ def main():
         threat_model_prompt = create_threat_model_prompt(system_context)
         
         # Generate STRIDE-LM Threat Model Button
-        if st.button("Generate STRIDE-LM Threat Model", key="gen_threat_model") and st.session_state.get('arch_explanation'):
+        if st.button("Generate STRIDE-LM Threat Model") and 'arch_explanation' in st.session_state:
             with st.spinner("Generating STRIDE-LM threat model..."):
                 try:
                     model_output = call_mistral(
@@ -203,7 +203,7 @@ def main():
             
         attack_tree_submit_button = st.button(label="Generate Attack Tree")
         
-        if attack_tree_submit_button and st.session_state.get('threat_model'):
+        if attack_tree_submit_button and 'threat_model' in st.session_state:
             attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_explanation'), st.session_state.get('threat_model'))
             with st.spinner("Generating attack tree..."):
                 try:
@@ -218,9 +218,8 @@ def main():
             st.write("Attack Tree Diagram Preview:")
             mermaid(st.session_state['attack_tree'])
             
-            col1, col2, col3, col4, col5 = st.columns([1,1,1,1,1])
-            
-            with col1:              
+            col1, col2, col3 = st.columns(3)
+            with col1:
                 st.download_button(
                     label="Download Diagram Code",
                     data=st.session_state['attack_tree'],
@@ -228,17 +227,11 @@ def main():
                     mime="text/plain",
                     help="Download the Mermaid code for the attack tree diagram."
                 )
-
             with col2:
-                mermaid_live_button = st.link_button("Open Mermaid Live", "https://mermaid.live")
-
-            # Empty columns for layout alignment
+                st.link_button("Open Mermaid Live", "https://mermaid.live")
             with col3:
                 st.write("")
-            with col4:
-                st.write("")
-            with col5:
-                st.write("")
+
         else:
             st.info("Please generate an architectural explanation and threat model first.")
 
@@ -310,11 +303,11 @@ def main():
         st.markdown("""---""")
 
         with st.container():
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
             with col1:
                 if st.button("Load Model Attributes"):
-                    if st.session_state.get('aml_file'):
+                    if 'aml_file' in st.session_state:
                         aml_content = clean_aml_content(st.session_state['aml_file'])
                         assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
                         st.session_state['aml_attributes'] = {
@@ -323,11 +316,9 @@ def main():
                             'hazards': hazards
                         }
                         st.success("Attributes extracted successfully.")
-                    else:
-                        st.info("You have unsaved edits. Please save them before reloading.")
             with col2:
                 if st.button("Save Model Attributes"):
-                    if st.session_state.get('aml_attributes'):
+                    if 'aml_attributes' in st.session_state:
                         aml_content = clean_aml_content(st.session_state['aml_file'])
                         #print("AML Attributes\n--------------\n")
                         #print(st.session_state['aml_attributes'])
@@ -338,6 +329,42 @@ def main():
                         #print("Updated AML\n=================\n")
                         #print(updated_aml)
                         st.success("Attributes saved successfully.")
+            with col3:
+                if st.button("Compute Probabilities"):
+                    if 'aml_attributes' in st.session_state:
+                        aml_content = clean_aml_content(st.session_state['aml_file'])
+                        env = Environment(*setup_environment(aml_content))
+                        aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
+                        #check_probability_data(aml_data)
+
+                        bbn_exposure, target_node = create_bbn_exposure(aml_data, env.sap)
+                        bbn_impact = create_bbn_impact(bbn_exposure, aml_data)
+                        check_bbn_models(bbn_exposure, bbn_impact)
+
+                        inference_exposure = VariableElimination(bbn_exposure)
+                        inference_impact = VariableElimination(bbn_impact)
+
+                        start_node = 'Attacker'
+                        cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, aml_data.total_elements, start_node, target_node)
+
+                        risk_score = cpd_prob * cpd_impact * 100
+                        print('[*] Risk score: {:.2f} %'.format(risk_score))
+                        print('--------------------------------------------------------')
+                        if risk_score < 20:
+                            print('[----] CPS System is under NEGLIGIBLE risk (less than 20%)')
+                        elif 20 <= risk_score < 40:
+                            print('[*---] CPS System is under LOW risk (between 20% and 40%)')
+                        elif 40 <= risk_score < 60:
+                            print('[**--] CPS System is under MEDIUM risk (between 40% and 60%)')
+                        elif 60 <= risk_score < 80:
+                            print('[***-] CPS System is under HIGH risk (between 60% and 80%)')
+                        else:
+                            print('[****] CPS System is under CRITICAL risk (greater than 80%)')
+
+                        st.sidebar.metric("Posterior Probability of Exposure", value=f"{cpd_prob:.4f}")
+                        st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{cpd_impact:.4f}")
+                        st.sidebar.metric("Risk Score", value=f"{risk_score:.2f}%")
+
 
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
@@ -362,9 +389,6 @@ def main():
             df_hazards = pd.DataFrame(hazards)
             edited_hazards = st.data_editor(df_hazards, num_rows="dynamic")
             st.session_state['aml_attributes']['hazards'] = edited_hazards.to_dict(orient='records')
-            #if st.button("Compute Impact Ratings"):
-                #code to compute impact ratings
-
         else:
             st.info("Please upload or generate an AutomationML model first.")
 
@@ -378,7 +402,7 @@ def main():
         st.markdown("""---""")
         
         dread_assessment_submit_button = st.button(label="Generate DREAD Risk Assessment")
-        if dread_assessment_submit_button and st.session_state['threat_model']:
+        if dread_assessment_submit_button and 'threat_model' in st.session_state:
             threats_markdown = tm_json_to_markdown(st.session_state['threat_model'], [])
             dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown, system_context)
 

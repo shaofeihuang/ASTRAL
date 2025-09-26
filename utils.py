@@ -198,6 +198,7 @@ def extract_mermaid_code(text):
     
     return code
 
+
 def clean_mermaid_syntax(code):
     code = re.sub(r'(\w+|\]|\)|\})(-->|==>|-.->)(\w+|\[|\(|\{)', r'\1 \2 \3', code)
     
@@ -257,24 +258,18 @@ def extract_attributes_from_aml(aml_content):
     root = ET.fromstring(aml_content)
 
     def parse_attribute(attr):
-        # If this attribute has nested attributes, parse them recursively with parent key prefix
         attr_dict = {}
         name = attr.attrib.get('Name', '')
         value_elem = attr.find('caex:Value', ns)
-        
-        # If value exists and no nested attributes, return simple key-value
         if value_elem is not None:
             attr_dict[name] = value_elem.text
         else:
-            # Nested attributes exist, parse each and prefix keys
             nested_attrs = attr.findall('caex:Attribute', ns)
             for nested_attr in nested_attrs:
                 nested_parsed = parse_attribute(nested_attr)
                 for k, v in nested_parsed.items():
-                    # Prefix nested attribute names with parent attribute name
                     attr_dict[f"{name}.{k}"] = v
         return attr_dict
-
 
     def extract_elements_starting_with(root, prefix, ns):
         all_nodes = root.findall(".//caex:InternalElement", ns)
@@ -324,50 +319,45 @@ def update_aml_from_attributes(aml_content, attr_sets):
 
     def update_attribute_recursive(attr_node, updated_attrs, parent_key=''):
         # Recursively update nested <Attribute> elements
+        #print("attr_node:", attr_node, "updated_attrs:", updated_attrs, "parent_key", parent_key)
         for child in attr_node.findall('caex:Attribute', ns):
             attr_name = child.attrib.get('Name', '')
-            full_key = f"{parent_key}.{attr_name}" if parent_key else attr_name
-            if full_key in updated_attrs:
+            if attr_name in updated_attrs:
                 value_node = child.find('caex:Value', ns)
                 if value_node is None:
                     value_node = ET.SubElement(child, f"{{{ns['caex']}}}Value")
-                old_val = value_node.text
-                value_node.text = str(updated_attrs[full_key])
-                print(f"Updated '{full_key}': '{old_val}' -> '{value_node.text}'")
+                #old_val = value_node.text
+                value_node.text = str(updated_attrs[attr_name])
+                #print(f"Updated '{attr_name}': '{old_val}' -> '{value_node.text}'")
             # Recursive descent for deeper nested attributes
-            update_attribute_recursive(child, updated_attrs, full_key)
+            update_attribute_recursive(child, updated_attrs, attr_name)
 
     def update_internal_element(node, updated_attrs):
-        print("------------------\n")
-        print("node:", node)
-        print("------------------\n")
-        print("attr", updated_attrs.items())
-        print("------------------\n")
+        #print("------------------\n")
+        #print("node:", node)
+        #print("------------------\n")
+        #print("attr", updated_attrs.items())
+        #print("------------------\n")
 
-        # Update direct attributes and nested attributes under AutomationEquipments (or similar)
         for key, val in updated_attrs.items():
-            print("[*] key:", key, "val", val, "\n")
-            # Skip root keys
-            #if key in ['ID', 'Name']:
-            #    continue
-            if '.' in key:
-                # Nested attribute, skip here and update recursively below
+            if key in ['ID', 'Name']:
                 continue
-
-            # Direct attribute update
+            if '.' in key:
+                continue
             attr_elem = None
-            for a in node.findall('caex:Attribute', ns):
+            for a in elem.findall('caex:Attribute', ns):
                 if a.attrib.get('Name') == key:
                     attr_elem = a
                     break
-            print("key:", key, "attr_elem:", attr_elem, "\n")
-            if attr_elem is not None:
-                value_node = attr_elem.find('caex:Value', ns)
-                if value_node is None:
-                    value_node = ET.SubElement(attr_elem, f"{{{ns['caex']}}}Value")
-                old_val = value_node.text
-                value_node.text = str(val)
-                print(f"Updated '{key}': '{old_val}' -> '{value_node.text}'")
+                if attr_elem is not None:
+                    value_node = attr_elem.find('caex:Value', ns)
+                    if value_node is None:
+                        value_node = ET.SubElement(attr_elem, f"{{{ns['caex']}}}Value")
+                    #old_val = value_node.text
+                    value_node.text = str(val)
+                    #print(f"Updated '{key}': '{old_val}' -> '{value_node.text}'")
+                #else:
+                    #print(f"Attribute '{key}' not found in element '{elem.attrib.get('Name')}'")
 
         # Now handle nested attribute updates - e.g. AutomationEquipments.Vendor
         for attr in node.findall('caex:Attribute', ns):
@@ -381,36 +371,36 @@ def update_aml_from_attributes(aml_content, attr_sets):
     for updated_asset in attr_sets.get('assets', []):
         id_val = updated_asset.get('ID')
         if not id_val:
-            print("Skipped asset with missing ID")
+            #print("Skipped asset with missing ID")
             continue
         elem = root.find(f".//caex:InternalElement[@ID='{id_val}']", ns)
         if elem is not None:
             update_internal_element(elem, updated_asset)
-        else:
-            print(f"Asset element with ID='{id_val}' not found")
+        #else:
+            #print(f"Asset element with ID='{id_val}' not found")
 
     # Update vulnerabilities
     for updated_vuln in attr_sets.get('vulnerabilities', []):
         id_val = updated_vuln.get('ID')
         if not id_val:
-            print("Skipped vulnerability with missing ID")
+            #print("Skipped vulnerability with missing ID")
             continue
         elem = root.find(f".//caex:InternalElement[@ID='{id_val}']", ns)
         if elem is not None:
             update_internal_element(elem, updated_vuln)
-        else:
-            print(f"Vulnerability element with ID='{id_val}' not found")
+        #else:
+            #print(f"Vulnerability element with ID='{id_val}' not found")
 
     # Update hazards
     for updated_hazard in attr_sets.get('hazards', []):
         id_val = updated_hazard.get('ID')
         if not id_val:
-            print("Skipped hazard with missing ID")
+            #print("Skipped hazard with missing ID")
             continue
         elem = root.find(f".//caex:InternalElement[@ID='{id_val}']", ns)
         if elem is not None:
             update_internal_element(elem, updated_hazard)
-        else:
-            print(f"Hazard element with ID='{id_val}' not found")
+        #else:
+            #print(f"Hazard element with ID='{id_val}' not found")
 
     return ET.tostring(root, encoding='utf-8').decode('utf-8')
