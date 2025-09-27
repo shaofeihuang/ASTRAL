@@ -556,25 +556,6 @@ def create_bbn_exposure(aml_data: AMLData, sap):
     bbn_exposure.add_cpds(*cpds.values())
     bbn_graph = bbn_exposure.to_markov_model()
 
-    for element1 in HazardinSystem:
-        node1=element1['ID']
-        for element2 in result_list:
-            node2=element2['Element']
-            child_num = element2['Number of children']
-            if node1 == node2:
-                if child_num == 0:
-                    last_node = node1
-    print("\n[*] Last node in BBN:", last_node)
-
-    children = {element2['Element'] for element2 in result_list if element2['Number of parents'] > 0}
-    first_node = None
-    for element1 in HazardinSystem:
-        node1 = element1['ID']
-        if node1 not in children:
-            first_node = node1
-            break  # stop at first found
-    print("\n[*] First node in BBN:", first_node)
-
     for node1, node2 in itertools.product(total_elements, repeat=2):
         if node1 == node2:
             path_length_betn_nodes.append((node1, node2, 0))
@@ -590,7 +571,7 @@ def create_bbn_exposure(aml_data: AMLData, sap):
                 if node2 == last_node:
                     path_length_final_node.append((node1, last_node, path_length, 1/path_length))
     
-    return bbn_exposure, last_node
+    return bbn_exposure
 
 def create_bbn_impact(bbn_exposure, aml_data: AMLData):
     probability_data = aml_data.probability_data
@@ -688,6 +669,7 @@ def find_shortest_path(bbn, valid_nodes, default_source_node, target_node):
     return source_node, target_node
 
 def compute_risk_scores(inference_exposure, inference_impact, total_elements, source_node, target_node):
+
     for nodes in total_elements:
         print ("[*] ", nodes)
         if nodes == target_node:

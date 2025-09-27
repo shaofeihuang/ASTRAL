@@ -149,6 +149,27 @@ def create_attack_tree_schema():
     }
 
 
+def attack_tree_to_attack_paths(tree_data):
+    attack_path_lines = []
+
+    def process_node(node, path_labels):
+        # Add current node label only (omit node ID)
+        path_labels = path_labels + [node["label"]]
+
+        # If leaf node, add reversed attack path (from attacker to goal)
+        if not node.get("children"):
+            reversed_labels = list(reversed(path_labels))
+            attack_path_lines.append(" --> ".join(reversed_labels))
+        else:
+            for child in node["children"]:
+                process_node(child, path_labels)
+
+    for root_node in tree_data["nodes"]:
+        process_node(root_node, [])
+
+    return "\n".join(attack_path_lines)
+
+
 def convert_tree_to_mermaid(tree_data):
     mermaid_lines = ["graph BT"]
     
