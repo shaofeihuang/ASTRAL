@@ -90,8 +90,8 @@ def main():
     max_tokens = model_token_limits[selected_model]["default"]
 
     system_context = st.sidebar.selectbox(
-        "System Context",
-        ["Cyber-Physical System", "Heating System", "Automotive IVI System", "Solar PV Inverter Panel"],
+        "CPS System Context",
+        ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System"],
         index=None,
         placeholder="Select or enter a custom description",
         accept_new_options=True,
@@ -232,6 +232,20 @@ def main():
                             st.session_state['attack_paths'] = attack_paths
                         except Exception as e:
                             st.error(f"Error generating attack tree: {e}")
+        with col2:
+            uploaded_data = st.file_uploader(
+                "Upload attack tree data file (.json)", type=["json"]
+            )
+            if uploaded_data is not None:
+                json_bytes = uploaded_data.read()  # bytes
+                json_str = json_bytes.decode("utf-8")  # decode to string
+                at_dict = json.loads(json_str)  # parse JSON string to dict
+                st.session_state['attack_tree_data'] = at_dict
+                st.success("Attack tree data uploaded successfully.")
+                attack_tree = convert_tree_to_mermaid(st.session_state['attack_tree_data'])
+                st.session_state['attack_tree'] = attack_tree
+                attack_paths = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
+                st.session_state['attack_paths'] = attack_paths
 
         if 'attack_tree' in st.session_state:
             st.write("Attack Paths:")
@@ -244,16 +258,24 @@ def main():
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.download_button(
-                    label="Download Diagram Code",
+                    label="Download Attack Tree Diagram",
                     data=st.session_state['attack_tree'],
                     file_name="attack_tree.md",
-                    mime="text/plain",
-                    help="Download the Mermaid code for the attack tree diagram."
+                    mime="text/markdown",
+                    help="Download the Mermaid code for the attack tree.",
+                    key = "download_attack_tree"
                 )
             with col2:
                 st.link_button("Open Mermaid Live", "https://mermaid.live")
             with col3:
-                st.write("")
+                st.download_button(
+                    label="Download Attack Tree Data (JSON)",
+                    data=json.dumps(st.session_state['attack_tree_data'], indent=2),
+                    file_name="attack_tree.json",
+                    mime="json",
+                    help="Download the raw attack tree data.",
+                    key = "download_attack_tree_data"
+                )
 
         else:
             st.info("Please generate an architectural explanation and threat model first.")
@@ -369,18 +391,14 @@ def main():
                             st.error(f"Failed to generate AutomationML file: {str(e)}")
 
         with col2:
-            if st.button("Upload AutomationML File"):
-                st.session_state["upload_clicked"] = True
-
-        if st.session_state.get("upload_clicked", False):
             uploaded_aml = st.file_uploader(
-                "Upload your AutomationML file", type=["xml", "aml"]
+                "Upload AutomationML file (.xml, .aml)", type=["xml", "aml"]
             )
             if uploaded_aml is not None:
                 aml_content = uploaded_aml.read().decode("utf-8")
                 st.session_state['aml_file'] = aml_content
                 st.success("AutomationML file uploaded successfully.")
-                st.code(st.session_state['aml_file'], language='xml')
+                #st.code(st.session_state['aml_file'], language='xml')
 
         if 'aml_file' in st.session_state:
             additional_detail = st.text_area(
@@ -435,6 +453,13 @@ def main():
                         st.success("Attributes saved successfully.")
 
             with col3:
+                start_node = st.selectbox(
+                    "Attacker ID in the system model",
+                    ("Attacker", "[U01] Attacker"),
+                    index=1,
+                    placeholder="Select or enter attacker ID",
+                    accept_new_options=True,
+                )
                 if st.button("Compute Bayesian Probabilities"):
                     if 'aml_attributes' in st.session_state:
                         aml_content = clean_aml_content(st.session_state['aml_file'])
@@ -442,22 +467,29 @@ def main():
                         aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
                         #check_probability_data(aml_data)
 
-                        bbn_exposure = create_bbn_exposure(aml_data, env.sap)
+                        bbn_exposure, last_node = create_bbn_exposure(aml_data, env.sap)
                         bbn_impact = create_bbn_impact(bbn_exposure, aml_data)
                         check_bbn_models(bbn_exposure, bbn_impact)
 
                         inference_exposure = VariableElimination(bbn_exposure)
                         inference_impact = VariableElimination(bbn_impact)
 
-                        start_node = st.session_state['attack_paths'].split(" --> ")[0]
-                        target_node = st.session_state['attack_paths'].split(" --> ")[-1]
+                        if 'attack_paths' in st.session_state:
+                            start_node = st.session_state['attack_paths'].split(" --> ")[0]
+                            target_node = st.session_state['attack_paths'].split(" --> ")[-1]
+                        else:
+
+                            target_node = last_node
+                        
                         print ("Start:", start_node, "Target:", target_node)
 
-                        for index, element in enumerate(aml_data.total_elements):
-                            print(f"Index: {index}, Element: {element}")
+                        #for index, element in enumerate(aml_data.total_elements):
+                        #    print(f"Index: {index}, Element: {element}")
 
                         cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, aml_data.total_elements, start_node, target_node)
-                        
+                        #cpd_prob = 0.5
+                        #cpd_impact = 0.5
+
                         risk_score = cpd_prob * cpd_impact * 100
                         print('[*] Risk score: {:.2f} %'.format(risk_score))
                         print('--------------------------------------------------------')
@@ -475,7 +507,6 @@ def main():
                         st.sidebar.metric("Posterior Probability of Exposure", value=f"{cpd_prob:.4f}")
                         st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{cpd_impact:.4f}")
                         st.sidebar.metric("Risk Score", value=f"{risk_score:.2f}%")
-
 
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
@@ -547,7 +578,7 @@ def main():
                 mime="text/markdown",
             )
         else:
-            st.error("Please generate a threat model first before requesting a DREAD risk assessment.")
+            st.info("Please generate a threat model first before requesting a DREAD risk assessment.")
 
 #----------------------------------------------------------------------------------------------
 # Placeholder for Decision Support Module

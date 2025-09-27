@@ -111,11 +111,20 @@ def process_AML_file(root, t):
             tag_list.append(tag)
             name_id_tag_list.append({'Name': name, 'ID': ID, 'Tag': tag})
         if RPA:
+            print("RPA:", RPA)
             RefPartnerBegin_list.append(RPA)
         if RPB:
             RefPartnerTerminate_list.append(RPB)
         if RPA and RPB:
             InternalLinks.append({RPA, RPB})
+    
+    if len(InternalLinks) == 0:
+        ns = {'caex': 'http://www.dke.de/CAEX'}
+        for internal_link in root.findall('.//caex:InternalLink', ns):
+            rpa = internal_link.find('caex:RefPartnerSideA', ns)
+            rpb = internal_link.find('caex:RefPartnerSideB', ns)
+            if rpa is not None and rpb is not None:
+                InternalLinks.append({rpa.text, rpb.text})
 
     internal_elements = root.findall(internalElementTag)
 
@@ -210,6 +219,19 @@ def process_AML_file(root, t):
             internal_element_b = interface_to_element_map[ref_partner_b]
             connection = {'from': internal_element_a, 'to': internal_element_b}
             connections.append(connection)
+    
+    if len(connections) == 0:
+        ns = {'caex': 'http://www.dke.de/CAEX'}
+        for internal_link in root.findall('.//caex:InternalLink', ns):
+            rpa = internal_link.find('caex:RefPartnerSideA', ns)
+            rpb = internal_link.find('caex:RefPartnerSideB', ns)
+            print (rpa.text, rpb.text)
+            if rpa.text in interface_to_element_map and rpb.text in interface_to_element_map:
+                internal_element_a = interface_to_element_map[rpa.text]
+                internal_element_b = interface_to_element_map[rpb.text]
+                print (internal_element_a, internal_element_b)
+                connection = {'from': internal_element_a, 'to': internal_element_b}
+                connections.append(connection)
 
     for connection in connections:
         from_interface = connection['from']
@@ -556,6 +578,16 @@ def create_bbn_exposure(aml_data: AMLData, sap):
     bbn_exposure.add_cpds(*cpds.values())
     bbn_graph = bbn_exposure.to_markov_model()
 
+    for element1 in total_elements:
+        node1=element1
+        for element2 in result_list:
+            node2=element2['Element']
+            child_num = element2['Number of children']
+            if node1 == node2:
+                if child_num == 0:
+                    last_node = node1
+    print("\n[*] Last node in BBN:", last_node)
+
     for node1, node2 in itertools.product(total_elements, repeat=2):
         if node1 == node2:
             path_length_betn_nodes.append((node1, node2, 0))
@@ -571,7 +603,7 @@ def create_bbn_exposure(aml_data: AMLData, sap):
                 if node2 == last_node:
                     path_length_final_node.append((node1, last_node, path_length, 1/path_length))
     
-    return bbn_exposure
+    return bbn_exposure, last_node
 
 def create_bbn_impact(bbn_exposure, aml_data: AMLData):
     probability_data = aml_data.probability_data
@@ -669,9 +701,7 @@ def find_shortest_path(bbn, valid_nodes, default_source_node, target_node):
     return source_node, target_node
 
 def compute_risk_scores(inference_exposure, inference_impact, total_elements, source_node, target_node):
-
     for nodes in total_elements:
-        print ("[*] ", nodes)
         if nodes == target_node:
             prob_failure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
             print("[*] CPT (Exposure):\n", prob_failure)

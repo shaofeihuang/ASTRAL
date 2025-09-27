@@ -354,11 +354,11 @@ def update_aml_from_attributes(aml_content, attr_sets):
             update_attribute_recursive(child, updated_attrs, attr_name)
 
     def update_internal_element(node, updated_attrs):
-        #print("------------------\n")
+        #print("------------------")
         #print("node:", node)
-        #print("------------------\n")
+        #print("------------------")
         #print("attr", updated_attrs.items())
-        #print("------------------\n")
+        #print("------------------")
 
         for key, val in updated_attrs.items():
             if key in ['ID', 'Name']:
