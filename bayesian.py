@@ -131,6 +131,7 @@ def process_AML_file(root, t):
     for internal_element in internal_elements:
         internal_element_id = internal_element.get('ID')
         internal_element_name = internal_element.get('Name')
+        internal_element_impact_rating = internal_element.get('Impact Rating')
         ref_base_system_unit_path = internal_element.get('RefBaseSystemUnitPath')
 
         failure_rate_value = get_attribute_value(internal_element, 'FailureRatePerHour')
@@ -168,17 +169,32 @@ def process_AML_file(root, t):
         else:
             probability_of_human_error = 0
 
-        internal_element_data = {
-            'ID': internal_element_id,
-            'Name': internal_element_name,
-            'Probability of Failure': probability_of_failure,
-            'Probability of Exposure': probability_of_exposure,
-            'Probability of Impact' : probability_of_impact_vulnerability,
-            'Probability of Mitigation' : probability_of_mitigation,
-            'Probability of Human Error': probability_of_human_error,
-            'RefBaseSystemUnitPath': ref_base_system_unit_path
-        }
-        
+        if internal_element_impact_rating is None:
+            internal_element_data = {
+                'ID': internal_element_id,
+                'Name': internal_element_name,
+                'Probability of Failure': probability_of_failure,
+                'Probability of Exposure': probability_of_exposure,
+                'Probability of Impact' : probability_of_impact_vulnerability,
+                'Probability of Mitigation' : probability_of_mitigation,
+                'Probability of Human Error': probability_of_human_error,
+                'RefBaseSystemUnitPath': ref_base_system_unit_path
+            }
+        else:
+            print ("[debug] ID:", internal_element_id, "Impact Rating:", internal_element_impact_rating)
+            internal_element_data = {
+                'ID': internal_element_id,
+                'Name': internal_element_name,
+                'Impact Rating': internal_element_impact_rating,
+                'Probability of Failure': probability_of_failure,
+                'Probability of Exposure': probability_of_exposure,
+                'Probability of Impact' : probability_of_impact_vulnerability,
+                'Probability of Mitigation' : probability_of_mitigation,
+                'Probability of Human Error': probability_of_human_error,
+                'RefBaseSystemUnitPath': ref_base_system_unit_path
+            }
+
+
         if ref_base_system_unit_path.startswith ('AssetofICS/'):
             AssetinSystem.append(internal_element_data)
         elif ref_base_system_unit_path == 'HazardforSystem/Hazard':
@@ -328,6 +344,42 @@ def generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_d
         ref_base_for_node = matching_process_nodes[0]['RefBaseSystemUnitPath']    
         if ref_base_for_node.startswith ('AssetOfICS/'):
             probability_of_failure_for_node = matching_process_nodes[0]['Probability of Failure']
+
+
+###########################################################################################################
+#   Scaling Algorithm (Work In Progress)
+###########################################################################################################
+
+#            if matching_process_nodes[0]['ID'] starts with ["[A##]"], count the number of children that are [V##]
+#            if there are more than one V# child, populate a dictionary of V## and the corresponding 'Probability of Mitigation' values
+#            set the scaling factor = 1 / number of V# in the dictionary
+#            comput probability_of_failure_for_node = min(1.0, scaling_factor * (sum of the 'Probability of Mitigation' values in the dict))
+
+# Scaling Algorithm: Handles [A01], [A02], ... and [V01], [V02], ...
+#if matching_process_nodes[0]['ID'].startswith("[A") and \
+#    matching_process_nodes[0]['ID'][2:4].isdigit() and matching_process_nodes[0]['ID'][4] == "]":
+
+    # Gather all direct children with ID [V##]
+#    v_children = [
+#        child for child in matching_process_nodes[0].get('children', [])
+#        if child['ID'].startswith("[V") and child['ID'][2:4].isdigit() and child['ID'][4] == "]"
+#    ]
+
+#    if len(v_children) > 1:
+        # Multiple vulnerabilities: scale result accordingly
+#        v_dict = {
+#            child['ID']: float(child.get('Probability of Mitigation', 0.0))
+#            for child in v_children
+#        }
+#        scaling_factor = 1.0 / len(v_dict)
+#        mitigation_sum = sum(v_dict.values())
+#        probability_of_failure_for_node = min(1.0, scaling_factor * mitigation_sum)
+#    elif len(v_children) == 1:
+        # Single vulnerability: probability of failure = Probability of Mitigation
+#        probability_of_failure_for_node = float(v_children[0].get('Probability of Mitigation', 0.0))
+#    else:
+        # No vulnerabilities: default failure probability is set to maximum
+#        probability_of_failure_for_node = 1.0 -> incorrect
 
 ###########################################################################################################
 #   Added for BlackEnergy scenario

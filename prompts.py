@@ -4,7 +4,7 @@ You are a Senior Solution Architect tasked with explaining a system architectura
 
 System context: {system_context}
 
-Thoroughly analyze the diagram and provide a structured explanation strictly based on visible content, covering:
+Think deeply to thoroughly analyze the diagram and provide a structured explanation strictly based on visible content, covering:
 
 1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
 2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
@@ -39,7 +39,7 @@ def create_threat_model_prompt(system_context):
     prompt = f'''
 You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modeling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
 
-Your task is to analyze the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
+Your task is to think deeply to thoroughly analyze the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
 
 System context: {system_context}
 
@@ -68,11 +68,18 @@ This format ensures each threat scenario provides a clear, integrated explanatio
 
 def create_attack_tree_prompt(system_context):
     prompt = """
-Your task is to analyze the threat model and create an attack tree structure in JSON format.
+You are a senior cyber security expert with over 20 years of experience in cyber-physical system (CPS) threat management and incident response.
+
+Your task is to think deeply to thoroughly analyze the threat model and create an attack tree structure in JSON format.
+
 The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analyzed.
+
 Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal.
+
 The tree should include all relevant attack paths and sub-paths based on the threat model.
+
 Also analyse if assets, hazards, or vulnerabilities may be linked to assets, hazards, or vulnerabilities in separate attack paths, and if so, represent these relationships appropriately in the tree structure.
+
 Each node label must begin with a prefix indicating its type:
 - `[A##]` for Asset nodes
 - `[V##]` for Vulnerability nodes
@@ -525,9 +532,12 @@ Use the following example AutomationML file as a reference for structure, conven
 def create_dread_assessment_prompt(threats, system_context):
     prompt = f"""
 You are a cyber security expert with more than 20 years of experience in threat modeling using STRIDE-LM and DREAD methodologies.
+
 Your task is to produce a DREAD risk assessment for the threats identified in a threat model, relevant to the following system context: {system_context}.
+
 Below is the list of identified threats:
 {threats}
+
 When providing the risk assessment, use a JSON formatted response with a top-level key "Risk Assessment" and a list of threats, each with the following sub-keys:
 - "Threat Type": A string representing the type of threat (e.g., "Spoofing").
 - "Scenario": A string describing the threat scenario.
@@ -536,10 +546,12 @@ When providing the risk assessment, use a JSON formatted response with a top-lev
 - "Exploitability": An integer between 1 and 10.
 - "Affected Users": An integer between 1 and 10.
 - "Discoverability": An integer between 1 and 10.
+
 Assign a value between 1 and 10 for each sub-key based on the DREAD methodology. Use the following scale:
 - 1-3: Low
 - 4-6: Medium
 - 7-10: High
+
 Ensure the JSON response is correctly formatted and does not contain any additional text. Here is an example of the expected JSON response format:
 {{
   "Risk Assessment": [
