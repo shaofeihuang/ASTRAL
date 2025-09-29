@@ -1,6 +1,7 @@
 from mistralai import Mistral
 import json
 import os
+import time
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
@@ -296,6 +297,7 @@ def main():
                 try:
                     # Step 1: Generate InternalElements + ExternalInterfaces
                     print("[#] Generating AML - Step 1")
+                    start_time = time.time()
                     prompt_step1 = create_aml_prompt_step_1(arch_explanation, threat_model, attack_paths)
                     response_step1 = call_mistral(
                                         api_key,
@@ -307,6 +309,9 @@ def main():
                                     )
                     internal_elements_xml = response_step1
                     #print (internal_elements_xml)
+                    end_time = time.time()
+                    elapsed_secs = end_time - start_time
+                    st.status(f"Step 1 completed ({elapsed_secs:.2f} secs)")
                 except Exception as e:
                     st.error(f"Error generating model (Step 1): {e}")
 
@@ -314,6 +319,7 @@ def main():
                 try:
                     # Step 2: Extract valid InternalLink pairs as JSON list
                     print("[#] Generating AML - Step 2")
+                    start_time = time.time()
                     prompt_step2 = create_aml_prompt_step_2(attack_paths)
                     response_step2 = call_mistral(
                                         api_key,
@@ -325,6 +331,9 @@ def main():
                                     )
                     valid_pairs_json = response_step2
                     #print (valid_pairs_json)
+                    end_time = time.time()
+                    elapsed_secs = end_time - start_time
+                    st.status(f"Step 2 completed ({elapsed_secs:.2f} secs)")
                 except Exception as e:
                     st.error(f"Error generating model (Step 2): {e}")
 
@@ -333,6 +342,7 @@ def main():
                     # Step 3: Generate node to ExternalInterface ID mapping from Step 1 output
                     # Simple heuristic extraction from internal_elements_xml for demonstration:
                     print("[#] Generating AML - Step 3")
+                    start_time = time.time()
                     node_to_interface_id_mapping = {}
                     pattern = r'ID="\[([A-Z0-9]+)\] [^"]+"[^>]*>.*?<ExternalInterface Name="[^"]+" ID="([^"]+)"'
                     matches = re.findall(pattern, internal_elements_xml, re.DOTALL)
@@ -355,6 +365,9 @@ def main():
                                     )
                     internal_links_xml = response_step3
                     #print (internal_links_xml)
+                    end_time = time.time()
+                    elapsed_secs = end_time - start_time
+                    st.status(f"Step 3 completed ({elapsed_secs:.2f} secs)")
                 except Exception as e:
                     st.error(f"Error generating model (Step 3): {e}")
 
@@ -362,6 +375,7 @@ def main():
                 try:
                     # Step 4: Assemble final AML XML document
                     print("[#] Generating AML - Step 4 (Final)")
+                    start_time = time.time()
                     prompt_step4 = create_aml_prompt_step_4(internal_elements_xml, internal_links_xml)
                     response_step4 = call_mistral(
                                         api_key,
@@ -371,6 +385,9 @@ def main():
                                         max_tokens=max_tokens,
                                         response_as_json=False
                                     )
+                    end_time = time.time()
+                    elapsed_secs = end_time - start_time
+                    st.status(f"Step 4 completed ({elapsed_secs:.2f} secs)")
                     final_aml_xml = response_step4
                 except Exception as e:
                     st.error(f"Error generating model (Step 4): {e}")
@@ -476,17 +493,14 @@ def main():
 
                         if 'attack_paths' in st.session_state:
                             start_node = st.session_state['attack_paths'].split(" --> ")[0]
-                            target_node = st.session_state['attack_paths'].split(" --> ")[-1]
-                        else:
-
-                            target_node = last_node
-                        
-                        print ("Start:", start_node, "Target:", target_node)
+                            last_node = st.session_state['attack_paths'].split(" --> ")[-1]
+                   
+                        print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
                         #for index, element in enumerate(aml_data.total_elements):
                         #    print(f"Index: {index}, Element: {element}")
 
-                        cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, aml_data.total_elements, start_node, target_node)
+                        cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, aml_data.total_elements, start_node, last_node)
                         #cpd_prob = 0.5
                         #cpd_impact = 0.5
 

@@ -111,7 +111,6 @@ def process_AML_file(root, t):
             tag_list.append(tag)
             name_id_tag_list.append({'Name': name, 'ID': ID, 'Tag': tag})
         if RPA:
-            print("RPA:", RPA)
             RefPartnerBegin_list.append(RPA)
         if RPB:
             RefPartnerTerminate_list.append(RPB)
@@ -241,11 +240,11 @@ def process_AML_file(root, t):
         for internal_link in root.findall('.//caex:InternalLink', ns):
             rpa = internal_link.find('caex:RefPartnerSideA', ns)
             rpb = internal_link.find('caex:RefPartnerSideB', ns)
-            print (rpa.text, rpb.text)
+            #print (rpa.text, rpb.text)
             if rpa.text in interface_to_element_map and rpb.text in interface_to_element_map:
                 internal_element_a = interface_to_element_map[rpa.text]
                 internal_element_b = interface_to_element_map[rpb.text]
-                print (internal_element_a, internal_element_b)
+                #print (internal_element_a, internal_element_b)
                 connection = {'from': internal_element_a, 'to': internal_element_b}
                 connections.append(connection)
 
@@ -310,7 +309,7 @@ def generate_cpd_values_hazard(num_parents):
         cpd_values[1][i] = 1 - cpd_values[0][i]
     return cpd_values
 
-def generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data: AMLData, sap,
+def generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data: AMLData, connections_mapped, sap,
                                    matching_hazard_nodes=[], matching_vulnerability_nodes=[], matching_process_nodes=[],
                                    hazard_node=False, vulnerability_node=False, process_node=False):
     probability_data = aml_data.probability_data
@@ -356,21 +355,33 @@ def generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_d
 #            comput probability_of_failure_for_node = min(1.0, scaling_factor * (sum of the 'Probability of Mitigation' values in the dict))
 
 # Scaling Algorithm: Handles [A01], [A02], ... and [V01], [V02], ...
-#if matching_process_nodes[0]['ID'].startswith("[A") and \
-#    matching_process_nodes[0]['ID'][2:4].isdigit() and matching_process_nodes[0]['ID'][4] == "]":
+            if matching_process_nodes[0]['ID'].startswith("[A") and \
+                matching_process_nodes[0]['ID'][2:4].isdigit() and matching_process_nodes[0]['ID'][4] == "]":
+                print (matching_process_nodes[0]['ID'])
 
-    # Gather all direct children with ID [V##]
-#    v_children = [
-#        child for child in matching_process_nodes[0].get('children', [])
-#        if child['ID'].startswith("[V") and child['ID'][2:4].isdigit() and child['ID'][4] == "]"
-#    ]
+            # Gather all direct children with ID [V##]
+            connections_from_to = defaultdict(list)
 
-#    if len(v_children) > 1:
-        # Multiple vulnerabilities: scale result accordingly
-#        v_dict = {
-#            child['ID']: float(child.get('Probability of Mitigation', 0.0))
-#            for child in v_children
-#        }
+            for connection in connections_mapped:
+                from_element = connection['from']
+                to_element = connection['to']
+                connections_from_to[from_element].append(to_element)
+
+                v = [{'Element': k, 'children': v} for k, v in connections_from_to.items()]
+
+                for item in v:
+                    filtered_children = [child for child in item['children'] if (child.startswith("[V") and child[2:4].isdigit() and child[4] == "]")]
+                    if filtered_children:
+                        print("Element:", item['Element'], "Children starting with [V:", filtered_children)
+
+ #               if len(filtered_children) > 1:
+ #                   # Multiple vulnerabilities: scale result accordingly
+ #                   v_dict = {
+ #                       child['ID']: float(child.get('Probability of Mitigation', 0.0))
+ #                       for child in v_children
+ #                   }
+ #                   print ("children:")
+ #                   print (v_dict.values)
 #        scaling_factor = 1.0 / len(v_dict)
 #        mitigation_sum = sum(v_dict.values())
 #        probability_of_failure_for_node = min(1.0, scaling_factor * mitigation_sum)
@@ -613,11 +624,11 @@ def create_bbn_exposure(aml_data: AMLData, sap):
         cpd_values = None
 
         if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, sap, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
         elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, sap, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
         elif matching_process_nodes:
-            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, sap, matching_process_nodes=matching_process_nodes, process_node=True)
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_process_nodes=matching_process_nodes, process_node=True)
 
         #print(f"[DEBUG] CPD values before normalization for node {node}: {cpd_values}")
 
@@ -638,7 +649,7 @@ def create_bbn_exposure(aml_data: AMLData, sap):
             if node1 == node2:
                 if child_num == 0:
                     last_node = node1
-    print("\n[*] Last node in BBN:", last_node)
+#    print("\n[*] Last node in BBN:", last_node)
 
     for node1, node2 in itertools.product(total_elements, repeat=2):
         if node1 == node2:
@@ -805,11 +816,11 @@ def bbn_inference(aml_data: AMLData, sap, source_node):
         cpd_values = None
 
         if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, sap, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
         elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, sap, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
         elif matching_process_nodes:
-            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, sap, matching_process_nodes=matching_process_nodes, process_node=True)
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_process_nodes=matching_process_nodes, process_node=True)
 
         cpd = TabularCPD(variable=node, variable_card=num_states, values=cpd_values,
                         evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
