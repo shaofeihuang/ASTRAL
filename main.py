@@ -468,15 +468,25 @@ def main():
                     placeholder="Select or enter attacker ID",
                     accept_new_options=True,
                 )
+                af_modifier_input = st.slider(
+                    "Attack Feasibility (AF) Modifier",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.01,
+                    step=0.01,
+                    help="Adjust to factor attack feasibility (such as attacker skill, system security posture, etc.). "
+                        "Lower values indicate a lower chance of a successful attack."
+                )
                 if st.button("Compute Bayesian Probabilities"):
                     if 'aml_attributes' in st.session_state:
                         aml_content = clean_aml_content(st.session_state['aml_file'])
                         env = Environment(*setup_environment(aml_content))
                         aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
                         #check_probability_data(aml_data)
-
-                        bbn_exposure, last_node = create_bbn_exposure(aml_data, env.sap)
-                        bbn_impact = create_bbn_impact(bbn_exposure, aml_data)
+                        env.af_modifier = af_modifier_input
+                        node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
+                        bbn_exposure, last_node = create_bbn_exposure(aml_data, node_context, env.af_modifier)
+                        bbn_impact = create_bbn_impact(bbn_exposure, aml_data, node_context)
                         check_bbn_models(bbn_exposure, bbn_impact)
 
                         inference_exposure = VariableElimination(bbn_exposure)

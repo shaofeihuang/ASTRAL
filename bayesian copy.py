@@ -5,7 +5,7 @@ import itertools
 import math
 import re
 from datetime import datetime
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from collections import defaultdict
 from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
@@ -15,7 +15,7 @@ from pgmpy.inference import VariableElimination
 class Environment:
     element_tree_root: object
     t: object
-    af_modifier: object
+    sap: object
 
 @dataclass
 class AMLData:
@@ -32,19 +32,20 @@ class AMLData:
 class NodeContext:
     matching_hazard_nodes: list = field(default_factory=list)
     matching_vulnerability_nodes: list = field(default_factory=list)
-    matching_asset_nodes: list = field(default_factory=list)
-    path_length_betn_nodes: list = field(default_factory=list)
-    path_length_betn_nodes_final: list = field(default_factory=list)
-    path_length_final_node: list = field(default_factory=list)
+    matching_process_nodes: list = field(default_factory=list)
+    hazard_node: bool = False
+    vulnerability_node: bool = False
+    process_node: bool = False
 
+    
 def setup_environment(aml_content):
     ET_root = ET.fromstring(aml_content)
     time_difference = datetime.now() - datetime.strptime("2024-01-01", "%Y-%m-%d")
     days = time_difference.days
     hours = divmod(time_difference.seconds, 3600)[0]
     t = days * 4 + (24 - hours)
-    af_modifier = 1 / 100
-    return ET_root, t, af_modifier
+    sap = 1 / 100
+    return ET_root, t, sap
 
 
 def get_attribute_value(internal_element, attribute_name):
@@ -317,10 +318,12 @@ def generate_cpd_values_hazard(num_parents):
     return cpd_values
 
 
-def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, node_context: NodeContext, NodeType: str):
-    cpd_values = np.zeros((2, 2 ** num_parents))
+def generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data: AMLData, connections_mapped, sap,
+                                   matching_hazard_nodes=[], matching_vulnerability_nodes=[], matching_process_nodes=[],
+                                   hazard_node=False, vulnerability_node=False, process_node=False):
+    cpd_values = np.zeros((num_states, 2 ** num_parents))
 
-    if NodeType == "Hazard":
+    if hazard_node:
         if num_parents == 0:
             cpd_values[0, 0] = 0.5
             cpd_values[1, 0] = 0.5
@@ -329,25 +332,25 @@ def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, no
             cpd_values[0, 1] = 0
             cpd_values[1, 0] = 1 - cpd_values[0, 0]
             cpd_values[1, 1] = 1 - cpd_values[0, 1]
-        elif 2 <= num_parents <= aml_data.max_num_parents:
+        elif 2 <= num_parents <= max_num_parents:
             cpd_values=generate_cpd_values_hazard(num_parents)
 
-    elif NodeType == "Vulnerability":
-        probability_of_exposure_for_node = node_context.matching_vulnerability_nodes[0]['Probability of Exposure']
+    elif vulnerability_node:
+        probability_of_exposure_for_node = matching_vulnerability_nodes[0]['Probability of Exposure']
         pofe = float(probability_of_exposure_for_node)        
         if num_parents == 0:
-            cpd_values[0, 0] = pofe * af_modifier
-            cpd_values[1, 0] = 1 - pofe * af_modifier
+            cpd_values[0, 0] = pofe * sap
+            cpd_values[1, 0] = 1 - pofe * sap
         elif num_parents >= 1:
-            cpd_values[0, :-1] = pofe * af_modifier
-            cpd_values[1, :-1] = 1 - pofe * af_modifier
+            cpd_values[0, :-1] = pofe * sap
+            cpd_values[1, :-1] = 1 - pofe * sap
             cpd_values[0, -1] = 0
             cpd_values[1, -1] = 1
     
-    elif NodeType == "Asset":
-        ref_base_for_node = node_context.matching_asset_nodes[0]['RefBaseSystemUnitPath']    
+    elif process_node:
+        ref_base_for_node = matching_process_nodes[0]['RefBaseSystemUnitPath']    
         if ref_base_for_node.startswith ('AssetOfICS/'):
-            probability_of_failure_for_node = node_context.matching_asset_nodes[0]['Probability of Failure']
+            probability_of_failure_for_node = matching_process_nodes[0]['Probability of Failure']
 
 ###########################################################################################################
 #   Scaling Algorithm
@@ -355,9 +358,9 @@ def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, no
 
             connections_from_to = defaultdict(list)
 
-            for connection in aml_data.connections_mapped:
+            for connection in connections_mapped:
                 from_element = connection['from']
-                if node_context.matching_asset_nodes[0]['ID'] == from_element:
+                if matching_process_nodes[0]['ID'] == from_element:
                     to_element = connection['to']
                     if re.match(r'^(V|\(V|\[V)\d', to_element):
                         connections_from_to[from_element].append(to_element)
@@ -397,25 +400,27 @@ def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, no
                 cpd_values[0, -1] = 0
                 cpd_values[1, -1] = 1
         elif ref_base_for_node == 'AssetOfICS/User':
-            probability_of_human_error_for_node = node_context.matching_asset_nodes[0]['Probability of Human Error']
+            probability_of_human_error_for_node = matching_process_nodes[0]['Probability of Human Error']
             pofhe = float(probability_of_human_error_for_node)
             cpd_values[0, 0] = pofhe
             cpd_values[1, 0] = 1 - pofhe
         else:
-            probability_of_failure_for_node = node_context.matching_asset_nodes[0]['Probability of Failure']
+            probability_of_failure_for_node = matching_process_nodes[0]['Probability of Failure']
             poff = float(probability_of_failure_for_node)
             cpd_values[0, 0] = poff
             cpd_values[1, 0] = 1 - poff
 
     cpd_values /= np.sum(cpd_values, axis=0)  # Normalize the CPD values
-    return cpd_values.reshape((2, -1))
+    return cpd_values.reshape((num_states, -1))
 
 
-def generate_cpd_values_impact(node, num_parents, aml_data: AMLData, node_context: NodeContext, NodeType: str):
-    cpd_values = np.zeros((2, 2 ** num_parents))
-    current_entry = next((entry for entry in aml_data.result_list if entry['Element'] == node), None)
+def generate_cpd_values_impact(node, num_states, num_parents, max_num_parents, result_list,
+                                   matching_hazard_nodes=[], matching_vulnerability_nodes=[], matching_process_nodes=[],
+                                   hazard_node=False, vulnerability_node=False, process_node=False):
+    cpd_values = np.zeros((num_states, 2 ** num_parents))
+    current_entry = next((entry for entry in result_list if entry['Element'] == node), None)
 
-    if NodeType == "Hazard":
+    if hazard_node:
         if num_parents == 0:
             cpd_values[0, 0] = 0.5
             cpd_values[1, 0] = 0.5
@@ -424,11 +429,11 @@ def generate_cpd_values_impact(node, num_parents, aml_data: AMLData, node_contex
             cpd_values[0, 1] = 0
             cpd_values[1, 0] = 1 - cpd_values[0, 0]
             cpd_values[1, 1] = 1 - cpd_values[0, 1]    
-        elif 2 <= num_parents <= aml_data.max_num_parents:
+        elif 2 <= num_parents <= max_num_parents:
             cpd_values=generate_cpd_values_hazard(num_parents)
     
-    elif NodeType == "Vulnerability":
-        probability_of_impact_for_node = node_context.matching_vulnerability_nodes[0]['Probability of Impact'] * ( 1 - node_context.matching_vulnerability_nodes[0]['Probability of Mitigation'])
+    elif vulnerability_node:
+        probability_of_impact_for_node = matching_vulnerability_nodes[0]['Probability of Impact'] * ( 1 - matching_vulnerability_nodes[0]['Probability of Mitigation'])
         pofi = float(probability_of_impact_for_node)
         #print (matching_vulnerability_nodes[0]['ID'], matching_vulnerability_nodes[0]['Probability of Impact'], pofi)
         if num_parents == 0:
@@ -440,10 +445,10 @@ def generate_cpd_values_impact(node, num_parents, aml_data: AMLData, node_contex
             cpd_values[0, -1] = pofi
             cpd_values[1, -1] = 1 - pofi
     
-    elif NodeType == "Asset":
-        ref_base_for_node = node_context.matching_asset_nodes[0]['RefBaseSystemUnitPath']
+    elif process_node:
+        ref_base_for_node = matching_process_nodes[0]['RefBaseSystemUnitPath']
         if ref_base_for_node.startswith ('AssetOfICS/'):
-            probability_of_failure_for_node = node_context.matching_asset_nodes[0]['Probability of Failure']
+            probability_of_failure_for_node = matching_process_nodes[0]['Probability of Failure']
             if probability_of_failure_for_node:
                 cpd_values[0, :-1] = 1
                 cpd_values[1, :-1] = 0
@@ -462,7 +467,7 @@ def generate_cpd_values_impact(node, num_parents, aml_data: AMLData, node_contex
             cpd_values[1, 0] = 1 - current_entry['Number of children']
 
     cpd_values /= np.sum(cpd_values, axis=0)  # Normalize the CPD values
-    return cpd_values.reshape((2, -1))
+    return cpd_values.reshape((num_states, -1))
 
 
 def shortest_path_length(graph, start_node, end_node):
@@ -473,34 +478,50 @@ def shortest_path_length(graph, start_node, end_node):
         return float('inf')
 
 
-def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifier):
+def create_bbn_exposure(aml_data: AMLData, sap):
+    probability_data = aml_data.probability_data
+    HazardinSystem = aml_data.HazardinSystem
+    VulnerabilityinSystem = aml_data.VulnerabilityinSystem
+    max_num_parents = aml_data.max_num_parents
+    total_elements = aml_data.total_elements
+    connections = aml_data.connections
+    connections_mapped = aml_data.connections_mapped
+    result_list = aml_data.result_list
+
     cpds = {}
     cpd_values_list = []
     last_node = None
+    matching_hazard_nodes = []
+    matching_vulnerability_nodes = []
+    matching_process_nodes = []
+    path_length_betn_nodes= []
+    path_length_betn_nodes_final= []
+    path_length_final_node = []
 
     bbn_exposure = DiscreteBayesianNetwork()
-    connections = aml_data.connections_mapped
-    bbn_exposure.add_nodes_from(aml_data.total_elements)
+    connections = connections_mapped
+    bbn_exposure.add_nodes_from(total_elements)
     bbn_exposure.add_edges_from([(connection['from'], connection['to']) for connection in connections])
 
     for node in bbn_exposure.nodes():
         num_parents = len(bbn_exposure.get_parents(node))
-        node_context.matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
-        node_context.matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        node_context.matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        num_states = 2  # Assuming binary states for each node
+        matching_hazard_nodes = [element for element in HazardinSystem if element['ID'] == node]
+        matching_vulnerability_nodes = [element for element in VulnerabilityinSystem if element['ID'] == node]
+        matching_process_nodes = [element for element in probability_data if element['ID'] == node]
 
         cpd_values = None
 
-        if node_context.matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Hazard")
-        elif node_context.matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Vulnerability")
-        elif node_context.matching_asset_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Asset")
+        if matching_hazard_nodes:
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
+        elif matching_vulnerability_nodes:
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
+        elif matching_process_nodes:
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_data, connections_mapped, sap, matching_process_nodes=matching_process_nodes, process_node=True)
 
         #print(f"[DEBUG] CPD values before normalization for node {node}: {cpd_values}")
 
-        cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
+        cpd = TabularCPD(variable=node, variable_card=num_states, values=cpd_values,
                         evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
 
         cpds[node] = cpd
@@ -509,9 +530,9 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifie
     bbn_exposure.add_cpds(*cpds.values())
     bbn_graph = bbn_exposure.to_markov_model()
 
-    for element1 in aml_data.total_elements:
+    for element1 in total_elements:
         node1=element1
-        for element2 in aml_data.result_list:
+        for element2 in result_list:
             node2=element2['Element']
             child_num = element2['Number of children']
             if node1 == node2:
@@ -519,48 +540,52 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifie
                     last_node = node1
 #    print("\n[*] Last node in BBN:", last_node)
 
-    for node1, node2 in itertools.product(aml_data.total_elements, repeat=2):
+    for node1, node2 in itertools.product(total_elements, repeat=2):
         if node1 == node2:
-            node_context.path_length_betn_nodes.append((node1, node2, 0))
+            path_length_betn_nodes.append((node1, node2, 0))
         else:
             path_length = shortest_path_length(bbn_graph, node1, node2)
             if path_length == float('inf'):
-                node_context.path_length_betn_nodes.append((node1, node2, "No path"))
+                path_length_betn_nodes.append((node1, node2, "No path"))
             else:
-                node_context.path_length_betn_nodes_final.append((node1, node2, path_length, 1/path_length))
-                node_context.path_length_betn_nodes.append({'Node1': node1, 'Node2': node2, 
+                path_length_betn_nodes_final.append((node1, node2, path_length, 1/path_length))
+                path_length_betn_nodes.append({'Node1': node1, 'Node2': node2, 
                                 'Number of hops': path_length, 
                                 'Probability': 1/path_length})
                 if node2 == last_node:
-                    node_context.path_length_final_node.append((node1, last_node, path_length, 1/path_length))
-  
+                    path_length_final_node.append((node1, last_node, path_length, 1/path_length))
+    
     return bbn_exposure, last_node
 
 
-def create_bbn_impact(bbn_exposure, aml_data: AMLData, node_context: NodeContext):
+def create_bbn_impact(bbn_exposure, aml_data: AMLData):
     cpds = {}
+    matching_hazard_nodes = []
+    matching_vulnerability_nodes = []
+    matching_process_nodes = []
 
     bbn_impact = DiscreteBayesianNetwork()
     bbn_impact.add_edges_from([(connection['from'], connection['to']) for connection in aml_data.connections])
  
     for node in bbn_impact.nodes():
         num_parents = len(bbn_exposure.get_parents(node))
+        num_states = 2
         cpd_values = None
         
-        node_context.matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
-        node_context.matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        node_context.matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
+        matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
+        matching_process_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
 
-        if node_context.matching_hazard_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Hazard")
-        elif node_context.matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Vulnerability")
-        elif node_context.matching_asset_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Asset")
+        if matching_hazard_nodes:
+            cpd_values = generate_cpd_values_impact(node, num_states, num_parents, aml_data.max_num_parents, result_list=aml_data.result_list, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
+        elif matching_vulnerability_nodes:
+            cpd_values = generate_cpd_values_impact(node, num_states, num_parents, aml_data.max_num_parents, result_list=aml_data.result_list, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
+        elif matching_process_nodes:
+            cpd_values = generate_cpd_values_impact(node, num_states, num_parents, aml_data.max_num_parents, result_list=aml_data.result_list, matching_process_nodes=matching_process_nodes, process_node=True)
 
         #print(f"[DEBUG] CPD values before normalization for node {node}: {cpd_values}")
 
-        cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
+        cpd = TabularCPD(variable=node, variable_card=num_states, values=cpd_values,
                         evidence=bbn_impact.get_parents(node), evidence_card=[2] * num_parents)
         cpds[node] = cpd
 
@@ -591,10 +616,16 @@ def compute_risk_scores(inference_exposure, inference_impact, total_elements, so
             pass
 
 
-def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, source_node):
+def bbn_inference(aml_data: AMLData, sap, source_node):
     cpds = {}
     cpd_values_list = []
     last_node = None
+    matching_hazard_nodes = []
+    matching_vulnerability_nodes = []
+    matching_process_nodes = []
+    path_length_betn_nodes= []
+    path_length_betn_nodes_final= []
+    path_length_final_node = []
 
     bbn_exposure = DiscreteBayesianNetwork()
     bbn_impact = DiscreteBayesianNetwork()
@@ -605,20 +636,21 @@ def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, sou
 
     for node in bbn_exposure.nodes():
         num_parents = len(bbn_exposure.get_parents(node))
+        num_states = 2  # Assuming binary states for each node
         matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
         matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        matching_process_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
 
         cpd_values = None
 
         if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Hazard")
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, aml_data.max_num_parents, aml_data, aml_data.connections_mapped, sap, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
         elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Vulnerability")
-        elif matching_asset_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Asset")
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, aml_data.max_num_parents, aml_data, aml_data.connections_mapped, sap, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
+        elif matching_process_nodes:
+            cpd_values = generate_cpd_values_exposure(num_states, num_parents, aml_data.max_num_parents, aml_data, aml_data.connections_mapped, sap, matching_process_nodes=matching_process_nodes, process_node=True)
 
-        cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
+        cpd = TabularCPD(variable=node, variable_card=num_states, values=cpd_values,
                         evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
 
         cpds[node] = cpd
@@ -639,35 +671,36 @@ def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, sou
 
     for node1, node2 in itertools.product(aml_data.total_elements, repeat=2):
         if node1 == node2:
-            node_context.path_length_betn_nodes.append((node1, node2, 0))
+            path_length_betn_nodes.append((node1, node2, 0))
         else:
             path_length = shortest_path_length(bbn_graph, node1, node2)
             if path_length == float('inf'):
-                node_context.path_length_betn_nodes.append((node1, node2, "No path"))
+                path_length_betn_nodes.append((node1, node2, "No path"))
             else:
-                node_context.path_length_betn_nodes_final.append((node1, node2, path_length, 1/path_length))
-                node_context.path_length_betn_nodes.append({'Node1': node1, 'Node2': node2, 
+                path_length_betn_nodes_final.append((node1, node2, path_length, 1/path_length))
+                path_length_betn_nodes.append({'Node1': node1, 'Node2': node2, 
                                 'Number of hops': path_length, 
                                 'Probability': 1/path_length})
                 if node2 == last_node:
-                    node_context.path_length_final_node.append((node1, last_node, path_length, 1/path_length))
+                    path_length_final_node.append((node1, last_node, path_length, 1/path_length))
 
     for node in bbn_impact.nodes():
         num_parents = len(bbn_exposure.get_parents(node))
+        num_states = 2
         cpd_values = None
 
         matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
         matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        matching_process_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
 
         if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Hazard")
+            cpd_values = generate_cpd_values_impact(node, num_states, num_parents, aml_data.max_num_parents, result_list=aml_data.result_list, matching_hazard_nodes=matching_hazard_nodes, hazard_node=True)
         elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Vulnerability")
-        elif matching_asset_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Asset")
+            cpd_values = generate_cpd_values_impact(node, num_states, num_parents, aml_data.max_num_parents, result_list=aml_data.result_list, matching_vulnerability_nodes=matching_vulnerability_nodes, vulnerability_node=True)
+        elif matching_process_nodes:
+            cpd_values = generate_cpd_values_impact(node, num_states, num_parents, aml_data.max_num_parents, result_list=aml_data.result_list, matching_process_nodes=matching_process_nodes, process_node=True)
 
-        cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
+        cpd = TabularCPD(variable=node, variable_card=num_states, values=cpd_values,
                         evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
 
         cpds[node] = cpd
