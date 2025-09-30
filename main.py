@@ -399,7 +399,6 @@ def main():
 
         with col1:
             if st.button("Generate AutomationML File"):
-                st.session_state["upload_clicked"] = False
                 if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_paths' in st.session_state:
                         try:
                             aml_content = generate_aml_stepwise(st.session_state['arch_explanation'], st.session_state['threat_model'], st.session_state['attack_paths'])
@@ -415,16 +414,8 @@ def main():
                 aml_content = uploaded_aml.read().decode("utf-8")
                 st.session_state['aml_file'] = aml_content
                 st.success("AutomationML file uploaded successfully.")
-                #st.code(st.session_state['aml_file'], language='xml')
 
         if 'aml_file' in st.session_state:
-            additional_detail = st.text_area(
-                "Additional Instructions (Optional)",
-                value="",
-                placeholder="Type additional instructions here.",
-                height=150,
-            )
-            # Re-Generate AutomationML File Button
             st.subheader("Generated AutomationML File")
             st.code(st.session_state['aml_file'], language='xml')
             st.download_button(
@@ -497,12 +488,14 @@ def main():
                    
                         print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
-                        #for index, element in enumerate(aml_data.total_elements):
+                        # Use this for debugging 
+                        # for index, element in enumerate(aml_data.total_elements):
                         #    print(f"Index: {index}, Element: {element}")
 
                         cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, aml_data.total_elements, start_node, last_node)
-                        #cpd_prob = 0.5
-                        #cpd_impact = 0.5
+                        # Use this for debugging if the compute_risk_scores function breaks
+                        # cpd_prob = 0.5
+                        # cpd_impact = 0.5
 
                         risk_score = cpd_prob * cpd_impact * 100
                         print('[*] Risk score: {:.2f} %'.format(risk_score))

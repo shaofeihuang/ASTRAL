@@ -528,7 +528,6 @@ Use the following example AutomationML file as a reference for structure, conven
 
 
 
-
 def create_dread_assessment_prompt(threats, system_context):
     prompt = f"""
 You are a cyber security expert with more than 20 years of experience in threat modeling using STRIDE-LM and DREAD methodologies.

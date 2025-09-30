@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 import networkx as nx
 import itertools
 import math
+import re
 from datetime import datetime
 from dataclasses import dataclass
 from collections import defaultdict
@@ -344,159 +345,39 @@ def generate_cpd_values_exposure(num_states, num_parents, max_num_parents, aml_d
         if ref_base_for_node.startswith ('AssetOfICS/'):
             probability_of_failure_for_node = matching_process_nodes[0]['Probability of Failure']
 
-
 ###########################################################################################################
-#   Scaling Algorithm (Work In Progress)
+#   Scaling Algorithm
 ###########################################################################################################
 
-#            if matching_process_nodes[0]['ID'] starts with ["[A##]"], count the number of children that are [V##]
-#            if there are more than one V# child, populate a dictionary of V## and the corresponding 'Probability of Mitigation' values
-#            set the scaling factor = 1 / number of V# in the dictionary
-#            comput probability_of_failure_for_node = min(1.0, scaling_factor * (sum of the 'Probability of Mitigation' values in the dict))
-
-# Scaling Algorithm: Handles [A01], [A02], ... and [V01], [V02], ...
-            if matching_process_nodes[0]['ID'].startswith("[A") and \
-                matching_process_nodes[0]['ID'][2:4].isdigit() and matching_process_nodes[0]['ID'][4] == "]":
-                print (matching_process_nodes[0]['ID'])
-
-            # Gather all direct children with ID [V##]
             connections_from_to = defaultdict(list)
 
             for connection in connections_mapped:
                 from_element = connection['from']
-                to_element = connection['to']
-                connections_from_to[from_element].append(to_element)
+                if matching_process_nodes[0]['ID'] == from_element:
+                    to_element = connection['to']
+                    if re.match(r'^(V|\(V|\[V)\d', to_element):
+                        connections_from_to[from_element].append(to_element)
+                        #print (from_element, to_element)
 
-                v = [{'Element': k, 'children': v} for k, v in connections_from_to.items()]
-
-                for item in v:
-                    filtered_children = [child for child in item['children'] if (child.startswith("[V") and child[2:4].isdigit() and child[4] == "]")]
-                    if filtered_children:
-                        print("Element:", item['Element'], "Children starting with [V:", filtered_children)
-
- #               if len(filtered_children) > 1:
- #                   # Multiple vulnerabilities: scale result accordingly
- #                   v_dict = {
- #                       child['ID']: float(child.get('Probability of Mitigation', 0.0))
- #                       for child in v_children
- #                   }
- #                   print ("children:")
- #                   print (v_dict.values)
-#        scaling_factor = 1.0 / len(v_dict)
-#        mitigation_sum = sum(v_dict.values())
-#        probability_of_failure_for_node = min(1.0, scaling_factor * mitigation_sum)
-#    elif len(v_children) == 1:
-        # Single vulnerability: probability of failure = Probability of Mitigation
-#        probability_of_failure_for_node = float(v_children[0].get('Probability of Mitigation', 0.0))
-#    else:
-        # No vulnerabilities: default failure probability is set to maximum
-#        probability_of_failure_for_node = 1.0 -> incorrect
-
-###########################################################################################################
-#   Added for BlackEnergy scenario
-###########################################################################################################
-
-            if matching_process_nodes[0]['ID'] in ["IT_Workstation", "ICS_Workstation"]:
-                # Extract the Probability of Mitigation for V1 and V2
-                values = [
-                    float(element['Probability of Mitigation']) 
-                    for element in probability_data 
-                    if element['ID'] in ["V1", "V2"]
-                ]
-                if len(values) == 2:
-                    V1, V2 = values
-                    if V1 > 0 or V2 > 0:
-                        # Adjust the scaling constant if needed to ensure proportionality and capping
-                        scaling_factor = 0.5  # Choose a factor that keeps the result <= 1
-                        probability_of_failure_for_node = min(1.0, scaling_factor * (V1 + V2))
-
-###########################################################################################################
-#   Added for Solar PV Inverter scenario
-###########################################################################################################
-
-            if matching_process_nodes[0]['ID'] in ["Solar_PV_Inverter"]:
-                # Extract the Probability of Mitigation for V1, V2, and V3
-                values = [
-                    float(element['Probability of Mitigation'])
-                    for element in probability_data 
-                    if element['ID'] in ["V1", "V2", "V3"]
-                ]
-                if len(values) == 3:
-                    V1, V2, V3 = values
-                    if V1 > 0 or V2 > 0 or V3 > 0:
-                        # Adjust the scaling constant if needed to ensure proportionality and capping
-                        scaling_factor = 0.33  # Choose a factor that keeps the result <= 1
-                        probability_of_failure_for_node = min(1.0, scaling_factor * (V1 + V2 + V3))
-
-            if matching_process_nodes[0]['ID'] in ["Comms_Dongle"]:
-                # Extract the Probability of Mitigation for V11 to V15
-                values = [
-                    float(element['Probability of Mitigation'])
-                    for element in probability_data
-                    if element['ID'] in ["V11", "V12", "V13", "V14", "V15"]
-                ]
-                if len(values) == 5:
-                    V11, V12, V13, V14, V15 = values
-                    if V11 > 0 or V12 > 0 or V13 > 0 or V14 > 0 or V15 > 0:
-                        scaling_factor = 0.2
-                        probability_of_failure_for_node = min(1.0, scaling_factor * (V11 + V12 + V13 + V14 + V15))
-
-            if matching_process_nodes[0]['ID'] == "Power_Grid":
-                values = [
-                    float(element['Probability of Mitigation'])
-                    for element in probability_data
-                    if element['ID'] == "V15"
-                ]
-                if values:
-                    V15 = values[0]
-                    if V15 > 0:
-                        probability_of_failure_for_node = V15
-
-###########################################################################################################
-#   Added for Railway CBTC scenario
-###########################################################################################################
-
-            if matching_process_nodes[0]['ID'] in ["ATS_Server"]:
-                # Extract the Probability of Mitigation for V1 and V2
-                values = [
-                    float(element['Probability of Mitigation'])
-                    for element in probability_data 
-                    if element['ID'] in ["V1", "V2"]
-                ]
-                if len(values) == 2:
-                    V1, V2 = values
-                    if V1 > 0 or V2 > 0:
-                        # Adjust the scaling constant if needed to ensure proportionality and capping
-                        scaling_factor = 0.5  # Choose a factor that keeps the result <= 1
-                        probability_of_failure_for_node = min(1.0, scaling_factor * (V1 + V2))
-
-            if matching_process_nodes[0]['ID'] in ["Wayside_Access_Point"]:
-                # Extract the Probability of Mitigation for V4 and V5
-                values = [
-                    float(element['Probability of Mitigation'])
-                    for element in probability_data 
-                    if element['ID'] in ["V4", "V5"]
-                ]
-                if len(values) == 2:
-                    V4, V5 = values
-                    if V4 > 0 or V5 > 0:
-                        # Adjust the scaling constant if needed to ensure proportionality and capping
-                        scaling_factor = 0.5  # Choose a factor that keeps the result <= 1
-                        probability_of_failure_for_node = min(1.0, scaling_factor * (V4 + V5))
-
-            if matching_process_nodes[0]['ID'] in ["Train_Onboard_Network"]:
-                # Extract the Probability of Mitigation for V6, V7 and V8
-                values = [
-                    float(element['Probability of Mitigation'])
-                    for element in probability_data 
-                    if element['ID'] in ["V6", "V7", "V8"]
-                ]
-                if len(values) == 3:
-                    V6, V7, V8 = values
-                    if V6 > 0 or V7 > 0 or V8 > 0:
-                        # Adjust the scaling constant if needed to ensure proportionality and capping
-                        scaling_factor = 0.33  # Choose a factor that keeps the result <= 1
-                        probability_of_failure_for_node = min(1.0, scaling_factor * (V6 + V7 + V8))
+            for asset, vulns in connections_from_to.items():
+                num_vulns = len(vulns)
+                #print("[-]", asset, vulns, num_vulns)
+                
+                sum_mitigation = 0.0  # Initialize sum for each asset
+                
+                for i in range(num_vulns):
+                    matched = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == vulns[i]]
+                    if matched:
+                        probability_of_mitigation = matched[0].get('Probability of Mitigation', 0.0)
+                        if probability_of_mitigation > 0:
+                            sum_mitigation += probability_of_mitigation
+                    else:
+                        print(f"No matching vulnerability found for ID {vulns[i]}")
+                
+                if num_vulns > 0:
+                    scaling_factor = 1.0 / num_vulns
+                    probability_of_failure_for_node = min(1.0, scaling_factor * sum_mitigation)
+                    print("Asset:", asset, "Probability of failure:", probability_of_failure_for_node)
 
 ###########################################################################################################
 
