@@ -63,15 +63,7 @@ def check_probability_data(aml_data: AMLData):
             "Prob of Human Error:", data['Probability of Human Error'])
         
 def process_AML_file(root, t):
-    instanceHierarchyTag=".//{http://www.dke.de/CAEX}InstanceHierarchy"
-    internalElementTag=".//{http://www.dke.de/CAEX}InternalElement"
-    externalInterfaceTag=".//{http://www.dke.de/CAEX}ExternalInterface"
-    AttributeTag=".//{http://www.dke.de/CAEX}Attribute"
-    ValueTag=".//{http://www.dke.de/CAEX}Value"
-    internalLinkTag=".//{http://www.dke.de/CAEX}InternalLink"
-
     max_num_parents = 0
-
     allinone_attrib = []  
     allinone_tags = []
     allinone_text = []
@@ -126,7 +118,7 @@ def process_AML_file(root, t):
             if rpa is not None and rpb is not None:
                 InternalLinks.append({rpa.text, rpb.text})
 
-    internal_elements = root.findall(internalElementTag)
+    internal_elements = root.findall(".//{http://www.dke.de/CAEX}InternalElement")
 
     for internal_element in internal_elements:
         internal_element_id = internal_element.get('ID')
@@ -204,8 +196,8 @@ def process_AML_file(root, t):
     
         probability_data.append(internal_element_data)
     
-    for internal_element in root.findall(internalElementTag):
-        external_interfaces = internal_element.findall(externalInterfaceTag)
+    for internal_element in root.findall(".//{http://www.dke.de/CAEX}InternalElement"):
+        external_interfaces = internal_element.findall(".//{http://www.dke.de/CAEX}ExternalInterface")
         if len(external_interfaces) < 5:
             internal_element_id = internal_element.get('ID')
             internal_element_name = internal_element.get('Name')
@@ -227,7 +219,7 @@ def process_AML_file(root, t):
         internal_element_id = external_interface['InternalElement ID']
         interface_to_element_map[external_interface_id] = internal_element_id
 
-    for internal_link in root.findall(internalLinkTag):
+    for internal_link in root.findall(".//{http://www.dke.de/CAEX}InternalLink"):
         ref_partner_a = internal_link.get('RefPartnerSideA')
         ref_partner_b = internal_link.get('RefPartnerSideB')
         if ref_partner_a in interface_to_element_map and ref_partner_b in interface_to_element_map:
