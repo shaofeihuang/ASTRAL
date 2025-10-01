@@ -2,6 +2,7 @@ from mistralai import Mistral
 import json
 import os
 import time
+import random
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
@@ -10,13 +11,13 @@ from utils import *
 from bayesian import *
 
 model_token_limits = {
-    "ministral-8b-latest": {"default": 64000, "max": 128000},
-    "pixtral-12b-latest": {"default": 64000, "max": 128000},
-    "mistral-medium-latest": {"default": 64000, "max": 128000},
     "mistral-large-latest": {"default": 64000, "max": 128000},
+    "mistral-medium-latest": {"default": 64000, "max": 128000},
     "mistral-small-latest": {"default": 24000, "max": 32000},
     "magistral-small-latest": {"default": 32000, "max": 40000},
     "magistral-medium-latest": {"default": 32000, "max": 40000},
+    "ministral-8b-latest": {"default": 64000, "max": 128000},
+    "pixtral-12b-latest": {"default": 64000, "max": 128000},
 }
 
 def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
@@ -93,7 +94,7 @@ def main():
     system_context = st.sidebar.selectbox(
         "CPS System Context",
         ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System"],
-        index=None,
+        index=0,
         placeholder="Select or enter a custom description",
         accept_new_options=True,
     )
@@ -122,16 +123,18 @@ def main():
             st.image(image_bytes, caption="Uploaded Image", width="stretch")
             arch_expl_prompt = create_arch_expl_prompt(system_context)
 
-        # Generate Architectural Explanation Button
-        if st.button("Generate Architectural Explanation") and uploaded_file is not None:
-            with st.spinner("Generating architectural explanation..."):
-                try:
-                    model_output = call_mistral(
-                        api_key, arch_expl_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
-                    )
-                    st.session_state['arch_explanation'] = model_output
-                except Exception as e:
-                    st.error(f"Failed to generate architectural explanation: {str(e)}")
+            # Generate Architectural Explanation Button
+            if st.button("Generate Architectural Explanation") and uploaded_file is not None:
+                with st.spinner("Generating architectural explanation..."):
+                    try:
+                        model_output = call_mistral(
+                            api_key, arch_expl_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
+                        )
+                        st.session_state['arch_explanation'] = model_output
+                    except Exception as e:
+                        st.error(f"Failed to generate architectural explanation: {str(e)}")
+        else:
+            st.info("Please upload system architecture diagram.")
 
         # Display Architectural Explanation if available
         if 'arch_explanation' in st.session_state:
@@ -160,8 +163,6 @@ def main():
                         st.rerun()
                     except Exception as e:
                         st.error(f"Failed to generate architectural explanation: {str(e)}")
-        else:
-            st.info("Please upload system architecture diagram.")
 
 #----------------------------------------------------------------------------------------------
 # Generate Threat Model
@@ -175,16 +176,19 @@ def main():
         threat_model_prompt = create_threat_model_prompt(system_context)
 
         # Generate STRIDE-LM Threat Model Button
-        if st.button("Generate STRIDE-LM Threat Model") and 'arch_explanation' in st.session_state:
-            with st.spinner("Generating STRIDE-LM threat model..."):
-                try:
-                    model_output = call_mistral(
-                        api_key, threat_model_prompt, image_bytes, selected_model, max_tokens, response_as_json=True
-                    )
-                    st.session_state['threat_model'] = model_output.get("threat_model", [])
-                    st.session_state['improvement_suggestions'] = model_output.get("improvement_suggestions", [])
-                except Exception as e:
-                    st.error(f"Failed to generate threat model: {str(e)}")
+        if 'arch_explanation' in st.session_state:
+            if st.button("Generate STRIDE-LM Threat Model"):
+                with st.spinner("Generating STRIDE-LM threat model..."):
+                    try:
+                        model_output = call_mistral(
+                            api_key, threat_model_prompt, image_bytes, selected_model, max_tokens, response_as_json=True
+                        )
+                        st.session_state['threat_model'] = model_output.get("threat_model", [])
+                        st.session_state['improvement_suggestions'] = model_output.get("improvement_suggestions", [])
+                    except Exception as e:
+                        st.error(f"Failed to generate threat model: {str(e)}")
+        else:
+            st.info("Generate an architectural explanation first to proceed.")
 
         # Display Threat Model if available
         if 'threat_model' in st.session_state:
@@ -200,8 +204,6 @@ def main():
                 file_name="threat_model.md",
                 mime="text/markdown",
             )
-        else:
-            st.info("Please generate an architectural explanation first.")
 
 #----------------------------------------------------------------------------------------------
 # Generate DREAD Risk Assessment
@@ -212,42 +214,34 @@ def main():
         DREAD is a structured methodology for evaluating and prioritising risks associated with security threats. It assesses each threat based on five criteria: **D**amage potential, **R**eproducibility, **E**xploitability, **A**ffected users, and **D**iscoverability. By scoring threats on these factors, organisations can calculate an overall risk level, which enables them to focus mitigation efforts on the most critical vulnerabilities first. This method supports consistent risk assessment, improves communication across teams, and helps allocate resources efficiently to protect systems effectively. Use this tab to perform a DREAD risk assessment for your application or system.
         """)
         st.markdown("""---""")
-
-        dread_assessment_submit_button = st.button(label="Generate DREAD Risk Assessment")
-        if dread_assessment_submit_button and 'threat_model' in st.session_state:
-            threats_markdown = tm_json_to_markdown(st.session_state['threat_model'], [])
-            dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown, system_context)
-
-            with st.spinner("Generating DREAD Risk Assessment..."):
-                max_retries = 3
-                for attempt in range(max_retries):
-                    try:
-                        dread_assessment = get_dread_assessment(api_key, selected_model, dread_assessment_prompt)
-                        st.session_state['dread_assessment'] = dread_assessment
-                        break
-                    except Exception as e:
-                        if attempt == max_retries - 1:
-                            st.error(f"Error generating DREAD risk assessment after {max_retries} attempts: {e}")
-                            dread_assessment = {"Risk Assessment": []}
-
-            dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
-
+        
+        if 'threat_model' in st.session_state:
+            if st.button(label="Generate DREAD Risk Assessment"):
+                threats_markdown = tm_json_to_markdown(st.session_state['threat_model'], [])
+                dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown, system_context)
+                with st.spinner("Generating DREAD Risk Assessment..."):
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            st.session_state['dread_assessment'] = get_dread_assessment(api_key, selected_model, dread_assessment_prompt)
+                            break
+                        except Exception as e:
+                            if attempt == max_retries - 1:
+                                st.error(f"Error generating DREAD risk assessment after {max_retries} attempts: {e}")
+                                
             if 'dread_assessment' in st.session_state:
-                dread_assessment = st.session_state['dread_assessment']
-                dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
-
-            st.markdown("## DREAD Risk Assessment")
-            st.markdown("The table below shows the DREAD risk assessment for each identified threat. The Risk Score is calculated as the average of the five DREAD categories.")
-            st.markdown(dread_assessment_markdown, unsafe_allow_html=False)
-
-            st.download_button(
-                label="Download DREAD Risk Assessment",
-                data=dread_assessment_markdown,
-                file_name="dread_assessment.md",
-                mime="text/markdown",
-            )
+                dread_assessment_markdown = dread_json_to_markdown(st.session_state['dread_assessment'])
+                st.markdown("## DREAD Risk Assessment")
+                st.markdown("The table below shows the DREAD risk assessment for each identified threat. The Risk Score is calculated as the average of the five DREAD categories.")
+                st.markdown(dread_assessment_markdown, unsafe_allow_html=False)
+                st.download_button(
+                    label="Download DREAD Risk Assessment",
+                    data=dread_assessment_markdown,
+                    file_name="dread_assessment.md",
+                    mime="text/markdown",
+                )
         else:
-            st.info("Please generate a threat model first before requesting a DREAD risk assessment.")
+            st.info("Generate a threat model first to proceed.")
 
 #----------------------------------------------------------------------------------------------
 # Generate Attack Trees and Attack Paths
@@ -258,15 +252,13 @@ def main():
         Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.
         """)
         st.markdown("""---""")
-        if selected_model == "mistral-small-latest":
-            st.warning("⚠️ Mistral Small doesn't reliably generate syntactically correct Mermaid code. Please use the Mistral Large model for generating attack trees, or select a different model provider.")
 
         with st.container():
             col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("Generate Attack Tree and Paths"):
-                if 'threat_model' in st.session_state:
+            if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state:
+                if st.button("Generate Attack Tree and Paths"):
                     attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_explanation'), st.session_state.get('threat_model'))
                     with st.spinner("Generating attack tree and paths..."):
                         try:
@@ -279,6 +271,9 @@ def main():
                             st.session_state['attack_paths'] = attack_paths
                         except Exception as e:
                             st.error(f"Error generating attack tree: {e}")
+            else:
+                st.info("Generate an architectural explanation and threat model first, or upload a saved attack tree data file to proceed.")
+
         with col2:
             uploaded_data = st.file_uploader(
                 "Upload attack tree data file (.json)", type=["json"]
@@ -293,7 +288,7 @@ def main():
                 st.session_state['attack_tree'] = attack_tree
                 attack_paths = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
                 st.session_state['attack_paths'] = attack_paths
-
+            
         if 'attack_tree' in st.session_state:
             st.write("Attack Paths:")
             st.code(st.session_state['attack_paths'])
@@ -324,9 +319,6 @@ def main():
                     key = "download_attack_tree_data"
                 )
 
-        else:
-            st.info("Please generate an architectural explanation and threat model first.")
-
 #----------------------------------------------------------------------------------------------
 # Generate System Model (AutomationML)
 #----------------------------------------------------------------------------------------------
@@ -338,104 +330,131 @@ def main():
         st.markdown("""---""")
 
         def generate_aml_stepwise(arch_explanation, threat_model, attack_paths):
+            max_retries = 3
+
             with st.spinner("Generating AutomationML Model (Step 1) ..."):
-                try:
-                    # Step 1: Generate InternalElements + ExternalInterfaces
-                    print("[#] Generating AML - Step 1")
-                    start_time = time.time()
-                    prompt_step1 = create_aml_prompt_step_1(arch_explanation, threat_model, attack_paths)
-                    response_step1 = call_mistral(
-                                        api_key,
-                                        prompt_step1,
-                                        image_bytes if 'image_bytes' in locals() else b'',
-                                        selected_model,
-                                        max_tokens=max_tokens,
-                                        response_as_json=False
-                                    )
-                    internal_elements_xml = response_step1
-                    #print (internal_elements_xml)
-                    end_time = time.time()
-                    elapsed_secs = end_time - start_time
-                    st.info(f"Step 1 completed ({elapsed_secs:.2f} secs)")
-                except Exception as e:
-                    st.error(f"Error generating model (Step 1): {e}")
+                for attempt in range(max_retries):
+                    try:
+                        print("[#] Generating AML - Step 1")
+                        start_time = time.time()
+
+                        prompt_step1 = create_aml_prompt_step_1(arch_explanation, threat_model, attack_paths)
+                        response_step1 = call_mistral(
+                            api_key,
+                            prompt_step1,
+                            image_bytes if 'image_bytes' in locals() else b'',
+                            selected_model,
+                            max_tokens=max_tokens,
+                            response_as_json=False
+                        )
+                        internal_elements_xml = response_step1
+
+                        end_time = time.time()
+                        elapsed_secs = end_time - start_time
+                        st.success(f"Step 1 completed ({elapsed_secs:.2f} secs)")
+                        break  # success, exit retry loop
+                    except Exception as e:
+                        if attempt == max_retries - 1:
+                            st.error(f"Error generating model (Step 1) after {max_retries} attempts: {e}")
+                        else:
+                            delay = 2 ** attempt + random.uniform(0, 1)
+                            st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
+                            time.sleep(delay)
 
             with st.spinner("Generating AutomationML Model (Step 2) ..."):
-                try:
-                    # Step 2: Extract valid InternalLink pairs as JSON list
-                    print("[#] Generating AML - Step 2")
-                    start_time = time.time()
-                    prompt_step2 = create_aml_prompt_step_2(attack_paths)
-                    response_step2 = call_mistral(
-                                        api_key,
-                                        prompt_step2,
-                                        image_bytes if 'image_bytes' in locals() else b'',
-                                        selected_model,
-                                        max_tokens=max_tokens,
-                                        response_as_json=False
-                                    )
-                    valid_pairs_json = response_step2
-                    #print (valid_pairs_json)
-                    end_time = time.time()
-                    elapsed_secs = end_time - start_time
-                    st.info(f"Step 2 completed ({elapsed_secs:.2f} secs)")
-                except Exception as e:
-                    st.error(f"Error generating model (Step 2): {e}")
+                for attempt in range(max_retries):
+                    try:
+                        print("[#] Generating AML - Step 2")
+                        start_time = time.time()
+
+                        prompt_step2 = create_aml_prompt_step_2(attack_paths)
+                        response_step2 = call_mistral(
+                            api_key,
+                            prompt_step2,
+                            image_bytes if 'image_bytes' in locals() else b'',
+                            selected_model,
+                            max_tokens=max_tokens,
+                            response_as_json=False
+                        )
+                        valid_pairs_json = response_step2
+
+                        end_time = time.time()
+                        elapsed_secs = end_time - start_time
+                        st.success(f"Step 2 completed ({elapsed_secs:.2f} secs)")
+                        break  # success, exit retry loop
+                    except Exception as e:
+                        if attempt == max_retries - 1:
+                            st.error(f"Error generating model (Step 2) after {max_retries} attempts: {e}")
+                        else:
+                            delay = 2 ** attempt + random.uniform(0, 1)
+                            st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
+                            time.sleep(delay)
 
             with st.spinner("Generating AutomationML Model (Step 3) ..."):
-                try:
-                    # Step 3: Generate node to ExternalInterface ID mapping from Step 1 output
-                    # Simple heuristic extraction from internal_elements_xml for demonstration:
-                    print("[#] Generating AML - Step 3")
-                    start_time = time.time()
-                    node_to_interface_id_mapping = {}
-                    pattern = r'ID="\[([A-Z0-9]+)\] [^"]+"[^>]*>.*?<ExternalInterface Name="[^"]+" ID="([^"]+)"'
-                    matches = re.findall(pattern, internal_elements_xml, re.DOTALL)
-                    for node_id, interface_id in matches:
-                        node_to_interface_id_mapping[node_id] = interface_id
+                for attempt in range(max_retries):
+                    try:
+                        print("[#] Generating AML - Step 3")
+                        start_time = time.time()
 
-                    # Format node-to-interface map string for prompt
-                    map_lines = [f'{node_id}: {iface_id}' for node_id, iface_id in node_to_interface_id_mapping.items()]
-                    map_str = "\n".join(map_lines)
-                    #print (map_str)
+                        node_to_interface_id_mapping = {}
+                        pattern = r'ID="\[([A-Z0-9]+)\] [^"]+"[^>]*>.*?<ExternalInterface Name="[^"]+" ID="([^"]+)"'
+                        matches = re.findall(pattern, internal_elements_xml, re.DOTALL)
+                        for node_id, interface_id in matches:
+                            node_to_interface_id_mapping[node_id] = interface_id
 
-                    prompt_step3 = create_aml_prompt_step_3(valid_pairs_json, map_str)
-                    response_step3 = call_mistral(
-                                        api_key,
-                                        prompt_step3,
-                                        image_bytes if 'image_bytes' in locals() else b'',
-                                        selected_model,
-                                        max_tokens=max_tokens,
-                                        response_as_json=False
-                                    )
-                    internal_links_xml = response_step3
-                    #print (internal_links_xml)
-                    end_time = time.time()
-                    elapsed_secs = end_time - start_time
-                    st.info(f"Step 3 completed ({elapsed_secs:.2f} secs)")
-                except Exception as e:
-                    st.error(f"Error generating model (Step 3): {e}")
+                        map_lines = [f'{node_id}: {iface_id}' for node_id, iface_id in node_to_interface_id_mapping.items()]
+                        map_str = "\n".join(map_lines)
+
+                        prompt_step3 = create_aml_prompt_step_3(valid_pairs_json, map_str)
+                        response_step3 = call_mistral(
+                            api_key,
+                            prompt_step3,
+                            image_bytes if 'image_bytes' in locals() else b'',
+                            selected_model,
+                            max_tokens=max_tokens,
+                            response_as_json=False
+                        )
+                        internal_links_xml = response_step3
+
+                        end_time = time.time()
+                        elapsed_secs = end_time - start_time
+                        st.success(f"Step 3 completed ({elapsed_secs:.2f} secs)")
+                        break  # success, stop retrying
+                    except Exception as e:
+                        if attempt == max_retries - 1:
+                            st.error(f"Error generating model (Step 3) after {max_retries} attempts: {e}")
+                        else:
+                            delay = 2 ** attempt + random.uniform(0, 1)  # exponential backoff + jitter
+                            st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
+                            time.sleep(delay)
 
             with st.spinner("Generating AutomationML Model (Step 4) ..."):
-                try:
-                    # Step 4: Assemble final AML XML document
-                    print("[#] Generating AML - Step 4 (Final)")
-                    start_time = time.time()
-                    prompt_step4 = create_aml_prompt_step_4(internal_elements_xml, internal_links_xml)
-                    response_step4 = call_mistral(
-                                        api_key,
-                                        prompt_step4,
-                                        image_bytes if 'image_bytes' in locals() else b'',
-                                        selected_model,
-                                        max_tokens=max_tokens,
-                                        response_as_json=False
-                                    )
-                    end_time = time.time()
-                    elapsed_secs = end_time - start_time
-                    st.info(f"Step 4 completed ({elapsed_secs:.2f} secs)")
-                    final_aml_xml = response_step4
-                except Exception as e:
-                    st.error(f"Error generating model (Step 4): {e}")
+                for attempt in range(max_retries):
+                    try:
+                        print("[#] Generating AML - Step 4 (Final)")
+                        start_time = time.time()
+                        prompt_step4 = create_aml_prompt_step_4(internal_elements_xml, internal_links_xml)
+                        response_step4 = call_mistral(
+                            api_key,
+                            prompt_step4,
+                            image_bytes if 'image_bytes' in locals() else b'',
+                            selected_model,
+                            max_tokens=max_tokens,
+                            response_as_json=False
+                        )
+                        end_time = time.time()
+                        elapsed_secs = end_time - start_time
+                        st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
+                        break  # success, exit retry loop
+                    except Exception as e:
+                        if attempt == max_retries - 1:
+                            st.error(f"Error generating model (Step 4) after {max_retries} attempts: {e}")
+                        else:
+                            delay = 2 ** attempt + random.uniform(0, 1)  # exponential backoff with jitter
+                            st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
+                            time.sleep(delay)
+                
+                final_aml_xml = response_step4
 
             return final_aml_xml
 
@@ -443,14 +462,16 @@ def main():
             col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("Generate AutomationML File"):
-                if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_paths' in st.session_state:
-                        try:
-                            aml_content = generate_aml_stepwise(st.session_state['arch_explanation'], st.session_state['threat_model'], st.session_state['attack_paths'])
-                            st.session_state['aml_file'] = aml_content
-                        except Exception as e:
-                            st.error(f"Failed to generate AutomationML file: {str(e)}")
-
+            if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_paths' in st.session_state:
+                if st.button("Generate AutomationML File"):
+                    try:
+                        aml_content = generate_aml_stepwise(st.session_state['arch_explanation'], st.session_state['threat_model'], st.session_state['attack_paths'])
+                        st.session_state['aml_file'] = aml_content
+                    except Exception as e:
+                        st.error(f"Failed to generate AutomationML file: {str(e)}")
+            else:
+                st.info("Generate an architectural explanation, threat model, and attack tree first, or upload a saved AutomationML file to proceed.")
+        
         with col2:
             uploaded_aml = st.file_uploader(
                 "Upload AutomationML file (.xml, .aml)", type=["xml", "aml"]
@@ -469,8 +490,6 @@ def main():
                 file_name="system_model.aml",
                 mime="application/xml",
             )
-        elif not st.session_state.get("upload_clicked", False):
-            st.info("Please generate an architectural explanation, threat model, and attack tree first.")
 
 #----------------------------------------------------------------------------------------------
 # Analyse System Model and Compute Bayesian Probabilities
@@ -478,7 +497,7 @@ def main():
 
     with tab6:
         st.markdown("""
-
+        Use this page to analyse system model attributes and calculate Bayesian probabilities of exposure and severe impact, along with the resulting risk assessment.
         """)
         st.markdown("""---""")
 
@@ -486,8 +505,8 @@ def main():
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                if st.button("Load Model Attributes"):
-                    if 'aml_file' in st.session_state:
+                if 'aml_file' in st.session_state:
+                    if st.button("Load Model Attributes"):
                         aml_content = clean_aml_content(st.session_state['aml_file'])
                         assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
                         st.session_state['aml_attributes'] = {
@@ -496,34 +515,37 @@ def main():
                             'hazards': hazards
                         }
                         st.success("Attributes extracted successfully.")
+                else:
+                    st.info("Generate or upload an AutomationML model first to proceed with model analysis.")
 
             with col2:
-                if st.button("Save Model Attributes"):
-                    if 'aml_attributes' in st.session_state:
+                if 'aml_attributes' in st.session_state:
+                    if st.button("Save Model Attributes"):
                         aml_content = clean_aml_content(st.session_state['aml_file'])
                         updated_aml = update_aml_from_attributes(aml_content, st.session_state['aml_attributes'])
                         st.session_state['aml_file'] = updated_aml
                         st.success("Attributes saved successfully.")
 
             with col3:
-                start_node = st.selectbox(
-                    "Attacker ID in the system model",
-                    ("Attacker", "[U01] Attacker"),
-                    index=1,
-                    placeholder="Select or enter attacker ID",
-                    accept_new_options=True,
-                )
-                af_modifier_input = st.slider(
-                    "Attack Feasibility (AF) Modifier",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.01,
-                    step=0.01,
-                    help="Adjust to factor attack feasibility (such as attacker skill, system security posture, etc.). "
-                        "Lower values indicate a lower chance of a successful attack."
-                )
-                if st.button("Compute Bayesian Probabilities"):
-                    if 'aml_attributes' in st.session_state:
+                if 'aml_attributes' in st.session_state:
+                    start_node = st.selectbox(
+                        "Attacker ID in the system model",
+                        ("Attacker", "[U01] Attacker"),
+                        index=1,
+                        placeholder="Select or enter attacker ID",
+                        accept_new_options=True,
+                    )
+                    af_modifier_input = st.slider(
+                        "Attack Feasibility (AF) Modifier",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=0.01,
+                        step=0.01,
+                        help="Adjust to factor attack feasibility (such as attacker skill, system security posture, etc.). "
+                            "Lower values indicate a lower chance of a successful attack."
+                    )
+
+                    if st.button("Compute Bayesian Probabilities"):
                         aml_content = clean_aml_content(st.session_state['aml_file'])
                         env = Environment(*setup_environment(aml_content))
                         aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
@@ -569,13 +591,14 @@ def main():
                         st.sidebar.metric("Posterior Probability of Exposure", value=f"{cpd_prob:.4f}")
                         st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{cpd_impact:.4f}")
                         st.sidebar.metric("Risk Score", value=f"{risk_score:.2f}%")
-
+        
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)
             edited_assets = st.data_editor(df_assets, num_rows="dynamic")
             st.session_state['aml_attributes']['assets'] = edited_assets.to_dict(orient='records')
+            print ("asset updated")
 
             st.subheader("Vulnerability Attributes")
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
@@ -587,21 +610,22 @@ def main():
                 df_vuln = df_vuln[new_cols]
             edited_vuln = st.data_editor(df_vuln, num_rows="dynamic")
             st.session_state['aml_attributes']['vulnerabilities'] = edited_vuln.to_dict(orient='records')
+            print ("vuln updated")
 
             st.subheader("Hazard Attributes")
             hazards = st.session_state['aml_attributes']['hazards']
             df_hazards = pd.DataFrame(hazards)
             edited_hazards = st.data_editor(df_hazards, num_rows="dynamic")
             st.session_state['aml_attributes']['hazards'] = edited_hazards.to_dict(orient='records')
-        else:
-            st.info("Please upload or generate an AutomationML model first.")
 
 #----------------------------------------------------------------------------------------------
 # Placeholder for Decision Support Module
 #----------------------------------------------------------------------------------------------
 
     with tab7:
-        st.markdown("""---""")
+        st.markdown("""
+        Use this page to view and calibrate the countermeasure porfolio, which includes the probabilities of mitigation for each vulnerability in the system model.
+        """)
         st.markdown("""---""")
 
         if 'aml_attributes' in st.session_state:
@@ -631,6 +655,8 @@ def main():
             # Update the original vulnerabilities list with new probabilities
             for i, prob in enumerate(updated_probs):
                 st.session_state['aml_attributes']['vulnerabilities'][i]['Vulnerability.Probability of Mitigation'] = prob
+        else:
+                st.info("Perform analysis first to proceed.")
 
 
 if __name__ == "__main__":
