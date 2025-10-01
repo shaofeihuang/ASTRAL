@@ -292,7 +292,6 @@ def process_AML_file(root, t):
         if num_parents > max_num_parents:
             max_num_parents = num_parents
 
-    #check_probability_data(amldata)
     return probability_data, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
 
 
@@ -324,7 +323,7 @@ def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, no
         probability_of_exposure_for_node = node_context.matching_vulnerability_nodes[0]['Probability of Exposure']
         probability_of_mitigation_for_node = node_context.matching_vulnerability_nodes[0]['Probability of Mitigation']
         pofe = float(probability_of_exposure_for_node * (1 - probability_of_mitigation_for_node))
-        print("[DEBUG] ID:", node_context.matching_vulnerability_nodes[0]['ID'], "Exposure:", probability_of_exposure_for_node, "Mitigation:", probability_of_mitigation_for_node, "POFE:", pofe)
+        #print("[DEBUG] ID:", node_context.matching_vulnerability_nodes[0]['ID'], "Exposure:", probability_of_exposure_for_node, "Mitigation:", probability_of_mitigation_for_node, "POFE:", pofe)
         if num_parents == 0:
             cpd_values[0, 0] = pofe * af_modifier
             cpd_values[1, 0] = 1 - pofe * af_modifier
@@ -351,11 +350,9 @@ def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, no
                     to_element = connection['to']
                     if re.match(r'^(V|\(V|\[V)\d', to_element):
                         connections_from_to[from_element].append(to_element)
-                        #print (from_element, to_element)
 
             for asset, vulns in connections_from_to.items():
                 num_vulns = len(vulns)
-                #print("[-]", asset, vulns, num_vulns)
 
                 sum_mitigation = 0.0  # Initialize sum for each asset
 
@@ -371,7 +368,7 @@ def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, no
                 if num_vulns > 0:
                     scaling_factor = 1.0 / num_vulns
                     probability_of_failure_for_node = min(1.0, scaling_factor * sum_mitigation)
-                    print("Asset:", asset, "Probability of failure:", probability_of_failure_for_node)
+                    #print("Asset:", asset, "Probability of failure:", probability_of_failure_for_node)
 
 ###########################################################################################################
 
@@ -420,7 +417,6 @@ def generate_cpd_values_impact(node, num_parents, aml_data: AMLData, node_contex
     elif NodeType == "Vulnerability":
         probability_of_impact_for_node = node_context.matching_vulnerability_nodes[0]['Probability of Impact'] * ( 1 - node_context.matching_vulnerability_nodes[0]['Probability of Mitigation'])
         pofi = float(probability_of_impact_for_node)
-        #print (matching_vulnerability_nodes[0]['ID'], matching_vulnerability_nodes[0]['Probability of Impact'], pofi)
         if num_parents == 0:
             cpd_values[0, 0] = pofi
             cpd_values[1, 0] = 1 - pofi
@@ -507,7 +503,7 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifie
             if node1 == node2:
                 if child_num == 0:
                     last_node = node1
-#    print("\n[*] Last node in BBN:", last_node)
+    print("\n[*] Last node in BBN:", last_node)
 
     for node1, node2 in itertools.product(aml_data.total_elements, repeat=2):
         if node1 == node2:

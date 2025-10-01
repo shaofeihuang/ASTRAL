@@ -55,8 +55,8 @@ def get_attack_tree(api_key, selected_model, prompt, system_context):
         tree_data = json.loads(cleaned_response)
         return tree_data
     except json.JSONDecodeError:
-        # Fallback: try to extract Mermaid code if JSON parsing fails
-        return extract_mermaid_code(response.choices[0].message.content)
+        return extract_mermaid_code(response.choices[0].message.content) # Fallback: try to extract Mermaid code if JSON parsing fails
+
 
 
 def get_dread_assessment(api_key, selected_model, prompt):
@@ -123,7 +123,6 @@ def main():
             st.image(image_bytes, caption="Uploaded Image", width="stretch")
             arch_expl_prompt = create_arch_expl_prompt(system_context)
 
-            # Generate Architectural Explanation Button
             if st.button("Generate Architectural Explanation") and uploaded_file is not None:
                 with st.spinner("Generating architectural explanation..."):
                     try:
@@ -136,7 +135,6 @@ def main():
         else:
             st.info("Please upload system architecture diagram.")
 
-        # Display Architectural Explanation if available
         if 'arch_explanation' in st.session_state:
             st.subheader("Architectural Explanation")
             st.write(st.session_state['arch_explanation'])
@@ -152,7 +150,6 @@ def main():
                 placeholder="Type extra architectural specifics here.",
                 height=150,
             )
-            # Re-Generate Architectural Explanation Button
             if st.button("Re-Generate Architectural Explanation"):
                 with st.spinner("Generating architectural explanation..."):
                     try:
@@ -175,7 +172,6 @@ def main():
         st.markdown("""---""")
         threat_model_prompt = create_threat_model_prompt(system_context)
 
-        # Generate STRIDE-LM Threat Model Button
         if 'arch_explanation' in st.session_state:
             if st.button("Generate STRIDE-LM Threat Model"):
                 with st.spinner("Generating STRIDE-LM threat model..."):
@@ -190,7 +186,6 @@ def main():
         else:
             st.info("Generate an architectural explanation first to proceed.")
 
-        # Display Threat Model if available
         if 'threat_model' in st.session_state:
             markdown_output = tm_json_to_markdown(
                 st.session_state['threat_model'],
@@ -263,7 +258,6 @@ def main():
                     with st.spinner("Generating attack tree and paths..."):
                         try:
                             attack_tree_data = get_attack_tree(api_key, selected_model, attack_tree_prompt, system_context)
-                            #print (attack_tree_data)
                             st.session_state['attack_tree_data'] = attack_tree_data
                             attack_tree = convert_tree_to_mermaid(attack_tree_data)
                             st.session_state['attack_tree'] = attack_tree
@@ -541,7 +535,7 @@ def main():
                             value=0.01,
                             step=0.01,
                             help="Adjust to factor attack feasibility (such as attacker skill, system security posture, etc.). "
-                                "Lower values indicate a lower chance of a successful attack."
+                                "Higher value indicates a higher chance of a successful attack."
                         )
 
                         if st.button("Compute Bayesian Probabilities"):
@@ -564,14 +558,10 @@ def main():
 
                             print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
-                            # Use this for debugging
                             # for index, element in enumerate(aml_data.total_elements):
                             #    print(f"Index: {index}, Element: {element}")
 
                             cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, aml_data.total_elements, start_node, last_node)
-                            # Use this for debugging if the compute_risk_scores function breaks
-                            # cpd_prob = 0.5
-                            # cpd_impact = 0.5
 
                             risk_score = cpd_prob * cpd_impact * 100
                             print('[*] Risk score: {:.2f} %'.format(risk_score))
@@ -599,7 +589,6 @@ def main():
             df_assets = pd.DataFrame(assets)
             edited_assets = st.data_editor(df_assets, num_rows="dynamic")
             st.session_state['aml_attributes']['assets'] = edited_assets.to_dict(orient='records')
-            print ("asset updated")
 
             st.subheader("Vulnerability Attributes")
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
@@ -611,7 +600,6 @@ def main():
                 df_vuln = df_vuln[new_cols]
             edited_vuln = st.data_editor(df_vuln, num_rows="dynamic")
             st.session_state['aml_attributes']['vulnerabilities'] = edited_vuln.to_dict(orient='records')
-            print ("vuln updated")
 
             st.subheader("Hazard Attributes")
             hazards = st.session_state['aml_attributes']['hazards']
@@ -634,7 +622,6 @@ def main():
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
             df_vuln = pd.DataFrame(vulnerabilities)
 
-            # Add column if missing
             if 'Vulnerability.Probability of Mitigation' not in df_vuln.columns:
                 df_vuln['Vulnerability.Probability of Mitigation'] = 0.0
 
@@ -653,7 +640,6 @@ def main():
                 )
                 updated_probs.append(prob)
 
-            # Update the original vulnerabilities list with new probabilities
             for i, prob in enumerate(updated_probs):
                 st.session_state['aml_attributes']['vulnerabilities'][i]['Vulnerability.Probability of Mitigation'] = prob
         else:
