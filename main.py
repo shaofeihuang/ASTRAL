@@ -30,10 +30,10 @@ def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str,
     }
     if response_as_json:
         params["response_format"] = {"type": "json_object"}
-    
+
     response = client.chat.complete(**params)
     content = response.choices[0].message.content
-    
+
     if response_as_json:
         return json.loads(content)
     else:
@@ -96,9 +96,9 @@ def main():
         index=None,
         placeholder="Select or enter a custom description",
         accept_new_options=True,
-    )  
+    )
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Analysis", "DREAD", "Mitigation"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "DREAD", "Attack Tree", "System Model", "Analysis", "Countermeasures"])
 
 #----------------------------------------------------------------------------------------------
 # Generate Architectural Explanation
@@ -173,7 +173,7 @@ def main():
         """)
         st.markdown("""---""")
         threat_model_prompt = create_threat_model_prompt(system_context)
-        
+
         # Generate STRIDE-LM Threat Model Button
         if st.button("Generate STRIDE-LM Threat Model") and 'arch_explanation' in st.session_state:
             with st.spinner("Generating STRIDE-LM threat model..."):
@@ -204,10 +204,56 @@ def main():
             st.info("Please generate an architectural explanation first.")
 
 #----------------------------------------------------------------------------------------------
-# Generate Attack Trees and Attack Paths
+# Generate DREAD Risk Assessment
 #----------------------------------------------------------------------------------------------
 
     with tab3:
+        st.markdown("""
+        DREAD is a structured methodology for evaluating and prioritising risks associated with security threats. It assesses each threat based on five criteria: **D**amage potential, **R**eproducibility, **E**xploitability, **A**ffected users, and **D**iscoverability. By scoring threats on these factors, organisations can calculate an overall risk level, which enables them to focus mitigation efforts on the most critical vulnerabilities first. This method supports consistent risk assessment, improves communication across teams, and helps allocate resources efficiently to protect systems effectively. Use this tab to perform a DREAD risk assessment for your application or system.
+        """)
+        st.markdown("""---""")
+
+        dread_assessment_submit_button = st.button(label="Generate DREAD Risk Assessment")
+        if dread_assessment_submit_button and 'threat_model' in st.session_state:
+            threats_markdown = tm_json_to_markdown(st.session_state['threat_model'], [])
+            dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown, system_context)
+
+            with st.spinner("Generating DREAD Risk Assessment..."):
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        dread_assessment = get_dread_assessment(api_key, selected_model, dread_assessment_prompt)
+                        st.session_state['dread_assessment'] = dread_assessment
+                        break
+                    except Exception as e:
+                        if attempt == max_retries - 1:
+                            st.error(f"Error generating DREAD risk assessment after {max_retries} attempts: {e}")
+                            dread_assessment = {"Risk Assessment": []}
+
+            dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
+
+            if 'dread_assessment' in st.session_state:
+                dread_assessment = st.session_state['dread_assessment']
+                dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
+
+            st.markdown("## DREAD Risk Assessment")
+            st.markdown("The table below shows the DREAD risk assessment for each identified threat. The Risk Score is calculated as the average of the five DREAD categories.")
+            st.markdown(dread_assessment_markdown, unsafe_allow_html=False)
+
+            st.download_button(
+                label="Download DREAD Risk Assessment",
+                data=dread_assessment_markdown,
+                file_name="dread_assessment.md",
+                mime="text/markdown",
+            )
+        else:
+            st.info("Please generate a threat model first before requesting a DREAD risk assessment.")
+
+#----------------------------------------------------------------------------------------------
+# Generate Attack Trees and Attack Paths
+#----------------------------------------------------------------------------------------------
+
+    with tab4:
         st.markdown("""
         Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.
         """)
@@ -255,7 +301,7 @@ def main():
             st.code(st.session_state['attack_tree'])
             st.write("Attack Tree Diagram Preview:")
             mermaid(st.session_state['attack_tree'])
-            
+
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.download_button(
@@ -281,12 +327,11 @@ def main():
         else:
             st.info("Please generate an architectural explanation and threat model first.")
 
-
 #----------------------------------------------------------------------------------------------
 # Generate System Model (AutomationML)
 #----------------------------------------------------------------------------------------------
 
-    with tab4:
+    with tab5:
         st.markdown("""
         Automation Markup Language (AutomationML) is an XML-based open standard for representing industrial automation systems. It builds upon the CAEX (Computer Aided Engineering Exchange) format defined in IEC 62424, which provides an object-oriented data model for system components and their hierarchical relationships. AutomationML facilitates semantic interoperability across diverse CPS domains by enabling standardised, meaningful exchange of data about physical and cyber components, their configurations, and interrelations. Use this tab to generate an AutomationML representation of the CPS system.
         """)
@@ -311,7 +356,7 @@ def main():
                     #print (internal_elements_xml)
                     end_time = time.time()
                     elapsed_secs = end_time - start_time
-                    st.status(f"Step 1 completed ({elapsed_secs:.2f} secs)")
+                    st.info(f"Step 1 completed ({elapsed_secs:.2f} secs)")
                 except Exception as e:
                     st.error(f"Error generating model (Step 1): {e}")
 
@@ -333,7 +378,7 @@ def main():
                     #print (valid_pairs_json)
                     end_time = time.time()
                     elapsed_secs = end_time - start_time
-                    st.status(f"Step 2 completed ({elapsed_secs:.2f} secs)")
+                    st.info(f"Step 2 completed ({elapsed_secs:.2f} secs)")
                 except Exception as e:
                     st.error(f"Error generating model (Step 2): {e}")
 
@@ -367,7 +412,7 @@ def main():
                     #print (internal_links_xml)
                     end_time = time.time()
                     elapsed_secs = end_time - start_time
-                    st.status(f"Step 3 completed ({elapsed_secs:.2f} secs)")
+                    st.info(f"Step 3 completed ({elapsed_secs:.2f} secs)")
                 except Exception as e:
                     st.error(f"Error generating model (Step 3): {e}")
 
@@ -387,7 +432,7 @@ def main():
                                     )
                     end_time = time.time()
                     elapsed_secs = end_time - start_time
-                    st.status(f"Step 4 completed ({elapsed_secs:.2f} secs)")
+                    st.info(f"Step 4 completed ({elapsed_secs:.2f} secs)")
                     final_aml_xml = response_step4
                 except Exception as e:
                     st.error(f"Error generating model (Step 4): {e}")
@@ -431,7 +476,7 @@ def main():
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
 
-    with tab5:
+    with tab6:
         st.markdown("""
 
         """)
@@ -494,11 +539,11 @@ def main():
 
                         if 'attack_paths' in st.session_state:
                             start_node = st.session_state['attack_paths'].split(" --> ")[0]
-                            last_node = st.session_state['attack_paths'].split(" --> ")[-1]
-                   
+                            #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
+
                         print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
-                        # Use this for debugging 
+                        # Use this for debugging
                         # for index, element in enumerate(aml_data.total_elements):
                         #    print(f"Index: {index}, Element: {element}")
 
@@ -529,7 +574,7 @@ def main():
             st.subheader("Asset Attributes")
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)
-            edited_assets = st.data_editor(df_assets, num_rows="dynamic")          
+            edited_assets = st.data_editor(df_assets, num_rows="dynamic")
             st.session_state['aml_attributes']['assets'] = edited_assets.to_dict(orient='records')
 
             st.subheader("Vulnerability Attributes")
@@ -552,60 +597,40 @@ def main():
             st.info("Please upload or generate an AutomationML model first.")
 
 #----------------------------------------------------------------------------------------------
-# Generate DREAD Risk Assessment
-#----------------------------------------------------------------------------------------------
-
-    with tab6:
-        st.markdown("""
-        DREAD is a structured methodology for evaluating and prioritising risks associated with security threats. It assesses each threat based on five criteria: **D**amage potential, **R**eproducibility, **E**xploitability, **A**ffected users, and **D**iscoverability. By scoring threats on these factors, organisations can calculate an overall risk level, which enables them to focus mitigation efforts on the most critical vulnerabilities first. This method supports consistent risk assessment, improves communication across teams, and helps allocate resources efficiently to protect systems effectively. Use this tab to perform a DREAD risk assessment for your application or system.
-        """)
-        st.markdown("""---""")
-        
-        dread_assessment_submit_button = st.button(label="Generate DREAD Risk Assessment")
-        if dread_assessment_submit_button and 'threat_model' in st.session_state:
-            threats_markdown = tm_json_to_markdown(st.session_state['threat_model'], [])
-            dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown, system_context)
-
-            with st.spinner("Generating DREAD Risk Assessment..."):
-                max_retries = 3
-                for attempt in range(max_retries):
-                    try:
-                        dread_assessment = get_dread_assessment(api_key, selected_model, dread_assessment_prompt)
-                        st.session_state['dread_assessment'] = dread_assessment
-                        break
-                    except Exception as e:
-                        if attempt == max_retries - 1:
-                            st.error(f"Error generating DREAD risk assessment after {max_retries} attempts: {e}")
-                            dread_assessment = {"Risk Assessment": []}
-
-            dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
-
-            if 'dread_assessment' in st.session_state:
-                dread_assessment = st.session_state['dread_assessment']
-                dread_assessment_markdown = dread_json_to_markdown(dread_assessment)
-            
-            st.markdown("## DREAD Risk Assessment")
-            st.markdown("The table below shows the DREAD risk assessment for each identified threat. The Risk Score is calculated as the average of the five DREAD categories.")
-            st.markdown(dread_assessment_markdown, unsafe_allow_html=False)
-            
-            st.download_button(
-                label="Download DREAD Risk Assessment",
-                data=dread_assessment_markdown,
-                file_name="dread_assessment.md",
-                mime="text/markdown",
-            )
-        else:
-            st.info("Please generate a threat model first before requesting a DREAD risk assessment.")
-
-#----------------------------------------------------------------------------------------------
 # Placeholder for Decision Support Module
 #----------------------------------------------------------------------------------------------
 
     with tab7:
-        st.markdown("""
-        Placeholder for mitigation strategies using real-time recommendations.
-        """)
         st.markdown("""---""")
+        st.markdown("""---""")
+
+        if 'aml_attributes' in st.session_state:
+            st.subheader("Countermeasure Portfolio")
+            vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
+            df_vuln = pd.DataFrame(vulnerabilities)
+
+            # Add column if missing
+            if 'Vulnerability.Probability of Mitigation' not in df_vuln.columns:
+                df_vuln['Vulnerability.Probability of Mitigation'] = 0.0
+
+            df_vuln_subset = df_vuln[['ID', 'Vulnerability.Probability of Mitigation']]
+
+            updated_probs = []
+
+            for index, row in df_vuln_subset.iterrows():
+                prob = st.slider(
+                    label=f"Vulnerability: {row['ID']}",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=float(row['Vulnerability.Probability of Mitigation']),
+                    step=0.01,
+                    key=f"slider_{row['ID']}_{index}"
+                )
+                updated_probs.append(prob)
+
+            # Update the original vulnerabilities list with new probabilities
+            for i, prob in enumerate(updated_probs):
+                st.session_state['aml_attributes']['vulnerabilities'][i]['Vulnerability.Probability of Mitigation'] = prob
 
 
 if __name__ == "__main__":
