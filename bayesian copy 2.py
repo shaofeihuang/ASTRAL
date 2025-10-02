@@ -19,7 +19,11 @@ class Environment:
 
 @dataclass
 class AMLData:
+    assets: object
+    hazards: object
+    vulnerabilities: object
     probability_data: object
+    AssetinSystem: object
     HazardinSystem: object
     VulnerabilityinSystem: object
     max_num_parents: int
@@ -55,6 +59,55 @@ def get_attribute_value(internal_element, attribute_name):
         if value_element is not None:
             return float(value_element.text)
     return None
+
+
+def parse_attribute(attr):
+    ns = {'caex': 'http://www.dke.de/CAEX'}
+    attr_dict = {}
+    name = attr.attrib.get('Name', '')
+    value_elem = attr.find('caex:Value', ns)
+    if value_elem is not None:
+        attr_dict[name] = value_elem.text
+    else:
+        nested_attrs = attr.findall('caex:Attribute', ns)
+        for nested_attr in nested_attrs:
+            nested_parsed = parse_attribute(nested_attr)
+            for k, v in nested_parsed.items():
+                attr_dict[f"{name}.{k}"] = v
+    return attr_dict
+
+
+def extract_elements_starting_with(root, prefix):
+    ns = {'caex': 'http://www.dke.de/CAEX'}
+    all_nodes = root.findall(".//caex:InternalElement", ns)
+    filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
+    items = []
+    for node in filtered_nodes:
+        data = {
+            'Name': node.attrib.get('Name', ''),
+            'ID': node.attrib.get('ID', '')
+        }
+        for attr in node.findall('caex:Attribute', ns):
+            parsed_attr = parse_attribute(attr)
+            data.update(parsed_attr)
+        items.append(data)
+    return items
+
+
+def extract_elements(root, ref_path):
+    ns = {'caex': 'http://www.dke.de/CAEX'}
+    nodes = root.findall(f".//caex:InternalElement[@RefBaseSystemUnitPath='{ref_path}']", ns)
+    items = []
+    for node in nodes:
+        data = {
+            'Name': node.attrib.get('Name', ''),
+            'ID': node.attrib.get('ID', '')
+        }
+        for attr in node.findall('caex:Attribute', ns):
+            parsed_attr = parse_attribute(attr)
+            data.update(parsed_attr)
+        items.append(data)
+    return items
 
 
 def calculate_probability_of_failure(failure_rate_value, t):
@@ -98,6 +151,10 @@ def process_AML_file(root, t):
     connections_mapped = []
     result_list = []
     total_elements = set()
+
+    assets = extract_elements_starting_with(root, 'AssetOfICS')
+    hazards = extract_elements(root, 'HazardforSystem/Hazard')
+    vulnerabilities = extract_elements(root, 'VulnerabilityforSystem/Vulnerability')
 
     for k in root.findall('.//'):
         allinone_attrib.append(k.attrib)
@@ -292,11 +349,25 @@ def process_AML_file(root, t):
         if num_parents > max_num_parents:
             max_num_parents = num_parents
 
-    return probability_data, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
+        return (
+            assets,
+            hazards,
+            vulnerabilities,
+            probability_data,
+            AssetinSystem,
+            HazardinSystem,
+            VulnerabilityinSystem,
+            max_num_parents,
+            total_elements,
+            connections,
+            connections_mapped,
+            result_list,
+        )
 
 
 def generate_cpd_values_hazard(num_parents):
-    cpd_values = [[0] * (2 ** num_parents) for _ in range(2)]
+    num_states = 2
+    cpd_values = [[0] * (num_states ** num_parents) for _ in range(2)]
     for i in range(2 ** num_parents):
         num_ones = bin(i).count('1')
         cpd_values[0][i] = (num_parents - num_ones) / num_parents
@@ -305,7 +376,8 @@ def generate_cpd_values_hazard(num_parents):
 
 
 def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, node_context: NodeContext, NodeType: str):
-    cpd_values = np.zeros((2, 2 ** num_parents))
+    num_states = 2
+    cpd_values = np.zeros((num_states, 2 ** num_parents))
 
     if NodeType == "Hazard":
         if num_parents == 0:
@@ -399,7 +471,8 @@ def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, no
 
 
 def generate_cpd_values_impact(node, num_parents, aml_data: AMLData, node_context: NodeContext, NodeType: str):
-    cpd_values = np.zeros((2, 2 ** num_parents))
+    num_states = 2
+    cpd_values = np.zeros((num_states, 2 ** num_parents))
     current_entry = next((entry for entry in aml_data.result_list if entry['Element'] == node), None)
 
     if NodeType == "Hazard":

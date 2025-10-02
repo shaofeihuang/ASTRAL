@@ -493,7 +493,7 @@ def main():
         aml_content = clean_aml_content(st.session_state['aml_file'])
         env = Environment(*setup_environment(aml_content))
         aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
-        st.session_state['aml_content'] = aml_content
+        #st.session_state['aml_content'] = aml_content
         st.session_state['aml_data'] = aml_data
         st.session_state['env'] = env
         assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
@@ -558,8 +558,9 @@ def main():
 
                 with col1:
                         if st.button("Load Model Attributes"):
-                            load_model_attributes()
-                            st.success("Attributes extracted successfully.")
+                            if 'aml_attributes' not in st.session_state:
+                                load_model_attributes()
+                                st.success("Attributes extracted successfully.")
 
                 with col2:
                     if 'aml_attributes' in st.session_state:
@@ -590,34 +591,29 @@ def main():
 
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
+            print (st.session_state['aml_data'])#.assets)
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)
             edited_assets = st.data_editor(df_assets, num_rows="dynamic")
-
             updated_assets = edited_assets.to_dict(orient='records')
             asset_map = {asset['ID']: asset for asset in updated_assets}
-            #print (st.session_state['aml_content'])
 
-            for internal_element in st.session_state['env'].element_tree_root.findall('.//InternalElement'):
-                print (internal_element) 
-                asset_id = internal_element.attrib.get('ID', None)
-                print (asset_id)
+            print (st.session_state['aml_data'])
+            ns = {'caex': 'http://www.dke.de/CAEX'}
+
+            for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
+                asset_id = internal_element.attrib.get('ID')
                 if asset_id and asset_id in asset_map:
                     updated = asset_map[asset_id]
-                    # Find AutomationEquipments attribute
-                    ae_attr = internal_element.find(".//Attribute[@Name='AutomationEquipments']")
-                    if ae_attr is not None:
-                        for key, value in updated.items():
-                            # Skip ID, Name, etc. unless you want to update those
-                            if key in ['ID', 'Name', 'RefBaseSystemUnitPath']:
-                                continue
-                            # Find the matching Attribute child
-                            sub_attr = ae_attr.find(f".//Attribute[@Name='{key}']")
-                            if sub_attr is not None:
-                                val_elem = sub_attr.find('Value')
-                                if val_elem is not None:
-                                    #val_elem.text = str(value)
-                                    print (val_elem.text, value)
+                    for key, value in updated.items():
+                        if key in ['ID', 'Name', 'RefBaseSystemUnitPath']:
+                            continue
+                        sub_attr = internal_element.find(f"caex:Attribute[@Name='{key}']", ns)
+                        if sub_attr is not None:
+                            val_elem = sub_attr.find("caex:Value", ns)
+                            if val_elem is not None:
+                                print("Asset ID:", asset_id, "Key:", key, "Old Value:", val_elem.text, "New Value:", value)
+                                val_elem.text = str(value)
 
 
             st.subheader("Vulnerability Attributes")
