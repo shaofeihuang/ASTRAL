@@ -76,6 +76,65 @@ def get_dread_assessment(api_key, selected_model, prompt):
 
     return dread_assessment
 
+
+def load_model_attributes():
+    aml_content = clean_aml_content(st.session_state['aml_file'])
+    env = Environment(*setup_environment(aml_content))
+    aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
+    #st.session_state['aml_content'] = aml_content
+    st.session_state['aml_data'] = aml_data
+    st.session_state['env'] = env
+    #assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
+    st.session_state['aml_attributes'] = {
+        'assets': aml_data.assets,
+        'vulnerabilities': aml_data.vulnerabilities,
+        'hazards': aml_data.hazards
+    }
+
+def compute_bayesian_probabilities():
+    #check_probability_data(aml_data)
+    st.session_state['env'].af_modifier = st.session_state['af_modifier_input']
+    node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
+    bbn_exposure, last_node = create_bbn_exposure(st.session_state['aml_data'], node_context, st.session_state['env'].af_modifier)
+    bbn_impact = create_bbn_impact(bbn_exposure, st.session_state['aml_data'], node_context)
+    check_bbn_models(bbn_exposure, bbn_impact)
+
+    inference_exposure = VariableElimination(bbn_exposure)
+    inference_impact = VariableElimination(bbn_impact)
+
+    start_node = st.session_state['start_node']
+
+    if 'attack_paths' in st.session_state:
+        start_node = st.session_state['attack_paths'].split(" --> ")[0]
+        #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
+
+    print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
+
+    # for index, element in enumerate(aml_data.total_elements):
+    #    print(f"Index: {index}, Element: {element}")
+
+    cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
+
+    risk_score = cpd_prob * cpd_impact * 100
+
+    st.session_state['cpd_prob'] = cpd_prob
+    st.session_state['cpd_impact'] = cpd_impact
+    st.session_state['risk_score'] = risk_score
+    
+    print('[*] Risk score: {:.2f} %'.format(risk_score))
+    print('--------------------------------------------------------')
+    if risk_score < 20:
+        print('[----] CPS System is under NEGLIGIBLE risk (less than 20%)')
+    elif 20 <= risk_score < 40:
+        print('[*---] CPS System is under LOW risk (between 20% and 40%)')
+    elif 40 <= risk_score < 60:
+        print('[**--] CPS System is under MEDIUM risk (between 40% and 60%)')
+    elif 60 <= risk_score < 80:
+        print('[***-] CPS System is under HIGH risk (between 60% and 80%)')
+    else:
+        print('[****] CPS System is under CRITICAL risk (greater than 80%)')
+
+
 def main():
     load_dotenv()
     st.sidebar.image("logo.png")
@@ -489,63 +548,6 @@ def main():
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
 
-    def load_model_attributes():
-        aml_content = clean_aml_content(st.session_state['aml_file'])
-        env = Environment(*setup_environment(aml_content))
-        aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
-        #st.session_state['aml_content'] = aml_content
-        st.session_state['aml_data'] = aml_data
-        st.session_state['env'] = env
-        #assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
-        st.session_state['aml_attributes'] = {
-            'assets': aml_data.assets,
-            'vulnerabilities': aml_data.vulnerabilities,
-            'hazards': aml_data.hazards
-        }
-
-    def compute_bayesian_probabilities():
-        #check_probability_data(aml_data)
-        st.session_state['env'].af_modifier = st.session_state['af_modifier_input']
-        node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
-        bbn_exposure, last_node = create_bbn_exposure(st.session_state['aml_data'], node_context, st.session_state['env'].af_modifier)
-        bbn_impact = create_bbn_impact(bbn_exposure, st.session_state['aml_data'], node_context)
-        check_bbn_models(bbn_exposure, bbn_impact)
-
-        inference_exposure = VariableElimination(bbn_exposure)
-        inference_impact = VariableElimination(bbn_impact)
-
-        start_node = st.session_state['start_node']
-
-        if 'attack_paths' in st.session_state:
-            start_node = st.session_state['attack_paths'].split(" --> ")[0]
-            #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
-
-        print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
-
-        # for index, element in enumerate(aml_data.total_elements):
-        #    print(f"Index: {index}, Element: {element}")
-
-        cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
-
-        risk_score = cpd_prob * cpd_impact * 100
-
-        st.session_state['cpd_prob'] = cpd_prob
-        st.session_state['cpd_impact'] = cpd_impact
-        st.session_state['risk_score'] = risk_score
-        
-        print('[*] Risk score: {:.2f} %'.format(risk_score))
-        print('--------------------------------------------------------')
-        if risk_score < 20:
-            print('[----] CPS System is under NEGLIGIBLE risk (less than 20%)')
-        elif 20 <= risk_score < 40:
-            print('[*---] CPS System is under LOW risk (between 20% and 40%)')
-        elif 40 <= risk_score < 60:
-            print('[**--] CPS System is under MEDIUM risk (between 40% and 60%)')
-        elif 60 <= risk_score < 80:
-            print('[***-] CPS System is under HIGH risk (between 60% and 80%)')
-        else:
-            print('[****] CPS System is under CRITICAL risk (greater than 80%)')
-
     with tab6:
         st.markdown("""
         Use this page to analyse system model attributes and calculate Bayesian probabilities of exposure and severe impact, along with the resulting risk assessment.
@@ -583,28 +585,10 @@ def main():
 
                         if st.button("Compute Bayesian Probabilities"):
                             compute_bayesian_probabilities()
-                            st.sidebar.metric("Posterior Probability of Exposure", value=f"{st.session_state['cpd_prob']:.4f}")
-                            st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{st.session_state['cpd_impact']:.4f}")
-                            st.sidebar.metric("Risk Score", value=f"{st.session_state['risk_score']:.2f}%")
+
         else:
             st.info("Generate or upload an AutomationML model first to proceed with model analysis.")
 
-        def extract_elements_starting_with(root, prefix):
-            all_nodes = root.findall(".//caex:InternalElement", ns)
-            filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
-            items = []
-            for node in filtered_nodes:
-                data = {
-                    'Name': node.attrib.get('Name', ''),
-                    'ID': node.attrib.get('ID', '')
-                }
-
-                for attr in node.findall('caex:Attribute', ns):
-                    parsed_attr = parse_attribute(attr)
-                    data.update(parsed_attr)
-
-                items.append(data)
-            return items
     
         if 'aml_attributes' in st.session_state:
             ns = {'caex': 'http://www.dke.de/CAEX'}
@@ -627,7 +611,6 @@ def main():
                                 st.session_state['aml_data'].assets[idx][key] = value
                     #print ("AFTER:", st.session_state['aml_data'].assets[idx], "\n")
 
-
             st.subheader("Vulnerability Attributes")
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
             df_vuln = pd.DataFrame(vulnerabilities)
@@ -643,14 +626,13 @@ def main():
                 vuln_id = internal_element.attrib.get('ID')
                 if vuln_id and vuln_id in vuln_map:
                     updated = vuln_map[vuln_id]
-                    idx = next((i for i, a in enumerate(st.session_state['aml_data'].vulnerabilities) if a['ID'] == vuln_id), None)
+                    idx = next((i for i, v in enumerate(st.session_state['aml_data'].vulnerabilities) if v['ID'] == vuln_id), None)
                     #print ("BEFORE:", st.session_state['aml_data'].vulnerabilities[idx])
                     for key, value in updated.items():
                         if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
                             if idx is not None:
                                 st.session_state['aml_data'].vulnerabilities[idx][key] = value
                     #print ("AFTER:", st.session_state['aml_data'].vulnerabilities[idx], "\n")
-
 
             st.subheader("Hazard Attributes")
             hazards = st.session_state['aml_attributes']['hazards']
@@ -663,7 +645,7 @@ def main():
                 hazard_id = internal_element.attrib.get('ID')
                 if hazard_id and hazard_id in hazard_map:
                     updated = hazard_map[hazard_id]
-                    idx = next((i for i, a in enumerate(st.session_state['aml_data'].hazards) if a['ID'] == hazard_id), None)
+                    idx = next((i for i, h in enumerate(st.session_state['aml_data'].hazards) if h['ID'] == hazard_id), None)
                     #print ("BEFORE:", st.session_state['aml_data'].hazards[idx])
                     for key, value in updated.items():
                         if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
@@ -672,6 +654,10 @@ def main():
                     #print ("AFTER:", st.session_state['aml_data'].hazards[idx], "\n")
 
             compute_bayesian_probabilities()
+            st.sidebar.metric("Posterior Probability of Exposure", value=f"{st.session_state['cpd_prob']:.4f}")
+            st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{st.session_state['cpd_impact']:.4f}")
+            st.sidebar.metric("Risk Score", value=f"{st.session_state['risk_score']:.2f}%")
+
 
 #----------------------------------------------------------------------------------------------
 # Placeholder for Decision Support Module
@@ -693,7 +679,7 @@ def main():
 
             df_vuln_subset = df_vuln[['ID', 'Vulnerability.Probability of Mitigation']]
 
-            updated_probs = []
+            updated_probs = {}
 
             for index, row in df_vuln_subset.iterrows():
                 prob = st.slider(
@@ -704,10 +690,21 @@ def main():
                     step=0.01,
                     key=f"slider_{row['ID']}_{index}"
                 )
-                updated_probs.append(prob)
+                updated_probs[row['ID']] = prob
+            #print (updated_probs)
+        
+            for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
+                vuln_id = internal_element.attrib.get('ID')
+                if vuln_id in updated_probs:
+                    prob = updated_probs[vuln_id]
+                    idx = next((i for i, v in enumerate(st.session_state['aml_data'].vulnerabilities) if v['ID'] == vuln_id), None)
+                    if idx is not None:
+                        print("BEFORE:", st.session_state['aml_data'].vulnerabilities[idx])
+                        st.session_state['aml_data'].vulnerabilities[idx]['Vulnerability.Probability of Mitigation'] = prob
+                    print ("AFTER:", st.session_state['aml_data'].vulnerabilities[idx], "\n")
 
-            for i, prob in enumerate(updated_probs):
-                st.session_state['aml_attributes']['vulnerabilities'][i]['Vulnerability.Probability of Mitigation'] = prob
+            compute_bayesian_probabilities()
+
         else:
                 st.info("Perform analysis first to proceed.")
 
