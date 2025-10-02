@@ -135,6 +135,12 @@ def compute_bayesian_probabilities():
         print('[****] CPS System is under CRITICAL risk (greater than 80%)')
 
 
+def display_metrics():
+    st.sidebar.metric("Posterior Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
+    st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
+    st.sidebar.metric("Risk Score", value=f"{st.session_state.get('risk_score', 0):.2f}%")
+
+
 def main():
     load_dotenv()
     st.sidebar.image("logo.png")
@@ -654,9 +660,6 @@ def main():
                     #print ("AFTER:", st.session_state['aml_data'].hazards[idx], "\n")
 
             compute_bayesian_probabilities()
-            st.sidebar.metric("Posterior Probability of Exposure", value=f"{st.session_state['cpd_prob']:.4f}")
-            st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{st.session_state['cpd_impact']:.4f}")
-            st.sidebar.metric("Risk Score", value=f"{st.session_state['risk_score']:.2f}%")
 
 
 #----------------------------------------------------------------------------------------------
@@ -699,15 +702,16 @@ def main():
                     prob = updated_probs[vuln_id]
                     idx = next((i for i, v in enumerate(st.session_state['aml_data'].vulnerabilities) if v['ID'] == vuln_id), None)
                     if idx is not None:
-                        print("BEFORE:", st.session_state['aml_data'].vulnerabilities[idx])
+                        #print("BEFORE:", st.session_state['aml_data'].vulnerabilities[idx])
                         st.session_state['aml_data'].vulnerabilities[idx]['Vulnerability.Probability of Mitigation'] = prob
-                    print ("AFTER:", st.session_state['aml_data'].vulnerabilities[idx], "\n")
+                        #print ("AFTER:", st.session_state['aml_data'].vulnerabilities[idx], "\n")
 
             compute_bayesian_probabilities()
 
         else:
                 st.info("Perform analysis first to proceed.")
 
+    display_metrics()
 
 if __name__ == "__main__":
     main()
