@@ -589,33 +589,43 @@ def main():
         else:
             st.info("Generate or upload an AutomationML model first to proceed with model analysis.")
 
+        def extract_elements_starting_with(root, prefix):
+            all_nodes = root.findall(".//caex:InternalElement", ns)
+            filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
+            items = []
+            for node in filtered_nodes:
+                data = {
+                    'Name': node.attrib.get('Name', ''),
+                    'ID': node.attrib.get('ID', '')
+                }
+
+                for attr in node.findall('caex:Attribute', ns):
+                    parsed_attr = parse_attribute(attr)
+                    data.update(parsed_attr)
+
+                items.append(data)
+            return items
+    
         if 'aml_attributes' in st.session_state:
+            ns = {'caex': 'http://www.dke.de/CAEX'}
+
             st.subheader("Asset Attributes")
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)
             edited_assets = st.data_editor(df_assets, num_rows="dynamic")
             updated_assets = edited_assets.to_dict(orient='records')
             asset_map = {asset['ID']: asset for asset in updated_assets}
-
-            #print (st.session_state['aml_data'])
-            ns = {'caex': 'http://www.dke.de/CAEX'}
-
             for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
                 asset_id = internal_element.attrib.get('ID')
                 if asset_id and asset_id in asset_map:
                     updated = asset_map[asset_id]
+                    idx = next((i for i, a in enumerate(st.session_state['aml_data'].assets) if a['ID'] == asset_id), None)
+                    #print ("BEFORE:", st.session_state['aml_data'].assets[idx])
                     for key, value in updated.items():
-                        print ("KEY:", key, "VAL:", value)
-                        if key in ['ID', 'Name', 'RefBaseSystemUnitPath']:
-                            continue
-                        sub_attr = internal_element.find(f"caex:Attribute[@Name='{key}']", ns)
-                        print (sub_attr)
-                        if sub_attr is not None:
-                            print ("KEY:", key, "SUBATTR:", sub_attr)
-                            val_elem = sub_attr.find("caex:Value", ns)
-                            if val_elem is not None:
-                                print("Asset ID:", asset_id, "Key:", key, "Old Value:", val_elem.text, "New Value:", value)
-                                val_elem.text = str(value)
+                        if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
+                            if idx is not None:
+                                st.session_state['aml_data'].assets[idx][key] = value
+                    #print ("AFTER:", st.session_state['aml_data'].assets[idx], "\n")
 
 
             st.subheader("Vulnerability Attributes")
@@ -626,14 +636,40 @@ def main():
                 cols.remove('Attack Name')
                 new_cols = ['Attack Name'] + cols
                 df_vuln = df_vuln[new_cols]
-            edited_vuln = st.data_editor(df_vuln, num_rows="dynamic")
-            st.session_state['aml_attributes']['vulnerabilities'] = edited_vuln.to_dict(orient='records')
+            edited_vulns = st.data_editor(df_vuln, num_rows="dynamic")
+            updated_vulns = edited_vulns.to_dict(orient='records')
+            vuln_map = {vuln['ID']: vuln for vuln in updated_vulns}
+            for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
+                vuln_id = internal_element.attrib.get('ID')
+                if vuln_id and vuln_id in vuln_map:
+                    updated = vuln_map[vuln_id]
+                    idx = next((i for i, a in enumerate(st.session_state['aml_data'].vulnerabilities) if a['ID'] == vuln_id), None)
+                    #print ("BEFORE:", st.session_state['aml_data'].vulnerabilities[idx])
+                    for key, value in updated.items():
+                        if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
+                            if idx is not None:
+                                st.session_state['aml_data'].vulnerabilities[idx][key] = value
+                    #print ("AFTER:", st.session_state['aml_data'].vulnerabilities[idx], "\n")
+
 
             st.subheader("Hazard Attributes")
             hazards = st.session_state['aml_attributes']['hazards']
             df_hazards = pd.DataFrame(hazards)
             edited_hazards = st.data_editor(df_hazards, num_rows="dynamic")
-            st.session_state['aml_attributes']['hazards'] = edited_hazards.to_dict(orient='records')
+            updated_hazards = edited_hazards.to_dict(orient='records')
+            hazard_map = {hazard['ID']: hazard for hazard in updated_hazards}
+
+            for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
+                hazard_id = internal_element.attrib.get('ID')
+                if hazard_id and hazard_id in hazard_map:
+                    updated = hazard_map[hazard_id]
+                    idx = next((i for i, a in enumerate(st.session_state['aml_data'].hazards) if a['ID'] == hazard_id), None)
+                    #print ("BEFORE:", st.session_state['aml_data'].hazards[idx])
+                    for key, value in updated.items():
+                        if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
+                            if idx is not None:
+                                st.session_state['aml_data'].hazards[idx][key] = value
+                    #print ("AFTER:", st.session_state['aml_data'].hazards[idx], "\n")
 
             compute_bayesian_probabilities()
 

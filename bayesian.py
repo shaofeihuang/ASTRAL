@@ -79,6 +79,56 @@ def check_probability_data(aml_data: AMLData):
             "Prob of Human Error:", data['Probability of Human Error'])
 
 
+def parse_attribute(attr, ns):
+    attr_dict = {}
+    name = attr.attrib.get('Name', '')
+    value_elem = attr.find('caex:Value', ns)
+    if value_elem is not None:
+        attr_dict[name] = value_elem.text
+    else:
+        nested_attrs = attr.findall('caex:Attribute', ns)
+        for nested_attr in nested_attrs:
+            nested_parsed = parse_attribute(nested_attr, ns)
+            for k, v in nested_parsed.items():
+                attr_dict[f"{name}.{k}"] = v
+    return attr_dict
+
+
+def extract_elements_starting_with(root, prefix, ns):
+    all_nodes = root.findall(".//caex:InternalElement", ns)
+    filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
+    items = []
+    for node in filtered_nodes:
+        data = {
+            'Name': node.attrib.get('Name', ''),
+            'ID': node.attrib.get('ID', '')
+        }
+
+        for attr in node.findall('caex:Attribute', ns):
+            parsed_attr = parse_attribute(attr, ns)
+            data.update(parsed_attr)
+
+        items.append(data)
+    return items
+
+
+def extract_elements(root, ref_path, ns):
+    nodes = root.findall(f".//caex:InternalElement[@RefBaseSystemUnitPath='{ref_path}']", ns)
+    items = []
+    for node in nodes:
+        data = {
+            'Name': node.attrib.get('Name', ''),
+            'ID': node.attrib.get('ID', '')
+        }
+
+        for attr in node.findall('caex:Attribute', ns):
+            parsed_attr = parse_attribute(attr, ns)
+            data.update(parsed_attr)
+
+        items.append(data)
+    return items
+
+
 def process_AML_file(root, t):
     max_num_parents = 0
     allinone_attrib = []
@@ -101,59 +151,12 @@ def process_AML_file(root, t):
     connections_mapped = []
     result_list = []
     total_elements = set()
-
-    def parse_attribute(attr):
-        attr_dict = {}
-        name = attr.attrib.get('Name', '')
-        value_elem = attr.find('caex:Value', ns)
-        if value_elem is not None:
-            attr_dict[name] = value_elem.text
-        else:
-            nested_attrs = attr.findall('caex:Attribute', ns)
-            for nested_attr in nested_attrs:
-                nested_parsed = parse_attribute(nested_attr)
-                for k, v in nested_parsed.items():
-                    attr_dict[f"{name}.{k}"] = v
-        return attr_dict
-
-    def extract_elements_starting_with(root, prefix, ns):
-        all_nodes = root.findall(".//caex:InternalElement", ns)
-        filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
-        items = []
-        for node in filtered_nodes:
-            data = {
-                'Name': node.attrib.get('Name', ''),
-                'ID': node.attrib.get('ID', '')
-            }
-
-            for attr in node.findall('caex:Attribute', ns):
-                parsed_attr = parse_attribute(attr)
-                data.update(parsed_attr)
-
-            items.append(data)
-        return items
-
-    def extract_elements(ref_path):
-        nodes = root.findall(f".//caex:InternalElement[@RefBaseSystemUnitPath='{ref_path}']", ns)
-        items = []
-        for node in nodes:
-            data = {
-                'Name': node.attrib.get('Name', ''),
-                'ID': node.attrib.get('ID', '')
-            }
-
-            for attr in node.findall('caex:Attribute', ns):
-                parsed_attr = parse_attribute(attr)
-                data.update(parsed_attr)
-
-            items.append(data)
-        return items
     
     ns = {'caex': 'http://www.dke.de/CAEX'}
 
     assets = extract_elements_starting_with(root, 'AssetOfICS', ns)
-    vulnerabilities = extract_elements('VulnerabilityforSystem/Vulnerability')
-    hazards = extract_elements('HazardforSystem/Hazard')
+    vulnerabilities = extract_elements(root, 'VulnerabilityforSystem/Vulnerability', ns)
+    hazards = extract_elements(root, 'HazardforSystem/Hazard', ns)
 
     for k in root.findall('.//'):
         allinone_attrib.append(k.attrib)
