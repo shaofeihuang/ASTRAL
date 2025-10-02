@@ -252,7 +252,7 @@ def main():
             col1, col2 = st.columns(2)
 
         with col1:
-            if all(key in st.session_state for key in ("arch_explanation", "threat_model")):
+            if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state:
                 if st.button("Generate Attack Tree and Paths"):
                     attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_explanation'), st.session_state.get('threat_model'))
                     with st.spinner("Generating attack tree and paths..."):
@@ -456,7 +456,7 @@ def main():
             col1, col2 = st.columns(2)
 
         with col1:
-            if all(key in st.session_state for key in ("arch_explanation", "threat_model", "attack_paths")):
+            if 'arch_explanation' in st.session_state and 'threat_model' in st.session_state and 'attack_paths' in st.session_state:
                 if st.button("Generate AutomationML File"):
                     try:
                         aml_content = generate_aml_stepwise(st.session_state['arch_explanation'], st.session_state['threat_model'], st.session_state['attack_paths'])
@@ -489,63 +489,6 @@ def main():
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
 
-    def load_model_attributes():
-        aml_content = clean_aml_content(st.session_state['aml_file'])
-        env = Environment(*setup_environment(aml_content))
-        aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
-        st.session_state['aml_content'] = aml_content
-        st.session_state['aml_data'] = aml_data
-        st.session_state['env'] = env
-        assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
-        st.session_state['aml_attributes'] = {
-            'assets': assets,
-            'vulnerabilities': vulnerabilities,
-            'hazards': hazards
-        }
-
-    def compute_bayesian_probabilities():
-        #check_probability_data(aml_data)
-        st.session_state['env'].af_modifier = st.session_state['af_modifier_input']
-        node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
-        bbn_exposure, last_node = create_bbn_exposure(st.session_state['aml_data'], node_context, st.session_state['env'].af_modifier)
-        bbn_impact = create_bbn_impact(bbn_exposure, st.session_state['aml_data'], node_context)
-        check_bbn_models(bbn_exposure, bbn_impact)
-
-        inference_exposure = VariableElimination(bbn_exposure)
-        inference_impact = VariableElimination(bbn_impact)
-
-        start_node = st.session_state['start_node']
-
-        if 'attack_paths' in st.session_state:
-            start_node = st.session_state['attack_paths'].split(" --> ")[0]
-            #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
-
-        print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
-
-        # for index, element in enumerate(aml_data.total_elements):
-        #    print(f"Index: {index}, Element: {element}")
-
-        cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
-
-        risk_score = cpd_prob * cpd_impact * 100
-
-        st.session_state['cpd_prob'] = cpd_prob
-        st.session_state['cpd_impact'] = cpd_impact
-        st.session_state['risk_score'] = risk_score
-        
-        print('[*] Risk score: {:.2f} %'.format(risk_score))
-        print('--------------------------------------------------------')
-        if risk_score < 20:
-            print('[----] CPS System is under NEGLIGIBLE risk (less than 20%)')
-        elif 20 <= risk_score < 40:
-            print('[*---] CPS System is under LOW risk (between 20% and 40%)')
-        elif 40 <= risk_score < 60:
-            print('[**--] CPS System is under MEDIUM risk (between 40% and 60%)')
-        elif 60 <= risk_score < 80:
-            print('[***-] CPS System is under HIGH risk (between 60% and 80%)')
-        else:
-            print('[****] CPS System is under CRITICAL risk (greater than 80%)')
-
     with tab6:
         st.markdown("""
         Use this page to analyse system model attributes and calculate Bayesian probabilities of exposure and severe impact, along with the resulting risk assessment.
@@ -554,23 +497,38 @@ def main():
 
         if 'aml_file' in st.session_state:
             with st.container():
-                col1, col2 = st.columns(2)
+                col1, col2, col3 = st.columns(3)
 
                 with col1:
                         if st.button("Load Model Attributes"):
-                            load_model_attributes()
+                            aml_content = clean_aml_content(st.session_state['aml_file'])
+                            assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
+                            st.session_state['aml_attributes'] = {
+                                'assets': assets,
+                                'vulnerabilities': vulnerabilities,
+                                'hazards': hazards
+                            }
                             st.success("Attributes extracted successfully.")
+
 
                 with col2:
                     if 'aml_attributes' in st.session_state:
-                        st.session_state['start_node'] = st.selectbox(
+                        if st.button("Save Model Attributes"):
+                            aml_content = clean_aml_content(st.session_state['aml_file'])
+                            updated_aml = update_aml_from_attributes(aml_content, st.session_state['aml_attributes'])
+                            st.session_state['aml_file'] = updated_aml
+                            st.success("Attributes saved successfully.")
+
+                with col3:
+                    if 'aml_attributes' in st.session_state:
+                        start_node = st.selectbox(
                             "Attacker ID in the system model",
                             ("Attacker", "[U01] Attacker"),
                             index=1,
                             placeholder="Select or enter attacker ID",
                             accept_new_options=True,
                         )
-                        st.session_state['af_modifier_input'] = st.slider(
+                        af_modifier_input = st.slider(
                             "Attack Feasibility (AF) Modifier",
                             min_value=0.0,
                             max_value=1.0,
@@ -581,10 +539,47 @@ def main():
                         )
 
                         if st.button("Compute Bayesian Probabilities"):
-                            compute_bayesian_probabilities()
-                            st.sidebar.metric("Posterior Probability of Exposure", value=f"{st.session_state['cpd_prob']:.4f}")
-                            st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{st.session_state['cpd_impact']:.4f}")
-                            st.sidebar.metric("Risk Score", value=f"{st.session_state['risk_score']:.2f}%")
+                            aml_content = clean_aml_content(st.session_state['aml_file'])
+                            env = Environment(*setup_environment(aml_content))
+                            aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
+                            #check_probability_data(aml_data)
+                            env.af_modifier = af_modifier_input
+                            node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
+                            bbn_exposure, last_node = create_bbn_exposure(aml_data, node_context, env.af_modifier)
+                            bbn_impact = create_bbn_impact(bbn_exposure, aml_data, node_context)
+                            check_bbn_models(bbn_exposure, bbn_impact)
+
+                            inference_exposure = VariableElimination(bbn_exposure)
+                            inference_impact = VariableElimination(bbn_impact)
+
+                            if 'attack_paths' in st.session_state:
+                                start_node = st.session_state['attack_paths'].split(" --> ")[0]
+                                #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
+
+                            print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
+
+                            # for index, element in enumerate(aml_data.total_elements):
+                            #    print(f"Index: {index}, Element: {element}")
+
+                            cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, aml_data.total_elements, start_node, last_node)
+
+                            risk_score = cpd_prob * cpd_impact * 100
+                            print('[*] Risk score: {:.2f} %'.format(risk_score))
+                            print('--------------------------------------------------------')
+                            if risk_score < 20:
+                                print('[----] CPS System is under NEGLIGIBLE risk (less than 20%)')
+                            elif 20 <= risk_score < 40:
+                                print('[*---] CPS System is under LOW risk (between 20% and 40%)')
+                            elif 40 <= risk_score < 60:
+                                print('[**--] CPS System is under MEDIUM risk (between 40% and 60%)')
+                            elif 60 <= risk_score < 80:
+                                print('[***-] CPS System is under HIGH risk (between 60% and 80%)')
+                            else:
+                                print('[****] CPS System is under CRITICAL risk (greater than 80%)')
+
+                            st.sidebar.metric("Posterior Probability of Exposure", value=f"{cpd_prob:.4f}")
+                            st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{cpd_impact:.4f}")
+                            st.sidebar.metric("Risk Score", value=f"{risk_score:.2f}%")
         else:
             st.info("Generate or upload an AutomationML model first to proceed with model analysis.")
 
@@ -593,32 +588,7 @@ def main():
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)
             edited_assets = st.data_editor(df_assets, num_rows="dynamic")
-
-            updated_assets = edited_assets.to_dict(orient='records')
-            asset_map = {asset['ID']: asset for asset in updated_assets}
-            #print (st.session_state['aml_content'])
-
-            for internal_element in st.session_state['env'].element_tree_root.findall('.//InternalElement'):
-                print (internal_element) 
-                asset_id = internal_element.attrib.get('ID', None)
-                print (asset_id)
-                if asset_id and asset_id in asset_map:
-                    updated = asset_map[asset_id]
-                    # Find AutomationEquipments attribute
-                    ae_attr = internal_element.find(".//Attribute[@Name='AutomationEquipments']")
-                    if ae_attr is not None:
-                        for key, value in updated.items():
-                            # Skip ID, Name, etc. unless you want to update those
-                            if key in ['ID', 'Name', 'RefBaseSystemUnitPath']:
-                                continue
-                            # Find the matching Attribute child
-                            sub_attr = ae_attr.find(f".//Attribute[@Name='{key}']")
-                            if sub_attr is not None:
-                                val_elem = sub_attr.find('Value')
-                                if val_elem is not None:
-                                    #val_elem.text = str(value)
-                                    print (val_elem.text, value)
-
+            st.session_state['aml_attributes']['assets'] = edited_assets.to_dict(orient='records')
 
             st.subheader("Vulnerability Attributes")
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
@@ -636,8 +606,6 @@ def main():
             df_hazards = pd.DataFrame(hazards)
             edited_hazards = st.data_editor(df_hazards, num_rows="dynamic")
             st.session_state['aml_attributes']['hazards'] = edited_hazards.to_dict(orient='records')
-
-            compute_bayesian_probabilities()
 
 #----------------------------------------------------------------------------------------------
 # Placeholder for Decision Support Module
