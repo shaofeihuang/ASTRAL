@@ -496,11 +496,11 @@ def main():
         #st.session_state['aml_content'] = aml_content
         st.session_state['aml_data'] = aml_data
         st.session_state['env'] = env
-        assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
+        #assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
         st.session_state['aml_attributes'] = {
-            'assets': assets,
-            'vulnerabilities': vulnerabilities,
-            'hazards': hazards
+            'assets': aml_data.assets,
+            'vulnerabilities': aml_data.vulnerabilities,
+            'hazards': aml_data.hazards
         }
 
     def compute_bayesian_probabilities():
@@ -591,14 +591,13 @@ def main():
 
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
-            print (st.session_state['aml_data'])#.assets)
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)
             edited_assets = st.data_editor(df_assets, num_rows="dynamic")
             updated_assets = edited_assets.to_dict(orient='records')
             asset_map = {asset['ID']: asset for asset in updated_assets}
 
-            print (st.session_state['aml_data'])
+            #print (st.session_state['aml_data'])
             ns = {'caex': 'http://www.dke.de/CAEX'}
 
             for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
@@ -606,10 +605,13 @@ def main():
                 if asset_id and asset_id in asset_map:
                     updated = asset_map[asset_id]
                     for key, value in updated.items():
+                        print ("KEY:", key, "VAL:", value)
                         if key in ['ID', 'Name', 'RefBaseSystemUnitPath']:
                             continue
                         sub_attr = internal_element.find(f"caex:Attribute[@Name='{key}']", ns)
+                        print (sub_attr)
                         if sub_attr is not None:
+                            print ("KEY:", key, "SUBATTR:", sub_attr)
                             val_elem = sub_attr.find("caex:Value", ns)
                             if val_elem is not None:
                                 print("Asset ID:", asset_id, "Key:", key, "Old Value:", val_elem.text, "New Value:", value)

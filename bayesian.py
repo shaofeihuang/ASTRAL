@@ -19,6 +19,9 @@ class Environment:
 
 @dataclass
 class AMLData:
+    assets: object
+    vulnerabilities: object
+    hazards: object
     probability_data: object
     HazardinSystem: object
     VulnerabilityinSystem: object
@@ -99,6 +102,59 @@ def process_AML_file(root, t):
     result_list = []
     total_elements = set()
 
+    def parse_attribute(attr):
+        attr_dict = {}
+        name = attr.attrib.get('Name', '')
+        value_elem = attr.find('caex:Value', ns)
+        if value_elem is not None:
+            attr_dict[name] = value_elem.text
+        else:
+            nested_attrs = attr.findall('caex:Attribute', ns)
+            for nested_attr in nested_attrs:
+                nested_parsed = parse_attribute(nested_attr)
+                for k, v in nested_parsed.items():
+                    attr_dict[f"{name}.{k}"] = v
+        return attr_dict
+
+    def extract_elements_starting_with(root, prefix, ns):
+        all_nodes = root.findall(".//caex:InternalElement", ns)
+        filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
+        items = []
+        for node in filtered_nodes:
+            data = {
+                'Name': node.attrib.get('Name', ''),
+                'ID': node.attrib.get('ID', '')
+            }
+
+            for attr in node.findall('caex:Attribute', ns):
+                parsed_attr = parse_attribute(attr)
+                data.update(parsed_attr)
+
+            items.append(data)
+        return items
+
+    def extract_elements(ref_path):
+        nodes = root.findall(f".//caex:InternalElement[@RefBaseSystemUnitPath='{ref_path}']", ns)
+        items = []
+        for node in nodes:
+            data = {
+                'Name': node.attrib.get('Name', ''),
+                'ID': node.attrib.get('ID', '')
+            }
+
+            for attr in node.findall('caex:Attribute', ns):
+                parsed_attr = parse_attribute(attr)
+                data.update(parsed_attr)
+
+            items.append(data)
+        return items
+    
+    ns = {'caex': 'http://www.dke.de/CAEX'}
+
+    assets = extract_elements_starting_with(root, 'AssetOfICS', ns)
+    vulnerabilities = extract_elements('VulnerabilityforSystem/Vulnerability')
+    hazards = extract_elements('HazardforSystem/Hazard')
+
     for k in root.findall('.//'):
         allinone_attrib.append(k.attrib)
         allinone_tags.append(k.tag)
@@ -125,7 +181,6 @@ def process_AML_file(root, t):
             InternalLinks.append({RPA, RPB})
 
     if len(InternalLinks) == 0:
-        ns = {'caex': 'http://www.dke.de/CAEX'}
         for internal_link in root.findall('.//caex:InternalLink', ns):
             rpa = internal_link.find('caex:RefPartnerSideA', ns)
             rpb = internal_link.find('caex:RefPartnerSideB', ns)
@@ -292,7 +347,7 @@ def process_AML_file(root, t):
         if num_parents > max_num_parents:
             max_num_parents = num_parents
 
-    return probability_data, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
+    return assets, vulnerabilities, hazards, probability_data, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
 
 
 def generate_cpd_values_hazard(num_parents):
