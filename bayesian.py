@@ -11,11 +11,13 @@ from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference import VariableElimination
 
+
 @dataclass
 class Environment:
     element_tree_root: object
     t: object
     af_modifier: object
+
 
 @dataclass
 class AMLData:
@@ -31,6 +33,7 @@ class AMLData:
     connections_mapped: object
     result_list: object
 
+
 @dataclass
 class NodeContext:
     matching_hazard_nodes: list = field(default_factory=list)
@@ -39,6 +42,7 @@ class NodeContext:
     path_length_betn_nodes: list = field(default_factory=list)
     path_length_betn_nodes_final: list = field(default_factory=list)
     path_length_final_node: list = field(default_factory=list)
+
 
 def setup_environment(aml_content):
     ET_root = ET.fromstring(aml_content)
@@ -620,14 +624,13 @@ def compute_risk_scores(inference_exposure, inference_impact, total_elements, so
     for nodes in total_elements:
         if nodes == target_node:
             prob_failure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
-            print("[*] CPT (Exposure):\n", prob_failure)
+#            print("[*] CPT (Exposure):\n", prob_failure)
             prob_impact = inference_impact.query(variables=[nodes], evidence={source_node:1})
-            print("[*] CPT (Impact):\n", prob_impact)
+#            print("[*] CPT (Impact):\n", prob_impact)
             cpd_prob = prob_failure.values
             cpd_impact = prob_impact.values
 #            print('--------------------------------------------------------')
-#            print("[*] Posterior probability of Exposure:", cpd_prob[0])
-#            print("[*] Posterior probability of impact:", cpd_impact[0])
+            print("[+] P(Exposure): {:.4f}".format(cpd_prob[0]), "P(Severe Impact): {:.4f}".format(cpd_impact[0]))
             return cpd_prob[0], cpd_impact[0]
         else:
             pass
