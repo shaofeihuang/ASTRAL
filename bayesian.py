@@ -4,6 +4,7 @@ import networkx as nx
 import itertools
 import math
 import re
+import streamlit as st
 from datetime import datetime
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -357,8 +358,10 @@ def generate_cpd_values_hazard(num_parents):
     return cpd_values
 
 
-def generate_cpd_values_exposure(num_parents, aml_data: AMLData, af_modifier, node_context: NodeContext, NodeType: str):
+def generate_cpd_values_exposure(num_parents, aml_data: AMLData, node_context: NodeContext, NodeType: str):
     cpd_values = np.zeros((2, 2 ** num_parents))
+
+    af_modifier = st.session_state['af_modifier_input']
 
     if NodeType == "Hazard":
         if num_parents == 0:
@@ -512,7 +515,7 @@ def shortest_path_length(graph, start_node, end_node):
         return float('inf')
 
 
-def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifier):
+def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext):
     cpds = {}
     cpd_values_list = []
     last_node = None
@@ -531,11 +534,11 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifie
         cpd_values = None
 
         if node_context.matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Hazard")
+            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Hazard")
         elif node_context.matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Vulnerability")
+            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Vulnerability")
         elif node_context.matching_asset_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Asset")
+            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Asset")
 
         #print(f"[DEBUG] CPD values before normalization for node {node}: {cpd_values}")
 
@@ -648,11 +651,11 @@ def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, sou
         cpd_values = None
 
         if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Hazard")
+            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Hazard")
         elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Vulnerability")
+            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Vulnerability")
         elif matching_asset_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, af_modifier, node_context, "Asset")
+            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Asset")
 
         cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
                         evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)

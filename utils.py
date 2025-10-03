@@ -355,7 +355,7 @@ def compute_bayesian_probabilities():
     #check_probability_data(aml_data)
     st.session_state['env'].af_modifier = st.session_state['af_modifier_input']
     node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
-    bbn_exposure, last_node = create_bbn_exposure(st.session_state['aml_data'], node_context, st.session_state['env'].af_modifier)
+    bbn_exposure, last_node = create_bbn_exposure(st.session_state['aml_data'], node_context)
     bbn_impact = create_bbn_impact(bbn_exposure, st.session_state['aml_data'], node_context)
     #check_bbn_models(bbn_exposure, bbn_impact)
 
