@@ -21,10 +21,8 @@ class Environment:
 
 @dataclass
 class AMLData:
-    assets: object
-    vulnerabilities: object
-    hazards: object
     probability_data: object
+    AssetinSystem: object
     HazardinSystem: object
     VulnerabilityinSystem: object
     max_num_parents: int
@@ -158,10 +156,6 @@ def process_AML_file(root, t):
     
     ns = {'caex': 'http://www.dke.de/CAEX'}
 
-    assets = extract_elements_starting_with(root, 'AssetOfICS', ns)
-    vulnerabilities = extract_elements(root, 'VulnerabilityforSystem/Vulnerability', ns)
-    hazards = extract_elements(root, 'HazardforSystem/Hazard', ns)
-
     for k in root.findall('.//'):
         allinone_attrib.append(k.attrib)
         allinone_tags.append(k.tag)
@@ -237,7 +231,6 @@ def process_AML_file(root, t):
                 'RefBaseSystemUnitPath': ref_base_system_unit_path
             }
         else:
-            print ("[debug] ID:", internal_element_id, "Impact Rating:", internal_element_impact_rating)
             internal_element_data = {
                 'ID': internal_element_id,
                 'Name': internal_element_name,
@@ -250,7 +243,7 @@ def process_AML_file(root, t):
                 'RefBaseSystemUnitPath': ref_base_system_unit_path
             }
 
-        if ref_base_system_unit_path.startswith ('AssetofICS/'):
+        if ref_base_system_unit_path.startswith ('AssetOfICS/'):
             AssetinSystem.append(internal_element_data)
         elif ref_base_system_unit_path == 'HazardforSystem/Hazard':
             HazardinSystem.append(internal_element_data)
@@ -296,11 +289,9 @@ def process_AML_file(root, t):
         for internal_link in root.findall('.//caex:InternalLink', ns):
             rpa = internal_link.find('caex:RefPartnerSideA', ns)
             rpb = internal_link.find('caex:RefPartnerSideB', ns)
-            #print (rpa.text, rpb.text)
             if rpa.text in interface_to_element_map and rpb.text in interface_to_element_map:
                 internal_element_a = interface_to_element_map[rpa.text]
                 internal_element_b = interface_to_element_map[rpb.text]
-                #print (internal_element_a, internal_element_b)
                 connection = {'from': internal_element_a, 'to': internal_element_b}
                 connections.append(connection)
 
@@ -354,7 +345,7 @@ def process_AML_file(root, t):
         if num_parents > max_num_parents:
             max_num_parents = num_parents
 
-    return assets, vulnerabilities, hazards, probability_data, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
+    return probability_data, AssetinSystem, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
 
 
 def generate_cpd_values_hazard(num_parents):
@@ -535,7 +526,7 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifie
         num_parents = len(bbn_exposure.get_parents(node))
         node_context.matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
         node_context.matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        node_context.matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        node_context.matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
 
         cpd_values = None
 
@@ -565,7 +556,7 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext, af_modifie
             if node1 == node2:
                 if child_num == 0:
                     last_node = node1
-    print("\n[*] Last node in BBN:", last_node)
+#    print("\n[*] Last node in BBN:", last_node)
 
     for node1, node2 in itertools.product(aml_data.total_elements, repeat=2):
         if node1 == node2:
@@ -595,7 +586,7 @@ def create_bbn_impact(bbn_exposure, aml_data: AMLData, node_context: NodeContext
 
         node_context.matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
         node_context.matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        node_context.matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        node_context.matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
 
         if node_context.matching_hazard_nodes:
             cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Hazard")
@@ -624,11 +615,11 @@ def compute_risk_scores(inference_exposure, inference_impact, total_elements, so
     for nodes in total_elements:
         if nodes == target_node:
             prob_failure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
-#            print("[*] CPT (Exposure):\n", prob_failure)
             prob_impact = inference_impact.query(variables=[nodes], evidence={source_node:1})
-#            print("[*] CPT (Impact):\n", prob_impact)
             cpd_prob = prob_failure.values
             cpd_impact = prob_impact.values
+#            print("[*] CPT (Exposure):\n", prob_failure)
+#            print("[*] CPT (Impact):\n", prob_impact)
 #            print('--------------------------------------------------------')
             print("[+] P(Exposure): {:.4f}".format(cpd_prob[0]), "P(Severe Impact): {:.4f}".format(cpd_impact[0]))
             return cpd_prob[0], cpd_impact[0]
@@ -652,7 +643,7 @@ def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, sou
         num_parents = len(bbn_exposure.get_parents(node))
         matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
         matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
 
         cpd_values = None
 
@@ -701,7 +692,7 @@ def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, sou
 
         matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
         matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        matching_asset_nodes = [element for element in aml_data.probability_data if element['ID'] == node]
+        matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
 
         if matching_hazard_nodes:
             cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Hazard")
@@ -723,7 +714,7 @@ def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, sou
 
     for nodes in aml_data.total_elements:
         if nodes == last_node:
-            values = [f"{element['ID']}: {element['Probability of Mitigation']}" for element in aml_data.probability_data if element['ID'] in [f"V{j}" for j in range(1,12)]]
+            values = [f"{element['ID']}: {element['Probability of Mitigation']}" for element in aml_data.AssetinSystem if element['ID'] in [f"V{j}" for j in range(1,12)]]
             prob_exposure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
             prob_failure = inference_impact.query(variables=[nodes], evidence={source_node:1})
             cpd_prob = prob_exposure.values

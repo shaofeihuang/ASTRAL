@@ -469,9 +469,6 @@ def main():
                                 "Higher value indicates a higher chance of a successful attack."
                         )
 
-#                        if st.button("Compute Bayesian Probabilities"):
-#                            compute_bayesian_probabilities()
-
         else:
             st.info("Generate or upload an AutomationML model first to proceed with model analysis.")
 
@@ -489,13 +486,11 @@ def main():
                 asset_id = internal_element.attrib.get('ID')
                 if asset_id and asset_id in asset_map:
                     updated = asset_map[asset_id]
-                    idx = next((i for i, a in enumerate(st.session_state['aml_data'].assets) if a['ID'] == asset_id), None)
-                    #print ("BEFORE:", st.session_state['aml_data'].assets[idx])
+                    idx = next((i for i, a in enumerate(st.session_state['aml_data'].AssetinSystem) if a['ID'] == asset_id), None)
                     for key, value in updated.items():
                         if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
                             if idx is not None:
-                                st.session_state['aml_data'].assets[idx][key] = value
-                    #print ("AFTER:", st.session_state['aml_data'].assets[idx], "\n")
+                                st.session_state['aml_data'].AssetinSystem[idx][key] = value
 
             st.subheader("Vulnerability Attributes")
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
@@ -512,13 +507,11 @@ def main():
                 vuln_id = internal_element.attrib.get('ID')
                 if vuln_id and vuln_id in vuln_map:
                     updated = vuln_map[vuln_id]
-                    idx = next((i for i, v in enumerate(st.session_state['aml_data'].vulnerabilities) if v['ID'] == vuln_id), None)
-                    #print ("BEFORE:", st.session_state['aml_data'].vulnerabilities[idx])
+                    idx = next((i for i, v in enumerate(st.session_state['aml_data'].VulnerabilityinSystem) if v['ID'] == vuln_id), None)
                     for key, value in updated.items():
                         if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
                             if idx is not None:
-                                st.session_state['aml_data'].vulnerabilities[idx][key] = value
-                    #print ("AFTER:", st.session_state['aml_data'].vulnerabilities[idx], "\n")
+                                st.session_state['aml_data'].VulnerabilityinSystem[idx][key] = value
 
             st.subheader("Hazard Attributes")
             hazards = st.session_state['aml_attributes']['hazards']
@@ -531,16 +524,11 @@ def main():
                 hazard_id = internal_element.attrib.get('ID')
                 if hazard_id and hazard_id in hazard_map:
                     updated = hazard_map[hazard_id]
-                    idx = next((i for i, h in enumerate(st.session_state['aml_data'].hazards) if h['ID'] == hazard_id), None)
-                    #print ("BEFORE:", st.session_state['aml_data'].hazards[idx])
+                    idx = next((i for i, h in enumerate(st.session_state['aml_data'].HazardinSystem) if h['ID'] == hazard_id), None)
                     for key, value in updated.items():
                         if key not in ['ID', 'Name', 'RefBaseSystemUnitPath']:
                             if idx is not None:
-                                st.session_state['aml_data'].hazards[idx][key] = value
-                    #print ("AFTER:", st.session_state['aml_data'].hazards[idx], "\n")
-
-            compute_bayesian_probabilities()
-
+                                st.session_state['aml_data'].HazardinSystem[idx][key] = value
 
 #----------------------------------------------------------------------------------------------
 # Placeholder for Decision Support Module
@@ -557,10 +545,10 @@ def main():
             vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
             df_vuln = pd.DataFrame(vulnerabilities)
 
-            if 'Vulnerability.Probability of Mitigation' not in df_vuln.columns:
-                df_vuln['Vulnerability.Probability of Mitigation'] = 0.0
+            if 'Probability of Mitigation' not in df_vuln.columns:
+                df_vuln['Probability of Mitigation'] = 0.0
 
-            df_vuln_subset = df_vuln[['ID', 'Vulnerability.Probability of Mitigation']]
+            df_vuln_subset = df_vuln[['ID', 'Probability of Mitigation']]
 
             updated_probs = {}
 
@@ -569,22 +557,19 @@ def main():
                     label=f"Vulnerability: {row['ID']}",
                     min_value=0.0,
                     max_value=1.0,
-                    value=float(row['Vulnerability.Probability of Mitigation']),
+                    value=float(row['Probability of Mitigation']),
                     step=0.01,
                     key=f"slider_{row['ID']}_{index}"
                 )
                 updated_probs[row['ID']] = prob
-            #print (updated_probs)
         
             for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
                 vuln_id = internal_element.attrib.get('ID')
                 if vuln_id in updated_probs:
                     prob = updated_probs[vuln_id]
-                    idx = next((i for i, v in enumerate(st.session_state['aml_data'].vulnerabilities) if v['ID'] == vuln_id), None)
+                    idx = next((i for i, v in enumerate(st.session_state['aml_data'].VulnerabilityinSystem) if v['ID'] == vuln_id), None)
                     if idx is not None:
-                        #print("BEFORE:", st.session_state['aml_data'].vulnerabilities[idx])
-                        st.session_state['aml_data'].vulnerabilities[idx]['Vulnerability.Probability of Mitigation'] = prob
-                        #print ("AFTER:", st.session_state['aml_data'].vulnerabilities[idx], "\n")
+                        st.session_state['aml_data'].VulnerabilityinSystem[idx]['Probability of Mitigation'] = prob
 
             compute_bayesian_probabilities()
 

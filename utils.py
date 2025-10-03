@@ -1,9 +1,12 @@
 import re
+import json
 import streamlit as st
 import streamlit.components.v1 as components
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from mistralai import Mistral
 from bayesian import *
+from prompts import *
 
 
 def clean_json_response(response_text):
@@ -278,64 +281,6 @@ def clean_aml_content(aml_content):
     return aml_content
 
 
-def extract_attributes_from_aml(aml_content):
-    ns = {'caex': 'http://www.dke.de/CAEX'}
-    root = ET.fromstring(aml_content)
-
-    def parse_attribute(attr):
-        attr_dict = {}
-        name = attr.attrib.get('Name', '')
-        value_elem = attr.find('caex:Value', ns)
-        if value_elem is not None:
-            attr_dict[name] = value_elem.text
-        else:
-            nested_attrs = attr.findall('caex:Attribute', ns)
-            for nested_attr in nested_attrs:
-                nested_parsed = parse_attribute(nested_attr)
-                for k, v in nested_parsed.items():
-                    attr_dict[f"{name}.{k}"] = v
-        return attr_dict
-
-    def extract_elements_starting_with(root, prefix, ns):
-        all_nodes = root.findall(".//caex:InternalElement", ns)
-        filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
-        items = []
-        for node in filtered_nodes:
-            data = {
-                'Name': node.attrib.get('Name', ''),
-                'ID': node.attrib.get('ID', '')
-            }
-
-            for attr in node.findall('caex:Attribute', ns):
-                parsed_attr = parse_attribute(attr)
-                data.update(parsed_attr)
-
-            items.append(data)
-        return items
-
-    def extract_elements(ref_path):
-        nodes = root.findall(f".//caex:InternalElement[@RefBaseSystemUnitPath='{ref_path}']", ns)
-        items = []
-        for node in nodes:
-            data = {
-                'Name': node.attrib.get('Name', ''),
-                'ID': node.attrib.get('ID', '')
-            }
-
-            for attr in node.findall('caex:Attribute', ns):
-                parsed_attr = parse_attribute(attr)
-                data.update(parsed_attr)
-
-            items.append(data)
-        return items
-
-    assets = extract_elements_starting_with(root, 'AssetOfICS', ns)
-    vulnerabilities = extract_elements('VulnerabilityforSystem/Vulnerability')
-    hazards = extract_elements('HazardforSystem/Hazard')
-
-    return assets, vulnerabilities, hazards
-
-
 def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
     client = Mistral(api_key=api_key)
     params = {
@@ -397,14 +342,12 @@ def load_model_attributes():
     aml_content = clean_aml_content(st.session_state['aml_file'])
     env = Environment(*setup_environment(aml_content))
     aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
-    #st.session_state['aml_content'] = aml_content
     st.session_state['aml_data'] = aml_data
     st.session_state['env'] = env
-    #assets, vulnerabilities, hazards = extract_attributes_from_aml(aml_content)
     st.session_state['aml_attributes'] = {
-        'assets': aml_data.assets,
-        'vulnerabilities': aml_data.vulnerabilities,
-        'hazards': aml_data.hazards
+        'assets': aml_data.AssetinSystem,
+        'vulnerabilities': aml_data.VulnerabilityinSystem,
+        'hazards': aml_data.HazardinSystem
     }
 
 
@@ -414,7 +357,7 @@ def compute_bayesian_probabilities():
     node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
     bbn_exposure, last_node = create_bbn_exposure(st.session_state['aml_data'], node_context, st.session_state['env'].af_modifier)
     bbn_impact = create_bbn_impact(bbn_exposure, st.session_state['aml_data'], node_context)
-    check_bbn_models(bbn_exposure, bbn_impact)
+    #check_bbn_models(bbn_exposure, bbn_impact)
 
     inference_exposure = VariableElimination(bbn_exposure)
     inference_impact = VariableElimination(bbn_impact)
@@ -425,7 +368,7 @@ def compute_bayesian_probabilities():
         start_node = st.session_state['attack_paths'].split(" --> ")[0]
         #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
 
-    print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
+    #print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
     # for index, element in enumerate(aml_data.total_elements):
     #    print(f"Index: {index}, Element: {element}")
@@ -437,22 +380,27 @@ def compute_bayesian_probabilities():
     st.session_state['cpd_prob'] = cpd_prob
     st.session_state['cpd_impact'] = cpd_impact
     st.session_state['risk_score'] = risk_score
-    
-    print('[+] Risk score: {:.2f} %'.format(risk_score))
+
+    print('--------------------------')
+    print(datetime.now())
+    print('--------------------------')
+    print('[+] P(Exposure): {:.4f}%'.format(cpd_prob))
+    print('[+] P(Severe Impact): {:.4f}%'.format(cpd_impact))
+    print('[+] Risk score: {:.2f}%'.format(risk_score))
 #    print('--------------------------------------------------------')
-    if risk_score < 20:
-        print('[+] CPS System is under NEGLIGIBLE risk (less than 20%)')
-    elif 20 <= risk_score < 40:
-        print('[+] CPS System is under LOW risk (between 20% and 40%)')
-    elif 40 <= risk_score < 60:
-        print('[+] CPS System is under MEDIUM risk (between 40% and 60%)')
-    elif 60 <= risk_score < 80:
-        print('[+] CPS System is under HIGH risk (between 60% and 80%)')
-    else:
-        print('[+] CPS System is under CRITICAL risk (greater than 80%)')
+#    if risk_score < 20:
+#        print('[+] CPS System is under NEGLIGIBLE risk (less than 20%)')
+#    elif 20 <= risk_score < 40:
+#        print('[+] CPS System is under LOW risk (between 20% and 40%)')
+#    elif 40 <= risk_score < 60:
+#        print('[+] CPS System is under MEDIUM risk (between 40% and 60%)')
+#    elif 60 <= risk_score < 80:
+#        print('[+] CPS System is under HIGH risk (between 60% and 80%)')
+#    else:
+#        print('[+] CPS System is under CRITICAL risk (greater than 80%)')
 
 
 def display_metrics():
-    st.sidebar.metric("Posterior Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
-    st.sidebar.metric("Posterior Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
+    st.sidebar.metric("Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
+    st.sidebar.metric("Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
     st.sidebar.metric("Risk Score", value=f"{st.session_state.get('risk_score', 0):.2f}%")
