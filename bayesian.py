@@ -17,7 +17,6 @@ from pgmpy.inference import VariableElimination
 class Environment:
     element_tree_root: object
     t: object
-    af_modifier: object
 
 
 @dataclass
@@ -35,6 +34,7 @@ class AMLData:
 
 @dataclass
 class NodeContext:
+    num_parents: object
     matching_hazard_nodes: list = field(default_factory=list)
     matching_vulnerability_nodes: list = field(default_factory=list)
     matching_asset_nodes: list = field(default_factory=list)
@@ -49,8 +49,7 @@ def setup_environment(aml_content):
     days = time_difference.days
     hours = divmod(time_difference.seconds, 3600)[0]
     t = days * 4 + (24 - hours)
-    af_modifier = 1 / 100
-    return ET_root, t, af_modifier
+    return ET_root, t
 
 
 def get_attribute_value(internal_element, attribute_name):
@@ -80,56 +79,6 @@ def check_probability_data(aml_data: AMLData):
             "Prob of Failure:", data['Probability of Failure'], "Prob of Exposure:", data['Probability of Exposure'],
             "Prob of Impact:", data['Probability of Impact'], "Prob of Mitigation:", data['Probability of Mitigation'],
             "Prob of Human Error:", data['Probability of Human Error'])
-
-
-def parse_attribute(attr, ns):
-    attr_dict = {}
-    name = attr.attrib.get('Name', '')
-    value_elem = attr.find('caex:Value', ns)
-    if value_elem is not None:
-        attr_dict[name] = value_elem.text
-    else:
-        nested_attrs = attr.findall('caex:Attribute', ns)
-        for nested_attr in nested_attrs:
-            nested_parsed = parse_attribute(nested_attr, ns)
-            for k, v in nested_parsed.items():
-                attr_dict[f"{name}.{k}"] = v
-    return attr_dict
-
-
-def extract_elements_starting_with(root, prefix, ns):
-    all_nodes = root.findall(".//caex:InternalElement", ns)
-    filtered_nodes = [node for node in all_nodes if node.attrib.get('RefBaseSystemUnitPath', '').startswith(prefix)]
-    items = []
-    for node in filtered_nodes:
-        data = {
-            'Name': node.attrib.get('Name', ''),
-            'ID': node.attrib.get('ID', '')
-        }
-
-        for attr in node.findall('caex:Attribute', ns):
-            parsed_attr = parse_attribute(attr, ns)
-            data.update(parsed_attr)
-
-        items.append(data)
-    return items
-
-
-def extract_elements(root, ref_path, ns):
-    nodes = root.findall(f".//caex:InternalElement[@RefBaseSystemUnitPath='{ref_path}']", ns)
-    items = []
-    for node in nodes:
-        data = {
-            'Name': node.attrib.get('Name', ''),
-            'ID': node.attrib.get('ID', '')
-        }
-
-        for attr in node.findall('caex:Attribute', ns):
-            parsed_attr = parse_attribute(attr, ns)
-            data.update(parsed_attr)
-
-        items.append(data)
-    return items
 
 
 def process_AML_file(root, t):
@@ -358,9 +307,11 @@ def generate_cpd_values_hazard(num_parents):
     return cpd_values
 
 
-def generate_cpd_values_exposure(num_parents, aml_data: AMLData, node_context: NodeContext, NodeType: str):
+def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
+    num_parents = node_context.num_parents
     cpd_values = np.zeros((2, 2 ** num_parents))
-
+    num_parents = node_context.num_parents
+    aml_data = st.session_state['aml_data']
     af_modifier = st.session_state['af_modifier_input']
 
     if NodeType == "Hazard":
@@ -515,10 +466,15 @@ def shortest_path_length(graph, start_node, end_node):
         return float('inf')
 
 
-def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext):
+def create_bbn_exposure():
     cpds = {}
     cpd_values_list = []
+    path_length_betn_nodes=[]
+    path_length_betn_nodes_final=[]
+    path_length_final_node=[]
     last_node = None
+    aml_data = st.session_state['aml_data']
+    node_context = NodeContext(num_parents=0, matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[])
 
     bbn_exposure = DiscreteBayesianNetwork()
     connections = aml_data.connections_mapped
@@ -526,7 +482,7 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext):
     bbn_exposure.add_edges_from([(connection['from'], connection['to']) for connection in connections])
 
     for node in bbn_exposure.nodes():
-        num_parents = len(bbn_exposure.get_parents(node))
+        node_context.num_parents = len(bbn_exposure.get_parents(node))
         node_context.matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
         node_context.matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
         node_context.matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
@@ -534,16 +490,16 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext):
         cpd_values = None
 
         if node_context.matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Hazard")
+            cpd_values = generate_cpd_values_exposure(node_context, "Hazard")
         elif node_context.matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Vulnerability")
+            cpd_values = generate_cpd_values_exposure(node_context, "Vulnerability")
         elif node_context.matching_asset_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Asset")
+            cpd_values = generate_cpd_values_exposure(node_context, "Asset")
 
         #print(f"[DEBUG] CPD values before normalization for node {node}: {cpd_values}")
 
         cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
-                        evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
+                        evidence=bbn_exposure.get_parents(node), evidence_card=[2] * node_context.num_parents)
 
         cpds[node] = cpd
         cpd_values_list.append((node, cpd_values.tolist(), cpd.variables, cpd.cardinality))
@@ -563,22 +519,24 @@ def create_bbn_exposure(aml_data: AMLData, node_context: NodeContext):
 
     for node1, node2 in itertools.product(aml_data.total_elements, repeat=2):
         if node1 == node2:
-            node_context.path_length_betn_nodes.append((node1, node2, 0))
+            path_length_betn_nodes.append((node1, node2, 0))
         else:
             path_length = shortest_path_length(bbn_graph, node1, node2)
             if path_length == float('inf'):
-                node_context.path_length_betn_nodes.append((node1, node2, "No path"))
+                path_length_betn_nodes.append((node1, node2, "No path"))
             else:
-                node_context.path_length_betn_nodes_final.append((node1, node2, path_length, 1/path_length))
-                node_context.path_length_betn_nodes.append({'Node1': node1, 'Node2': node2, 'Number of hops': path_length, 'Probability': 1/path_length})
+                path_length_betn_nodes_final.append((node1, node2, path_length, 1/path_length))
+                path_length_betn_nodes.append({'Node1': node1, 'Node2': node2, 'Number of hops': path_length, 'Probability': 1/path_length})
                 if node2 == last_node:
-                    node_context.path_length_final_node.append((node1, last_node, path_length, 1/path_length))
+                    path_length_final_node.append((node1, last_node, path_length, 1/path_length))
 
     return bbn_exposure, last_node
 
 
-def create_bbn_impact(bbn_exposure, aml_data: AMLData, node_context: NodeContext):
+def create_bbn_impact(bbn_exposure):
     cpds = {}
+    aml_data = st.session_state['aml_data']
+    node_context = NodeContext(num_parents=0, matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[])
 
     bbn_impact = DiscreteBayesianNetwork()
     bbn_impact.add_edges_from([(connection['from'], connection['to']) for connection in aml_data.connections])
@@ -630,10 +588,12 @@ def compute_risk_scores(inference_exposure, inference_impact, total_elements, so
             pass
 
 
-def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, source_node):
+def bbn_inference(node_context: NodeContext, source_node):
     cpds = {}
     cpd_values_list = []
     last_node = None
+    aml_data = st.session_state['aml_data']
+    num_parents = node_context.num_parents
 
     bbn_exposure = DiscreteBayesianNetwork()
     bbn_impact = DiscreteBayesianNetwork()
@@ -651,11 +611,11 @@ def bbn_inference(aml_data: AMLData, node_context: NodeContext, af_modifier, sou
         cpd_values = None
 
         if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Hazard")
+            cpd_values = generate_cpd_values_exposure(node_context, "Hazard")
         elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Vulnerability")
+            cpd_values = generate_cpd_values_exposure(node_context, "Vulnerability")
         elif matching_asset_nodes:
-            cpd_values = generate_cpd_values_exposure(num_parents, aml_data, node_context, "Asset")
+            cpd_values = generate_cpd_values_exposure(node_context, "Asset")
 
         cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
                         evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
