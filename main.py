@@ -4,6 +4,7 @@ import time
 import random
 import streamlit as st
 import pandas as pd
+from datetime import date
 from dotenv import load_dotenv
 from prompts import *
 from utils import *
@@ -445,10 +446,20 @@ def main():
                 col1, col2 = st.columns(2)
 
                 with col1:
+                        date_input = st.date_input(
+                                    "Enter system installation date",
+                                    date(2024, 1, 1),
+                                    min_value=date(1900, 1, 1),
+                                    max_value="today",
+                                    format="DD/MM/YYYY")
+                        if date_input > date.today():
+                            st.error("The installation date cannot be in the future.")
+                        else:
+                            st.session_state['date_input'] = date_input
+                        
                         if st.button("Load Model Attributes"):
-                            if 'aml_attributes' not in st.session_state:
-                                load_model_attributes()
-                                st.success("Attributes extracted successfully.")
+                            load_model_attributes()
+                            st.success("Attributes extracted successfully.")
 
                 with col2:
                     if 'aml_attributes' in st.session_state:
@@ -459,6 +470,7 @@ def main():
                             placeholder="Select or enter attacker ID",
                             accept_new_options=True,
                         )
+
                         st.session_state['af_modifier_input'] = st.slider(
                             "Attack Feasibility (AF) Modifier",
                             min_value=0.0,

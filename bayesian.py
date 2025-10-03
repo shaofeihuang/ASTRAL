@@ -5,7 +5,7 @@ import itertools
 import math
 import re
 import streamlit as st
-from datetime import datetime
+from datetime import date
 from dataclasses import dataclass, field
 from collections import defaultdict
 from pgmpy.models import DiscreteBayesianNetwork
@@ -45,7 +45,7 @@ class NodeContext:
 
 def setup_environment(aml_content):
     ET_root = ET.fromstring(aml_content)
-    time_difference = datetime.now() - datetime.strptime("2024-01-01", "%Y-%m-%d")
+    time_difference = date.today() - st.session_state['date_input']
     days = time_difference.days
     hours = divmod(time_difference.seconds, 3600)[0]
     t = days * 4 + (24 - hours)
