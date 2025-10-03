@@ -353,10 +353,8 @@ def load_model_attributes():
 
 def compute_bayesian_probabilities():
     #check_probability_data(aml_data)
-    st.session_state['env'].af_modifier = st.session_state['af_modifier_input']
-    node_context = NodeContext(matching_asset_nodes=[], matching_hazard_nodes=[], matching_vulnerability_nodes=[], path_length_betn_nodes=[], path_length_betn_nodes_final=[], path_length_final_node=[])
-    bbn_exposure, last_node = create_bbn_exposure(st.session_state['aml_data'], node_context)
-    bbn_impact = create_bbn_impact(bbn_exposure, st.session_state['aml_data'], node_context)
+    bbn_exposure, last_node = create_bbn_exposure()
+    bbn_impact = create_bbn_impact(bbn_exposure)
     #check_bbn_models(bbn_exposure, bbn_impact)
 
     inference_exposure = VariableElimination(bbn_exposure)
@@ -369,9 +367,6 @@ def compute_bayesian_probabilities():
         #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
 
     #print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
-
-    # for index, element in enumerate(aml_data.total_elements):
-    #    print(f"Index: {index}, Element: {element}")
 
     cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
 
@@ -387,17 +382,6 @@ def compute_bayesian_probabilities():
     print('[+] P(Exposure): {:.4f}%'.format(cpd_prob))
     print('[+] P(Severe Impact): {:.4f}%'.format(cpd_impact))
     print('[+] Risk score: {:.2f}%'.format(risk_score))
-#    print('--------------------------------------------------------')
-#    if risk_score < 20:
-#        print('[+] CPS System is under NEGLIGIBLE risk (less than 20%)')
-#    elif 20 <= risk_score < 40:
-#        print('[+] CPS System is under LOW risk (between 20% and 40%)')
-#    elif 40 <= risk_score < 60:
-#        print('[+] CPS System is under MEDIUM risk (between 40% and 60%)')
-#    elif 60 <= risk_score < 80:
-#        print('[+] CPS System is under HIGH risk (between 60% and 80%)')
-#    else:
-#        print('[+] CPS System is under CRITICAL risk (greater than 80%)')
 
 
 def display_metrics():
