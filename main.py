@@ -12,13 +12,13 @@ from bayesian import *
 
 
 model_token_limits = {
-    "mistral-large-latest": {"default": 64000, "max": 128000},
-    "mistral-medium-latest": {"default": 64000, "max": 128000},
-    "mistral-small-latest": {"default": 24000, "max": 32000},
-    "magistral-small-latest": {"default": 32000, "max": 40000},
-    "magistral-medium-latest": {"default": 32000, "max": 40000},
-    "ministral-8b-latest": {"default": 64000, "max": 128000},
-    "pixtral-12b-latest": {"default": 64000, "max": 128000},
+    "mistral-large-latest": {"default": 128000, "max": 128000},
+    "mistral-medium-latest": {"default": 128000, "max": 128000},
+    "mistral-small-latest": {"default": 128000, "max": 128000},
+    "magistral-small-latest": {"default": 40000, "max": 40000},
+    "magistral-medium-latest": {"default": 40000, "max": 40000},
+    "ministral-8b-latest": {"default": 128000, "max": 128000},
+    "pixtral-12b-latest": {"default": 128000, "max": 128000},
 }
 
 
@@ -32,7 +32,7 @@ def main():
         list(model_token_limits.keys()),
         key="selected_model",
         help=(
-            "Select a suitable model. Larger models may provide better results but can be slower and more costly."
+            "Select a suitable model."
         ),
     )
     max_tokens = model_token_limits[selected_model]["default"]
@@ -93,7 +93,7 @@ def main():
             additional_detail = st.text_area(
                 "Additional Details (Optional)",
                 value="",
-                placeholder="Type extra architectural specifics here.",
+                placeholder="Enter extra architectural specifics here.",
                 height=150,
             )
             if st.button("Re-Generate Architectural Explanation"):
