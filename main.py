@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from prompts import *
 from utils import *
 from bayesian import *
-
+from mistralai import Mistral
+from anthropic import Anthropic
 
 model_token_limits = {
     # Claude models
@@ -27,6 +28,133 @@ model_token_limits = {
     "Mistral API:pixtral-12b-latest": {"default": 128000, "max": 128000},
 }
 
+
+
+def on_model_provider_change():
+    """Update token limit and selected model when model provider changes"""
+    new_provider = st.session_state.model_provider
+    provider_key = f"{new_provider}:default"
+    if provider_key in model_token_limits:
+        st.session_state.token_limit = model_token_limits[provider_key]["default"]
+    else:
+        st.session_state.token_limit = 8000
+    if 'current_model_key' in st.session_state:
+        del st.session_state.current_model_key
+    if new_provider == "Anthropic API":
+        st.session_state.selected_model = "claude-sonnet-4"
+    elif new_provider == "Mistral API":
+        st.session_state.selected_model = "mistral-large-latest"
+
+
+def on_model_selection_change():
+    """Update token limit when specific model is selected"""
+    if 'model_provider' not in st.session_state or 'selected_model' not in st.session_state:
+        return  
+    model_provider = st.session_state.model_provider
+    selected_model = st.session_state.selected_model
+    model_key = f"{model_provider}:{selected_model}"
+    if model_key in model_token_limits:
+        st.session_state.token_limit = model_token_limits[model_key]["default"]
+    else:
+        provider_key = f"{model_provider}:default"
+        if provider_key in model_token_limits:
+            st.session_state.token_limit = model_token_limits[provider_key]["default"]
+    if 'current_model_key' in st.session_state:
+        del st.session_state.current_model_key
+
+
+def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
+    client = Mistral(api_key=api_key)
+    params = {
+        "model": model_name,
+        "messages": [
+            {"role": "user", "content": prompt_text, "image": image_bytes}
+        ],
+        "max_tokens": max_tokens,
+    }
+    if response_as_json:
+        params["response_format"] = {"type": "json_object"}
+
+    response = client.chat.complete(**params)
+    content = response.choices[0].message.content
+
+    if response_as_json:
+        return json.loads(content)
+    else:
+        return content
+
+
+def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
+    client = Anthropic(api_key)
+    
+    is_claude_3_7 = "claude-3-7" in model_name.lower()
+    is_thinking_mode = "thinking" in model_name.lower()
+    
+    actual_model = "claude-3-7-sonnet-latest" if is_thinking_mode else model_name
+    
+    try:
+        if is_claude_3_7:
+            json_prompt = prompt_text + "\n\nIMPORTANT: Your response MUST be a valid JSON object with the exact structure shown in the example above. Do not include any explanatory text, markdown formatting, or code blocks. Return only the raw JSON object."
+            if is_thinking_mode:
+                response = client.messages.create(
+                    model=actual_model,
+                    max_tokens=24000,
+                    thinking={
+                        "type": "enabled",
+                        "budget_tokens": 16000
+                    },
+                    system="You are a JSON-generating assistant. You must ONLY output valid, parseable JSON with no additional text or formatting.",
+                    messages=[
+                        {"role": "user", "content": json_prompt, "image": image_bytes}
+                    ],
+                    timeout=600  # 10-minute timeout
+                )
+            else:
+                response = client.messages.create(
+                    model=actual_model,
+                    max_tokens=4096,
+                    system="You are a JSON-generating assistant. You must ONLY output valid, parseable JSON with no additional text or formatting.",
+                    messages=[
+                        {"role": "user", "content": json_prompt, "image": image_bytes}
+                    ],
+                    timeout=300  # 5-minute timeout
+                )
+        else:
+            # Standard handling for other Claude models
+            response = client.messages.create(
+                model=actual_model,
+                max_tokens=4096,
+                system="You are a helpful assistant designed to output JSON. Your response must be a valid, parseable JSON object with no additional text, markdown formatting, or explanation. Do not include ```json code blocks or any other formatting - just return the raw JSON object.",
+                messages=[
+                    {"role": "user", "content": prompt_text, "image": image_bytes}
+                ],
+                timeout=300  # 5-minute timeout
+            )
+        
+        if is_thinking_mode:
+            full_content = ''.join(block.text for block in response.content if block.type == "text")
+            thinking_content = ''.join(block.thinking for block in response.content if block.type == "thinking")
+            if thinking_content:
+                st.session_state['last_thinking_content'] = thinking_content
+        else:
+            full_content = ''.join(block.text for block in response.content)
+        
+        try:
+            if is_claude_3_7:
+                full_content = full_content.replace(",\n  ]", "\n  ]").replace(",\n]", "\n]")
+                full_content = re.sub(r'//.*?\n', '\n', full_content)
+            
+            response_content = json.loads(full_content)
+            return response_content
+        except json.JSONDecodeError as e:
+            return e
+            
+    except Exception as e:
+        # Handle timeout and other errors
+        error_message = str(e)
+        st.error(f"Error with Anthropic API: {error_message}")
+        return e
+    
 
 def main():
     load_dotenv()
