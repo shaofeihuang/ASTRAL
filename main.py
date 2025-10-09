@@ -28,39 +28,6 @@ model_token_limits = {
 }
 
 
-def on_model_provider_change():
-    """Update token limit and selected model when model provider changes"""
-    new_provider = st.session_state.model_provider
-    provider_key = f"{new_provider}:default"
-    if provider_key in model_token_limits:
-        st.session_state.token_limit = model_token_limits[provider_key]["default"]
-    else:
-        st.session_state.token_limit = 8000
-    if 'current_model_key' in st.session_state:
-        del st.session_state.current_model_key
-    if new_provider == "Anthropic API":
-        st.session_state.selected_model = "claude-sonnet-4"
-    elif new_provider == "Mistral API":
-        st.session_state.selected_model = "mistral-large-latest"
-
-
-def on_model_selection_change():
-    """Update token limit when specific model is selected"""
-    if 'model_provider' not in st.session_state or 'selected_model' not in st.session_state:
-        return  
-    model_provider = st.session_state.model_provider
-    selected_model = st.session_state.selected_model
-    model_key = f"{model_provider}:{selected_model}"
-    if model_key in model_token_limits:
-        st.session_state.token_limit = model_token_limits[model_key]["default"]
-    else:
-        provider_key = f"{model_provider}:default"
-        if provider_key in model_token_limits:
-            st.session_state.token_limit = model_token_limits[provider_key]["default"]
-    if 'current_model_key' in st.session_state:
-        del st.session_state.current_model_key
-
-
 def main():
     load_dotenv()
     with st.sidebar:
