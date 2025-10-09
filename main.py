@@ -8,6 +8,7 @@ from utils import *
 from bayesian import *
 from mistralai import Mistral
 from anthropic import Anthropic
+from openai import OpenAI
 
 model_token_limits = {
     # OpenAI models
@@ -93,6 +94,42 @@ def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str,
     else:
         return content
 
+
+def call_openai(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
+    client = OpenAI(api_key)
+
+    # For reasoning models (o1, o3, o3-mini, o4-mini) and GPT-5 series models, use a structured system prompt
+    if model_name in ["gpt-5", "gpt-5-mini", "gpt-5-nano", "o3", "o3-mini", "o4-mini"]:
+        max_tokens = 20000 if model_name.startswith("gpt-5") else 8192
+        response = client.chat.completions.create(
+            model=model_name,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": prompt_text, "image": image_bytes}
+            ],
+            max_completion_tokens=max_tokens
+        )
+    else:
+        system_prompt = "You are a helpful assistant designed to output JSON."
+        # Create completion with max_tokens for other models
+        response = client.chat.completions.create(
+            model=model_name,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": prompt_text, "image": image_bytes}
+            ],
+            max_tokens=8192
+        )
+
+    # Convert the JSON string in the 'content' field to a Python dictionary
+    content = response.choices[0].message.content
+    
+    if not content:
+        raise ValueError(f"Empty response from model {model_name}. This may indicate the model is not available or has rate limits.")
+    
+    response_content = json.loads(content)
+
+    return response_content
 
 def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
     client = Anthropic(api_key)
