@@ -10,6 +10,17 @@ from mistralai import Mistral
 from anthropic import Anthropic
 
 model_token_limits = {
+    # OpenAI models
+    "OpenAI API:gpt-5": {"default": 128000, "max": 400000},
+    "OpenAI API:gpt-5-mini": {"default": 64000, "max": 400000},
+    "OpenAI API:gpt-5-nano": {"default": 64000, "max": 400000},
+    "OpenAI API:gpt-4.1": {"default": 128000, "max": 1000000},
+    "OpenAI API:gpt-4o": {"default": 64000, "max": 128000},
+    "OpenAI API:gpt-4o-mini": {"default": 64000, "max": 128000},
+    "OpenAI API:o3": {"default": 64000, "max": 200000},
+    "OpenAI API:o3-mini": {"default": 64000, "max": 200000},
+    "OpenAI API:o4-mini": {"default": 64000, "max": 200000},    
+
     # Claude models
     "Anthropic API:claude-sonnet-4-5-20250929": {"default": 64000, "max": 200000},
     "Anthropic API:claude-sonnet-4-20250514": {"default": 64000, "max": 200000},
@@ -29,9 +40,7 @@ model_token_limits = {
 }
 
 
-
 def on_model_provider_change():
-    """Update token limit and selected model when model provider changes"""
     new_provider = st.session_state.model_provider
     provider_key = f"{new_provider}:default"
     if provider_key in model_token_limits:
@@ -40,14 +49,15 @@ def on_model_provider_change():
         st.session_state.token_limit = 8000
     if 'current_model_key' in st.session_state:
         del st.session_state.current_model_key
-    if new_provider == "Anthropic API":
-        st.session_state.selected_model = "claude-sonnet-4"
+    if new_provider == "OpenAI API":
+        st.session_state.selected_model = "gpt-5"
+    elif new_provider == "Anthropic API":
+        st.session_state.selected_model = "claude-sonnet-4-5"
     elif new_provider == "Mistral API":
         st.session_state.selected_model = "mistral-large-latest"
 
 
 def on_model_selection_change():
-    """Update token limit when specific model is selected"""
     if 'model_provider' not in st.session_state or 'selected_model' not in st.session_state:
         return  
     model_provider = st.session_state.model_provider
@@ -160,15 +170,27 @@ def main():
     load_dotenv()
     with st.sidebar:
         st.image("logo.png")
-
+    
         model_provider = st.selectbox(
         "Select your preferred model provider:",
-        ["Anthropic API", "Mistral API"],
+        ["OpenAI API", "Anthropic API", "Mistral API"],
         key="model_provider",
-        index=1,
+        index=2,
         on_change=on_model_provider_change,
         help="Select the model provider you would like to use. This will determine the models available for selection.",
         )
+    
+        if model_provider == "OpenAI API":
+            st.session_state['api_key'] = st.text_input("OpenAI API Key",
+                                            value=os.getenv("OPENAI_API_KEY"),
+                                            type="password")
+            selected_model = st.selectbox(
+                "Select the model you would like to use:",
+                ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4o", "gpt-4o-mini", "o3", "o3-mini", "o4-mini"],
+                key="selected_model",
+                on_change=on_model_selection_change,
+                help="Select the model you would like to use."
+            )
 
         if model_provider == "Anthropic API":
             st.session_state['api_key'] = st.text_input("Anthropic API Key",
