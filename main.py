@@ -1,7 +1,4 @@
-import json
-import os
-import time
-import random
+import json, os, time, random
 import streamlit as st
 import pandas as pd
 from datetime import date
@@ -12,38 +9,105 @@ from bayesian import *
 
 
 model_token_limits = {
-    "mistral-large-latest": {"default": 128000, "max": 128000},
-    "mistral-medium-latest": {"default": 128000, "max": 128000},
-    "mistral-small-latest": {"default": 128000, "max": 128000},
-    "magistral-small-latest": {"default": 40000, "max": 40000},
-    "magistral-medium-latest": {"default": 40000, "max": 40000},
-    "ministral-8b-latest": {"default": 128000, "max": 128000},
-    "pixtral-12b-latest": {"default": 128000, "max": 128000},
+    # Claude models
+    "Anthropic API:claude-sonnet-4-5-20250929": {"default": 64000, "max": 200000},
+    "Anthropic API:claude-sonnet-4-20250514": {"default": 64000, "max": 200000},
+    "Anthropic API:claude-opus-4-1-20250805": {"default": 64000, "max": 200000},
+    "Anthropic API:claude-opus-4-20250514": {"default": 64000, "max": 200000},
+    "Anthropic API:claude-3-7-sonnet-latest": {"default": 64000, "max": 200000},
+    "Anthropic API:claude-3-5-haiku-latest": {"default": 64000, "max": 200000},
+
+    # Mistral models
+    "Mistral API:mistral-large-latest": {"default": 128000, "max": 128000},
+    "Mistral API:mistral-medium-latest": {"default": 128000, "max": 128000},
+    "Mistral API:mistral-small-latest": {"default": 128000, "max": 128000},
+    "Mistral API:magistral-small-latest": {"default": 40000, "max": 40000},
+    "Mistral API:magistral-medium-latest": {"default": 40000, "max": 40000},
+    "Mistral API:ministral-8b-latest": {"default": 128000, "max": 128000},
+    "Mistral API:pixtral-12b-latest": {"default": 128000, "max": 128000},
 }
+
+
+def on_model_provider_change():
+    """Update token limit and selected model when model provider changes"""
+    new_provider = st.session_state.model_provider
+    provider_key = f"{new_provider}:default"
+    if provider_key in model_token_limits:
+        st.session_state.token_limit = model_token_limits[provider_key]["default"]
+    else:
+        st.session_state.token_limit = 8000
+    if 'current_model_key' in st.session_state:
+        del st.session_state.current_model_key
+    if new_provider == "Anthropic API":
+        st.session_state.selected_model = "claude-sonnet-4"
+    elif new_provider == "Mistral API":
+        st.session_state.selected_model = "mistral-large-latest"
+
+
+def on_model_selection_change():
+    """Update token limit when specific model is selected"""
+    if 'model_provider' not in st.session_state or 'selected_model' not in st.session_state:
+        return  
+    model_provider = st.session_state.model_provider
+    selected_model = st.session_state.selected_model
+    model_key = f"{model_provider}:{selected_model}"
+    if model_key in model_token_limits:
+        st.session_state.token_limit = model_token_limits[model_key]["default"]
+    else:
+        provider_key = f"{model_provider}:default"
+        if provider_key in model_token_limits:
+            st.session_state.token_limit = model_token_limits[provider_key]["default"]
+    if 'current_model_key' in st.session_state:
+        del st.session_state.current_model_key
 
 
 def main():
     load_dotenv()
-    st.sidebar.image("logo.png")
-    default_key = os.getenv("MISTRAL_API_KEY", "")
-    api_key = st.sidebar.text_input("Mistral API Key", value=default_key, type="password")
-    selected_model = st.sidebar.selectbox(
-        "Select the model you would like to use:",
-        list(model_token_limits.keys()),
-        key="selected_model",
-        help=(
-            "Select a suitable model."
-        ),
-    )
-    max_tokens = model_token_limits[selected_model]["default"]
+    with st.sidebar:
+        st.image("logo.png")
 
-    system_context = st.sidebar.selectbox(
-        "CPS System Context",
-        ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System"],
-        index=0,
-        placeholder="Select or enter a custom description",
-        accept_new_options=True,
-    )
+        model_provider = st.selectbox(
+        "Select your preferred model provider:",
+        ["Anthropic API", "Mistral API"],
+        key="model_provider",
+        index=1,
+        on_change=on_model_provider_change,
+        help="Select the model provider you would like to use. This will determine the models available for selection.",
+        )
+
+        if model_provider == "Anthropic API":
+            st.session_state['api_key'] = st.text_input("Anthropic API Key",
+                                            value=os.getenv("ANTHROPIC_API_KEY"),
+                                            type="password")
+            selected_model = st.selectbox(
+                "Select the model you would like to use:",
+                ["claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-opus-4-1-20250805", "claude-opus-4-20250514",
+                 "claude-3-7-sonnet-latest", "claude-3-5-haiku-latest"],
+                key="selected_model",
+                on_change=on_model_selection_change,
+                help="Select the model you would like to use."
+            )
+
+        if model_provider == "Mistral API":
+            st.session_state['api_key'] = st.text_input("Mistral API Key",
+                                            value=os.getenv("MISTRAL_API_KEY"),
+                                            type="password")
+            selected_model = st.selectbox(
+                "Select the model you would like to use:",
+                ["mistral-large-latest", "mistral-medium-latest", "mistral-small-latest", "magistral-medium-latest",
+                 "magistral-small-latest", "ministral-8b-latest", "pixtral-12b-latest"],
+                key="selected_model",
+                on_change=on_model_selection_change,
+                help="Select the model you would like to use."
+            )
+
+        system_context = st.selectbox(
+            "CPS System Context",
+            ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System"],
+            index=0,
+            placeholder="Select or enter a custom description",
+            accept_new_options=True,
+        )
 
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "DREAD", "Attack Tree", "System Model", "Analysis", "Countermeasures"])
 
@@ -56,8 +120,8 @@ def main():
 
         st.markdown("""---""")
 
-        if not api_key:
-            st.sidebar.warning("Please enter your Mistral API key.")
+        if 'api_key' not in st.session_state:
+            st.sidebar.warning("Please enter your API key.")
             st.stop()
 
         uploaded_file = st.file_uploader(
@@ -72,10 +136,16 @@ def main():
             if st.button("Generate Architectural Explanation") and uploaded_file is not None:
                 with st.spinner("Generating architectural explanation..."):
                     try:
-                        model_output = call_mistral(
-                            api_key, arch_expl_prompt, image_bytes, selected_model, max_tokens, response_as_json=False
-                        )
-                        st.session_state['arch_explanation'] = model_output
+                        if model_provider == "Mistral API":
+                            model_output = call_mistral(
+                                st.session_state['api_key'],
+                                arch_expl_prompt,
+                                image_bytes,
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
+                            st.session_state['arch_explanation'] = model_output
                     except Exception as e:
                         st.error(f"Failed to generate architectural explanation: {str(e)}")
         else:
@@ -99,11 +169,17 @@ def main():
             if st.button("Re-Generate Architectural Explanation"):
                 with st.spinner("Generating architectural explanation..."):
                     try:
-                        model_output = call_mistral(
-                            api_key, arch_expl_prompt + "\n" + additional_detail.strip(), image_bytes, selected_model, max_tokens, response_as_json=False
-                        )
-                        st.session_state['arch_explanation'] = model_output
-                        st.rerun()
+                        if model_provider == "Mistral API":
+                            model_output = call_mistral(
+                                st.session_state['api_key'],
+                                arch_expl_prompt + "\n" + additional_detail.strip(),
+                                image_bytes,
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
+                            st.session_state['arch_explanation'] = model_output
+                            st.rerun()
                     except Exception as e:
                         st.error(f"Failed to generate architectural explanation: {str(e)}")
 
@@ -122,11 +198,17 @@ def main():
             if st.button("Generate STRIDE-LM Threat Model"):
                 with st.spinner("Generating STRIDE-LM threat model..."):
                     try:
-                        model_output = call_mistral(
-                            api_key, threat_model_prompt, image_bytes, selected_model, max_tokens, response_as_json=True
-                        )
-                        st.session_state['threat_model'] = model_output.get("threat_model", [])
-                        st.session_state['improvement_suggestions'] = model_output.get("improvement_suggestions", [])
+                        if model_provider == "Mistral API":
+                            model_output = call_mistral(
+                                st.session_state['api_key'],
+                                threat_model_prompt,
+                                image_bytes,
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=True
+                                )
+                            st.session_state['threat_model'] = model_output.get("threat_model", [])
+                            st.session_state['improvement_suggestions'] = model_output.get("improvement_suggestions", [])
                     except Exception as e:
                         st.error(f"Failed to generate threat model: {str(e)}")
         else:
@@ -164,7 +246,7 @@ def main():
                     max_retries = 3
                     for attempt in range(max_retries):
                         try:
-                            st.session_state['dread_assessment'] = get_dread_assessment(api_key, selected_model, dread_assessment_prompt)
+                            st.session_state['dread_assessment'] = get_dread_assessment(st.session_state['api_key'], selected_model, dread_assessment_prompt)
                             break
                         except Exception as e:
                             if attempt == max_retries - 1:
@@ -203,7 +285,7 @@ def main():
                     attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_explanation'), st.session_state.get('threat_model'))
                     with st.spinner("Generating attack tree and paths..."):
                         try:
-                            attack_tree_data = get_attack_tree(api_key, selected_model, attack_tree_prompt, system_context)
+                            attack_tree_data = get_attack_tree(st.session_state['api_key'], selected_model, attack_tree_prompt, system_context)
                             st.session_state['attack_tree_data'] = attack_tree_data
                             attack_tree = convert_tree_to_mermaid(attack_tree_data)
                             st.session_state['attack_tree'] = attack_tree
@@ -279,14 +361,15 @@ def main():
                         start_time = time.time()
 
                         prompt_step1 = create_aml_prompt_step_1(arch_explanation, threat_model, attack_paths)
-                        response_step1 = call_mistral(
-                            api_key,
-                            prompt_step1,
-                            image_bytes if 'image_bytes' in locals() else b'',
-                            selected_model,
-                            max_tokens=max_tokens,
-                            response_as_json=False
-                        )
+                        if model_provider == "Mistral API":
+                            response_step1 = call_mistral(
+                                st.session_state['api_key'],
+                                prompt_step1,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
                         internal_elements_xml = response_step1
 
                         end_time = time.time()
@@ -308,14 +391,15 @@ def main():
                         start_time = time.time()
 
                         prompt_step2 = create_aml_prompt_step_2(attack_paths)
-                        response_step2 = call_mistral(
-                            api_key,
-                            prompt_step2,
-                            image_bytes if 'image_bytes' in locals() else b'',
-                            selected_model,
-                            max_tokens=max_tokens,
-                            response_as_json=False
-                        )
+                        if model_provider == "Mistral API":
+                            response_step2 = call_mistral(
+                                st.session_state['api_key'],
+                                prompt_step2,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
                         valid_pairs_json = response_step2
 
                         end_time = time.time()
@@ -346,14 +430,15 @@ def main():
                         map_str = "\n".join(map_lines)
 
                         prompt_step3 = create_aml_prompt_step_3(valid_pairs_json, map_str)
-                        response_step3 = call_mistral(
-                            api_key,
-                            prompt_step3,
-                            image_bytes if 'image_bytes' in locals() else b'',
-                            selected_model,
-                            max_tokens=max_tokens,
-                            response_as_json=False
-                        )
+                        if model_provider == "Mistral API":
+                            response_step3 = call_mistral(
+                                st.session_state['api_key'],
+                                prompt_step3,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
                         internal_links_xml = response_step3
 
                         end_time = time.time()
@@ -374,14 +459,15 @@ def main():
                         print("[#] Generating AML - Step 4 (Final)")
                         start_time = time.time()
                         prompt_step4 = create_aml_prompt_step_4(internal_elements_xml, internal_links_xml)
-                        response_step4 = call_mistral(
-                            api_key,
-                            prompt_step4,
-                            image_bytes if 'image_bytes' in locals() else b'',
-                            selected_model,
-                            max_tokens=max_tokens,
-                            response_as_json=False
-                        )
+                        if model_provider == "Mistral API":
+                            response_step4 = call_mistral(
+                                st.session_state['api_key'],
+                                prompt_step4,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
                         end_time = time.time()
                         elapsed_secs = end_time - start_time
                         st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
