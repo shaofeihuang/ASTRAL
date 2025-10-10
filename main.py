@@ -42,40 +42,48 @@ model_token_limits = {
 
 
 def on_model_provider_change():
-    new_provider = st.session_state.model_provider
-    provider_key = f"{new_provider}:default"
-    if provider_key in model_token_limits:
-        st.session_state.token_limit = model_token_limits[provider_key]["default"]
-    else:
-        st.session_state.token_limit = 8000
-    if 'current_model_key' in st.session_state:
-        del st.session_state.current_model_key
+    new_provider = st.session_state['model_provider']
+    # Set default model per provider first
     if new_provider == "OpenAI API":
-        st.session_state.selected_model = "gpt-5"
+        st.session_state['selected_model'] = "gpt-5"
     elif new_provider == "Anthropic API":
-        st.session_state.selected_model = "claude-sonnet-4-5"
+        st.session_state['selected_model'] = "claude-sonnet-4-5-20250929"
     elif new_provider == "Mistral API":
-        st.session_state.selected_model = "mistral-large-latest"
+        st.session_state['selected_model'] = "mistral-large-latest"
+
+    # Compose correct key for lookup
+    model_key = f"{new_provider}:{st.session_state['selected_model']}"
+
+    # Set token limits from dict if existent, else fallback
+    if model_key in model_token_limits:
+        st.session_state['token_limit'] = model_token_limits[model_key]["default"]
+    else:
+        st.session_state['token_limit'] = 8000
+
+    # Remove current model key
+    if 'current_model_key' in st.session_state:
+        del st.session_state['current_model_key']
 
 
 def on_model_selection_change():
     if 'model_provider' not in st.session_state or 'selected_model' not in st.session_state:
-        return  
-    model_provider = st.session_state.model_provider
-    selected_model = st.session_state.selected_model
-    model_key = f"{model_provider}:{selected_model}"
+        return
+    
+    model_key = f"{st.session_state['model_provider']}:{st.session_state['selected_model']}"
+
     if model_key in model_token_limits:
-        st.session_state.token_limit = model_token_limits[model_key]["default"]
+        st.session_state['token_limit'] = model_token_limits[model_key]["default"]
     else:
         provider_key = f"{model_provider}:default"
         if provider_key in model_token_limits:
-            st.session_state.token_limit = model_token_limits[provider_key]["default"]
+            st.session_state['token_limit'] = model_token_limits[provider_key]["default"]
+    
     if 'current_model_key' in st.session_state:
-        del st.session_state.current_model_key
+        del st.session_state['current_model_key']
 
 
 def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
-    client = Mistral(api_key=api_key)
+    client = Mistral(api_key)
     params = {
         "model": model_name,
         "messages": [
@@ -216,7 +224,7 @@ def main():
         on_change=on_model_provider_change,
         help="Select the model provider you would like to use. This will determine the models available for selection.",
         )
-    
+
         if model_provider == "OpenAI API":
             st.session_state['api_key'] = st.text_input("OpenAI API Key",
                                             value=os.getenv("OPENAI_API_KEY"),
@@ -246,6 +254,7 @@ def main():
             st.session_state['api_key'] = st.text_input("Mistral API Key",
                                             value=os.getenv("MISTRAL_API_KEY"),
                                             type="password")
+            
             selected_model = st.selectbox(
                 "Select the model you would like to use:",
                 ["mistral-large-latest", "mistral-medium-latest", "mistral-small-latest", "magistral-medium-latest",
@@ -254,6 +263,11 @@ def main():
                 on_change=on_model_selection_change,
                 help="Select the model you would like to use."
             )
+
+
+        if 'token_limit' not in st.session_state:
+            model_key = f"{model_provider}:{selected_model}"
+            st.session_state['token_limit'] = model_token_limits[model_key]["default"]
 
         system_context = st.selectbox(
             "CPS System Context",
