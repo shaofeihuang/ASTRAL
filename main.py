@@ -9,6 +9,9 @@ from bayesian import *
 from mistralai import Mistral
 from anthropic import Anthropic
 from openai import OpenAI
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+from azure.core.exceptions import ResourceNotFoundError
 
 model_token_limits = {
     # OpenAI models
@@ -74,7 +77,7 @@ def on_model_selection_change():
     if model_key in model_token_limits:
         st.session_state['token_limit'] = model_token_limits[model_key]["default"]
     else:
-        provider_key = f"{model_provider}:default"
+        provider_key = f"{st.session_state['model_provider']}:default"
         if provider_key in model_token_limits:
             st.session_state['token_limit'] = model_token_limits[provider_key]["default"]
     
@@ -212,7 +215,16 @@ def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: st
     
 
 def main():
-    load_dotenv()
+    if 'azure_key_vault_logged_in' not in st.session_state:
+        # Azure Key Vault
+        key_vault_name = "tra-demo"
+        key_vault_uri = f"https://{key_vault_name}.vault.azure.net/"
+        credential = DefaultAzureCredential()
+        st.session_state['client'] = SecretClient(vault_url=key_vault_uri, credential=credential)
+        st.session_state['azure_key_vault_logged_in'] = key_vault_name
+    
+    #load_dotenv()
+
     with st.sidebar:
         st.image("logo.png")
     
@@ -226,9 +238,12 @@ def main():
         )
 
         if model_provider == "OpenAI API":
-            st.session_state['api_key'] = st.text_input("OpenAI API Key",
-                                            value=os.getenv("OPENAI_API_KEY"),
-                                            type="password")
+
+            try:
+                st.session_state['api_key'] = st.session_state['client'].get_secret("OPENAI-API-KEY").value
+            except ResourceNotFoundError:
+                st.session_state['api_key'] = st.text_input("OpenAI API Key", type="password")
+
             selected_model = st.selectbox(
                 "Select the model you would like to use:",
                 ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4o", "gpt-4o-mini", "o3", "o3-mini", "o4-mini"],
@@ -238,9 +253,12 @@ def main():
             )
 
         if model_provider == "Anthropic API":
-            st.session_state['api_key'] = st.text_input("Anthropic API Key",
-                                            value=os.getenv("ANTHROPIC_API_KEY"),
-                                            type="password")
+
+            try:
+                st.session_state['api_key'] = st.session_state['client'].get_secret("ANTHROPIC-API-KEY").value
+            except ResourceNotFoundError:
+                st.session_state['api_key'] = st.text_input("Anthropic API Key", type="password")
+
             selected_model = st.selectbox(
                 "Select the model you would like to use:",
                 ["claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-opus-4-1-20250805", "claude-opus-4-20250514",
@@ -251,9 +269,11 @@ def main():
             )
 
         if model_provider == "Mistral API":
-            st.session_state['api_key'] = st.text_input("Mistral API Key",
-                                            value=os.getenv("MISTRAL_API_KEY"),
-                                            type="password")
+
+            try:
+                st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
+            except ResourceNotFoundError:
+                st.session_state['api_key'] = st.text_input("Mistral API Key", type="password")
             
             selected_model = st.selectbox(
                 "Select the model you would like to use:",
@@ -263,7 +283,6 @@ def main():
                 on_change=on_model_selection_change,
                 help="Select the model you would like to use."
             )
-
 
         if 'token_limit' not in st.session_state:
             model_key = f"{model_provider}:{selected_model}"
