@@ -1,0 +1,442 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G00] Disrupt or Stop Cyber-Physical System Operations (Railway CBTC)",
+      "children": [
+        {
+          "id": "compromise_communication",
+          "label": "[G01] Compromise Train-to-Wayside Communication",
+          "children": [
+            {
+              "id": "wireless_protocols",
+              "label": "[A01] Wireless Communication Protocols (IEEE 802.11p, GSM-R, LTE-R)",
+              "children": [
+                {
+                  "id": "protocol_vuln",
+                  "label": "[V01] Exploit Protocol Vulnerabilities (e.g., CVE-2021-3176, Log4Shell)",
+                  "children": [
+                    {
+                      "id": "spoof_train_id",
+                      "label": "[H01] Spoof Train Identity or Position Data",
+                      "children": [
+                        {
+                          "id": "false_signaling",
+                          "label": "[H02] Cause Incorrect Signaling Leading to Collisions/Derailements",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "dos_wireless",
+                      "label": "[H03] Launch DoS on Wireless Channels (Jamming, Flooding)",
+                      "children": [
+                        {
+                          "id": "comm_loss",
+                          "label": "[H04] Induce Loss of Train-Ground Communication",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "rogue_base_station",
+                  "label": "[A02] Deploy Rogue Base Station (Fake GSM-R Tower)",
+                  "children": [
+                    {
+                      "id": "mitm_attack",
+                      "label": "[V02] Perform Man-in-the-Middle (MITM) Attack on Train Comms",
+                      "children": [
+                        {
+                          "id": "tamper_commands",
+                          "label": "[H05] Tamper with Movement Authorities or Braking Commands",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "compromise_wayside",
+          "label": "[G02] Compromise Wayside Infrastructure",
+          "children": [
+            {
+              "id": "trackside_assets",
+              "label": "[A03] Trackside Assets (Zone Controllers, Signals, Points Machines)",
+              "children": [
+                {
+                  "id": "physical_access",
+                  "label": "[V03] Gain Unauthorized Physical Access to Trackside Cabinets",
+                  "children": [
+                    {
+                      "id": "tamper_sensors",
+                      "label": "[H06] Tamper with Axle Counters/Balises to Spoof Occupancy",
+                      "children": [
+                        {
+                          "id": "false_occupancy",
+                          "label": "[H07] Trigger False Track Occupancy or Clear Signals",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "sabotage_power",
+                      "label": "[H08] Sabotage Power Supply to Wayside Controllers",
+                      "children": [
+                        {
+                          "id": "system_failure",
+                          "label": "[H09] Cause Fail-Safe Mode or System Shutdown",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "default_creds",
+                  "label": "[V04] Exploit Default/Hardcoded Credentials in PLCs/Radio Units",
+                  "children": [
+                    {
+                      "id": "unauth_access",
+                      "label": "[H10] Gain Unauthorized Remote Access to Wayside Systems",
+                      "children": [
+                        {
+                          "id": "modify_logic",
+                          "label": "[H11] Modify Interlocking Logic or Signal Timing",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "backbone_network",
+              "label": "[A04] Backbone Network (Fiber Rings, Switches, Gateways)",
+              "children": [
+                {
+                  "id": "network_vuln",
+                  "label": "[V05] Exploit Network Vulnerabilities (e.g., CVE-2020-25705, RSTP Misconfig)",
+                  "children": [
+                    {
+                      "id": "dos_network",
+                      "label": "[H12] Launch DoS on Backbone (MPLS-TE Flooding, ARP Spoofing)",
+                      "children": [
+                        {
+                          "id": "loss_supervision",
+                          "label": "[H13] Disrupt Central Supervision or Redundancy",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "lateral_movement",
+                      "label": "[H14] Move Laterally from IT to OT (e.g., via Misconfigured Firewall)",
+                      "children": [
+                        {
+                          "id": "compromise_occ",
+                          "label": "[H15] Compromise Operations Control Center (OCC) Systems",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "compromise_trainborne",
+          "label": "[G03] Compromise Trainborne Systems",
+          "children": [
+            {
+              "id": "onboard_assets",
+              "label": "[A05] Onboard Assets (ATP/ATO Units, Vital Computers, TIU)",
+              "children": [
+                {
+                  "id": "firmware_vuln",
+                  "label": "[V06] Exploit Firmware Vulnerabilities (e.g., CVE-2021-34527)",
+                  "children": [
+                    {
+                      "id": "tamper_atp",
+                      "label": "[H16] Tamper with ATP Braking Curves or Speed Limits",
+                      "children": [
+                        {
+                          "id": "unsafe_operation",
+                          "label": "[H17] Force Unsafe Train Operation (Overspeed, Missed Stops)",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "maintenance_port",
+                  "label": "[A06] Onboard Maintenance Ports (USB, Ethernet, Diagnostic Connectors)",
+                  "children": [
+                    {
+                      "id": "unauth_fw_update",
+                      "label": "[V07] Perform Unauthorized Firmware Update via Port",
+                      "children": [
+                        {
+                          "id": "malicious_logic",
+                          "label": "[H18] Inject Malicious Logic into Vital Computer",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "gps_spoofing",
+              "label": "[A07] GPS Receiver (for Positioning)",
+              "children": [
+                {
+                  "id": "spoof_gps",
+                  "label": "[V08] Spoof GPS Signals to Falsify Train Position",
+                  "children": [
+                    {
+                      "id": "incorrect_localization",
+                      "label": "[H19] Cause Incorrect Train Localization (Balise Mismatch)",
+                      "children": [
+                        {
+                          "id": "signal_violation",
+                          "label": "[H20] Trigger Signal Violation or Wrong-Route Incursion",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "compromise_supporting_it",
+          "label": "[G04] Compromise Supporting IT Systems",
+          "children": [
+            {
+              "id": "it_assets",
+              "label": "[A08] IT Assets (Maintenance Workstations, Historian Servers, Remote Portals)",
+              "children": [
+                {
+                  "id": "credential_theft",
+                  "label": "[V09] Steal Credentials via Phishing (e.g., CVE-2019-19781)",
+                  "children": [
+                    {
+                      "id": "unauth_remote_access",
+                      "label": "[H21] Gain Unauthorized Remote Access via VPN/Jump Host",
+                      "children": [
+                        {
+                          "id": "modify_schedules",
+                          "label": "[H22] Modify Train Schedules or Timetables (Non-Vital)",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "tamper_logs",
+                          "label": "[H23] Tamper with Historian Logs to Hide Attacks",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "supply_chain",
+                  "label": "[A09] Supply Chain (Third-Party Vendors, Firmware Updates)",
+                  "children": [
+                    {
+                      "id": "malicious_update",
+                      "label": "[V10] Inject Malicious Code in Firmware Update (e.g., via CVE-2021-3806)",
+                      "children": [
+                        {
+                          "id": "persistent_compromise",
+                          "label": "[H24] Achieve Persistent Compromise of Wayside/Onboard Systems",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_sabotage",
+          "label": "[G05] Physical Sabotage or Tampering",
+          "children": [
+            {
+              "id": "physical_assets",
+              "label": "[A10] Physical Assets (Tracks, Power Lines, Cabinets)",
+              "children": [
+                {
+                  "id": "track_tampering",
+                  "label": "[H25] Tamper with Tracks (e.g., Remove Fishplates, Obstruct Sensors)",
+                  "children": [
+                    {
+                      "id": "derailment_risk",
+                      "label": "[H26] Create Derailment or Collision Risk",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "power_sabotage",
+                  "label": "[H27] Sabotage Power Supply (e.g., Cut Cables, Overload Transformers)",
+                  "children": [
+                    {
+                      "id": "system_shutdown",
+                      "label": "[H28] Force Emergency Shutdown of Wayside Systems",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "insider_threat",
+          "label": "[G06] Insider Threat",
+          "children": [
+            {
+              "id": "authorized_personnel",
+              "label": "[A11] Authorized Personnel (Operators, Maintenance, Vendors)",
+              "children": [
+                {
+                  "id": "abuse_access",
+                  "label": "[V11] Abuse Legitimate Access for Malicious Actions",
+                  "children": [
+                    {
+                      "id": "disable_safety",
+                      "label": "[H29] Disable Safety Systems (e.g., ATP, Door Locks)",
+                      "children": [
+                        {
+                          "id": "unsafe_operation_insider",
+                          "label": "[H30] Enable Unsafe Train Operation",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "data_exfiltration",
+                      "label": "[H31] Exfiltrate Sensitive Data (e.g., Cryptographic Keys, Timetables)",
+                      "children": [
+                        {
+                          "id": "future_attacks",
+                          "label": "[H32] Enable Future Targeted Attacks",
+                          "children": [
+                            {
+                              "id": "attacker",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

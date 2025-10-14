@@ -1,0 +1,714 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] Disrupt or Stop Cyber-Physical System Operations (Heating System)",
+      "children": [
+        {
+          "id": "spoof_goal",
+          "label": "[G02] Spoof Legitimate Commands or Data",
+          "children": [
+            {
+              "id": "bms_protocol",
+              "label": "[A01] Building Management System (BMS) Protocols (Modbus, BACnet, OPC UA)",
+              "children": [
+                {
+                  "id": "weak_auth_bms",
+                  "label": "[V01] Weak or Missing Authentication in BMS Protocols",
+                  "children": [
+                    {
+                      "id": "modbus_no_auth",
+                      "label": "[V02] Modbus TCP/RTU Lacking Authentication (Default Configuration)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "bacnet_broadcast",
+                      "label": "[V03] BACnet Broadcast Messages Vulnerable to Spoofing (Who-Is, I-Am)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "opc_ua_misconfig",
+                      "label": "[V04] OPC UA Misconfigured Certificates or Disabled Encryption",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cve_2022_3028",
+                  "label": "[V05] Exploit CVE-2022-3028 (BMS Protocol Vulnerability)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "spoofed_sensor_data",
+              "label": "[H01] Spoofed Sensor Data (Temperature, Pressure, Flow)",
+              "children": [
+                {
+                  "id": "false_low_temp",
+                  "label": "[H02] False Low-Temperature Readings Causing Overcompensation (Overheating Risk)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "false_high_temp",
+                  "label": "[H03] False High-Temperature Readings Causing System Shutdown (DoS)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "spoofed_control",
+              "label": "[H04] Spoofed Control Commands (Direct Actuator Manipulation)",
+              "children": [
+                {
+                  "id": "unauth_modbus_cmd",
+                  "label": "[H05] Unauthorized Modbus Commands to Actuators (e.g., Open Valve 100%)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tamper_goal",
+          "label": "[G03] Tamper with Control Logic or System Configurations",
+          "children": [
+            {
+              "id": "eng_workstation",
+              "label": "[A02] Engineering Workstation (PLC Programming, HMI Configuration)",
+              "children": [
+                {
+                  "id": "weak_access_control",
+                  "label": "[V06] Weak Access Controls on Engineering Workstations (Default/Shared Credentials)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "cve_2021_22893",
+                  "label": "[V07] Exploit CVE-2021-22893 (Control Logic Vulnerability)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "plc_firmware",
+              "label": "[A03] PLC Firmware/Logic (Ladder Logic, Control Algorithms)",
+              "children": [
+                {
+                  "id": "unauth_firmware_update",
+                  "label": "[V08] Unauthenticated Firmware Update Mechanism",
+                  "children": [
+                    {
+                      "id": "malicious_firmware",
+                      "label": "[H06] Injection of Malicious Firmware (Altered Control Loops)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "logic_bomb",
+                  "label": "[H07] Logic Bomb in PLC Code (Time/Delay-Based Trigger)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "safety_interlocks",
+              "label": "[A04] Safety Instrumented Systems (SIS) or Interlocks",
+              "children": [
+                {
+                  "id": "bypass_interlocks",
+                  "label": "[H08] Bypass or Disable Safety Interlocks (Max Temperature Limits)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "tamper_impact",
+              "label": "[H09] Tampering-Induced Physical Hazards",
+              "children": [
+                {
+                  "id": "overheat_equipment",
+                  "label": "[H10] Overheating of Critical Components (Boiler, Heat Exchanger)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "erratic_actuation",
+                  "label": "[H11] Erratic Actuator Behavior (Rapid Cycling of Valves/Dampers)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_goal",
+          "label": "[G04] Compromise Logging or Audit Mechanisms (Repudiation)",
+          "children": [
+            {
+              "id": "scada_logs",
+              "label": "[A05] SCADA/HMI Audit Logs (Operator Actions, System Events)",
+              "children": [
+                {
+                  "id": "log_tampering",
+                  "label": "[V09] Insecure Log Storage (Unencrypted, Writable by Low-Privilege Users)",
+                  "children": [
+                    {
+                      "id": "delete_logs",
+                      "label": "[H12] Deletion of Critical Logs (Covering Tracks)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "inject_false_logs",
+                      "label": "[H13] Injection of False Log Entries (Misleading Forensics)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "historian_data",
+              "label": "[A06] Historian Database (Time-Series Operational Data)",
+              "children": [
+                {
+                  "id": "historian_access",
+                  "label": "[V10] Excessive Permissions on Historian (Read/Write for Non-Admin Users)",
+                  "children": [
+                    {
+                      "id": "alter_trends",
+                      "label": "[H14] Alter Historical Trends (Hide Equipment Degradation)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "repudiation_impact",
+              "label": "[H15] Lack of Accountability for Malicious Actions",
+              "children": [
+                {
+                  "id": "undetected_activities",
+                  "label": "[H16] Prolonged Undetected Malicious Activities (Persistent Compromise)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure_goal",
+          "label": "[G05] Unauthorized Information Disclosure",
+          "children": [
+            {
+              "id": "web_interface",
+              "label": "[A07] Heating System Web Interface (Configuration, Monitoring)",
+              "children": [
+                {
+                  "id": "cve_2020_25223",
+                  "label": "[V11] Exploit CVE-2020-25223 (Web Interface Vulnerability)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "default_creds",
+                  "label": "[V12] Default or Weak Credentials on Web Interface",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "exposed_data",
+              "label": "[H17] Exposure of Sensitive Operational Data",
+              "children": [
+                {
+                  "id": "leak_configs",
+                  "label": "[H18] Leak of System Configurations (PLC Logic, Network Topology)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "leak_creds",
+                  "label": "[H19] Leak of User Credentials (Reuse in Lateral Movement)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "enterprise_integration",
+              "label": "[A08] Enterprise Integration Points (APIs, Gateways)",
+              "children": [
+                {
+                  "id": "insecure_api",
+                  "label": "[V13] Insecure API Endpoints (Lack of Rate Limiting, Authentication)",
+                  "children": [
+                    {
+                      "id": "data_exfil",
+                      "label": "[H20] Exfiltration of Operational Data to External Servers",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_goal",
+          "label": "[G06] Denial of Service (DoS) on Critical Components",
+          "children": [
+            {
+              "id": "network_infra",
+              "label": "[A09] Network Infrastructure (Switches, Routers, Firewalls)",
+              "children": [
+                {
+                  "id": "cve_2019_18218",
+                  "label": "[V14] Exploit CVE-2019-18218 (Network Protocol Vulnerability)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "flood_traffic",
+                  "label": "[H21] Traffic Flooding (Modbus TCP, OPC UA Ports)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "plc_comms",
+              "label": "[A10] PLC Communication Channels (Cyclic Polling, Heartbeats)",
+              "children": [
+                {
+                  "id": "disrupt_heartbeat",
+                  "label": "[H22] Disrupt PLC Heartbeat Messages (Cause Fail-Safe Shutdown)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "hmi_servers",
+              "label": "[A11] HMI/SCADA Servers (Operator Interfaces)",
+              "children": [
+                {
+                  "id": "resource_exhaustion",
+                  "label": "[H23] Resource Exhaustion (CPU/Memory) via Malformed Packets",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "dos_impact",
+              "label": "[H24] DoS-Induced Operational Disruption",
+              "children": [
+                {
+                  "id": "loss_of_control",
+                  "label": "[H25] Loss of Heating Control (Freezing Risk in Critical Areas)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "system_reboot",
+                  "label": "[H26] Forced System Reboots (Disrupting Processes)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "priv_esc_goal",
+          "label": "[G07] Elevation of Privilege (Unauthorized Admin Access)",
+          "children": [
+            {
+              "id": "access_control",
+              "label": "[A12] Access Control Mechanisms (RBAC, Local Accounts)",
+              "children": [
+                {
+                  "id": "cve_2021_34527",
+                  "label": "[V15] Exploit CVE-2021-34527 (Privilege Escalation Vulnerability)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "cred_theft",
+                  "label": "[V16] Theft of Credentials (Keylogging, Pass-the-Hash)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "remote_access",
+              "label": "[A13] Remote Access Portals (VPN, Jump Hosts)",
+              "children": [
+                {
+                  "id": "vpn_misconfig",
+                  "label": "[V17] Misconfigured VPN (Weak Encryption, No MFA)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "priv_esc_impact",
+              "label": "[H27] Abuse of Elevated Privileges",
+              "children": [
+                {
+                  "id": "unauth_shutdown",
+                  "label": "[H28] Unauthorized System Shutdown or Reconfiguration",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "persist_access",
+                  "label": "[H29] Persistent Backdoor Installation (Maintain Long-Term Access)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement_goal",
+          "label": "[G08] Lateral Movement Across System Components",
+          "children": [
+            {
+              "id": "network_segmentation",
+              "label": "[A14] Network Segmentation (VLANs, Firewalls)",
+              "children": [
+                {
+                  "id": "flat_network",
+                  "label": "[V18] Flat Network Architecture (No Segmentation Between OT Levels)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "weak_acls",
+                  "label": "[V19] Weak ACLs on Industrial Switches (Allow Unrestricted Traffic)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "compromised_device",
+              "label": "[A15] Compromised Field Device (Sensor, Actuator, RTU)",
+              "children": [
+                {
+                  "id": "default_device_creds",
+                  "label": "[V20] Default Credentials on Field Devices (Modbus, BACnet Devices)",
+                  "children": [
+                    {
+                      "id": "pivot_to_plc",
+                      "label": "[H30] Pivot from Compromised Sensor to PLC (Modbus Master)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "engineering_ws",
+              "label": "[A16] Engineering Workstation (Shared Across Multiple Systems)",
+              "children": [
+                {
+                  "id": "shared_creds",
+                  "label": "[V21] Shared Credentials Across Multiple OT Systems",
+                  "children": [
+                    {
+                      "id": "lateral_to_scada",
+                      "label": "[H31] Lateral Movement from Engineering WS to SCADA Server",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "lateral_impact",
+              "label": "[H32] Widespread System Compromise via Lateral Movement",
+              "children": [
+                {
+                  "id": "full_system_control",
+                  "label": "[H33] Gain Control of Entire Heating System (PLCs, HMIs, Historians)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_goal",
+          "label": "[G09] Physical Tampering or Access",
+          "children": [
+            {
+              "id": "local_hmi",
+              "label": "[A17] Local HMI Panels (Unsecured Physical Access)",
+              "children": [
+                {
+                  "id": "unlocked_hmi",
+                  "label": "[V22] Unlocked or Default-Pinned HMI Panels",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "field_devices",
+              "label": "[A18] Field Devices (Sensors, Actuators, Valves)",
+              "children": [
+                {
+                  "id": "physical_tamper",
+                  "label": "[H34] Physical Tampering with Sensors/Actuators (Replacement, Signal Jamming)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "usb_ports",
+              "label": "[A19] USB Ports on Engineering Workstations/PLCs",
+              "children": [
+                {
+                  "id": "unrestricted_usb",
+                  "label": "[V23] Unrestricted USB Access (No Disabling or Whitelisting)",
+                  "children": [
+                    {
+                      "id": "malware_via_usb",
+                      "label": "[H35] Introduction of Malware via USB (e.g., Stuxnet-like Payload)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "supply_chain",
+              "label": "[A20] Supply Chain (Third-Party Vendors, Firmware Updates)",
+              "children": [
+                {
+                  "id": "compromised_updates",
+                  "label": "[V24] Compromised Firmware or Patch Updates",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "rogue_vendor",
+                  "label": "[H36] Rogue Vendor Access (Abuse of Remote Support Tools)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
