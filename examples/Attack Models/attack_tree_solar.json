@@ -1,0 +1,508 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] Disrupt or Stop Cyber-Physical System Operations (Heating System)",
+      "children": [
+        {
+          "id": "spoofing",
+          "label": "[H01] Spoofing of Control Commands or Sensor Data",
+          "children": [
+            {
+              "id": "modbus_spoof",
+              "label": "[V01] Exploit Weak Authentication in Modbus/TCP (CVE-2018-5443)",
+              "children": [
+                {
+                  "id": "plc_compromise",
+                  "label": "[A01] Programmable Logic Controllers (PLCs)",
+                  "children": [
+                    {
+                      "id": "plc_firmware",
+                      "label": "[V02] Outdated or Vulnerable PLC Firmware",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "plc_default_creds",
+                      "label": "[V03] Default or Weak Credentials on PLCs",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "dnp3_spoof",
+              "label": "[V04] Exploit Lack of Authentication in DNP3 Protocol",
+              "children": [
+                {
+                  "id": "rtu_compromise",
+                  "label": "[A02] Remote Terminal Units (RTUs)",
+                  "children": [
+                    {
+                      "id": "rtu_mitm",
+                      "label": "[H02] Man-in-the-Middle (MITM) Attack on RTU Communications",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tampering",
+          "label": "[H03] Tampering with System Parameters or Data",
+          "children": [
+            {
+              "id": "hmi_tamper",
+              "label": "[A03] Human-Machine Interface (HMI)",
+              "children": [
+                {
+                  "id": "hmi_input_val",
+                  "label": "[V05] Improper Input Validation in HMI (CVE-2017-9642)",
+                  "children": [
+                    {
+                      "id": "hmi_cred_theft",
+                      "label": "[V06] Stolen or Weak HMI Operator Credentials",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "scada_log_tamper",
+              "label": "[A04] SCADA System Logs",
+              "children": [
+                {
+                  "id": "scada_log_integrity",
+                  "label": "[V07] Compromised Log Integrity (CVE-2019-10995)",
+                  "children": [
+                    {
+                      "id": "scada_priv_escalation",
+                      "label": "[V08] Privilege Escalation in SCADA (CVE-2018-10617)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation",
+          "label": "[H04] Repudiation via Log or Audit Trail Manipulation",
+          "children": [
+            {
+              "id": "scada_audit_bypass",
+              "label": "[A05] SCADA Audit Mechanisms",
+              "children": [
+                {
+                  "id": "scada_weak_logging",
+                  "label": "[V09] Insufficient Logging or Log Tampering",
+                  "children": [
+                    {
+                      "id": "scada_cred_compromise",
+                      "label": "[V10] Compromised SCADA Administrator Credentials",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure",
+          "label": "[H05] Information Disclosure of Sensitive Data",
+          "children": [
+            {
+              "id": "web_interface",
+              "label": "[A06] Heating System Web Interface",
+              "children": [
+                {
+                  "id": "web_vuln",
+                  "label": "[V11] Web Interface Information Disclosure (CVE-2020-7014)",
+                  "children": [
+                    {
+                      "id": "web_default_creds",
+                      "label": "[V12] Default Credentials on Web Interface",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "unencrypted_comms",
+              "label": "[A07] Unencrypted Communications (Modbus, DNP3)",
+              "children": [
+                {
+                  "id": "sniffing",
+                  "label": "[H06] Network Traffic Sniffing",
+                  "children": [
+                    {
+                      "id": "network_access",
+                      "label": "[A08] Access to OT Network Segment",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos",
+          "label": "[H07] Denial of Service (DoS) on Critical Components",
+          "children": [
+            {
+              "id": "network_flood",
+              "label": "[H08] Network Flooding Attack",
+              "children": [
+                {
+                  "id": "plc_comms",
+                  "label": "[A09] PLC Communication Channels",
+                  "children": [
+                    {
+                      "id": "plc_dos_vuln",
+                      "label": "[V13] PLC DoS Vulnerability (CVE-2016-5694)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "scada_overload",
+              "label": "[A10] SCADA System Resources",
+              "children": [
+                {
+                  "id": "scada_resource_exhaustion",
+                  "label": "[H09] SCADA Resource Exhaustion",
+                  "children": [
+                    {
+                      "id": "malicious_payload",
+                      "label": "[V14] Malicious Payload via Engineering Workstation",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "priv_escalation",
+          "label": "[H10] Elevation of Privilege",
+          "children": [
+            {
+              "id": "auth_mechanism",
+              "label": "[A11] Authentication Mechanism in OT Systems",
+              "children": [
+                {
+                  "id": "auth_bypass",
+                  "label": "[V15] Authentication Bypass (CVE-2018-10617)",
+                  "children": [
+                    {
+                      "id": "cred_theft",
+                      "label": "[H11] Theft of Operator/Administrator Credentials",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement",
+          "label": "[H12] Lateral Movement Across OT Network",
+          "children": [
+            {
+              "id": "hmi_compromise",
+              "label": "[A12] Compromised HMI Workstation",
+              "children": [
+                {
+                  "id": "hmi_to_plc",
+                  "label": "[H13] Pivot from HMI to PLC/RTU",
+                  "children": [
+                    {
+                      "id": "weak_segmentation",
+                      "label": "[V16] Inadequate Network Segmentation",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "engineering_ws",
+              "label": "[A13] Engineering Workstation",
+              "children": [
+                {
+                  "id": "malware_injection",
+                  "label": "[V17] Malware Injection via Engineering Tools",
+                  "children": [
+                    {
+                      "id": "firmware_backdoor",
+                      "label": "[V18] Backdoored Firmware Updates",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain",
+          "label": "[H14] Supply Chain Compromise",
+          "children": [
+            {
+              "id": "vendor_access",
+              "label": "[A14] Vendor Remote Access Tools",
+              "children": [
+                {
+                  "id": "vendor_cred_compromise",
+                  "label": "[V19] Compromised Vendor Credentials or Tools",
+                  "children": [
+                    {
+                      "id": "malicious_update",
+                      "label": "[V20] Malicious Firmware/Software Update (SolarWinds-style)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "counterfeit_hw",
+              "label": "[A15] Counterfeit or Tampered Hardware",
+              "children": [
+                {
+                  "id": "plc_backdoor",
+                  "label": "[V21] Hardware Backdoors in PLCs/RTUs",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_access",
+          "label": "[H15] Physical Access Exploitation",
+          "children": [
+            {
+              "id": "plc_console",
+              "label": "[A16] PLC/RUT Console Ports",
+              "children": [
+                {
+                  "id": "default_console_creds",
+                  "label": "[V22] Default Console Credentials",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "usb_drops",
+              "label": "[A17] USB Ports on HMIs/Engineering Workstations",
+              "children": [
+                {
+                  "id": "malicious_usb",
+                  "label": "[H16] Malicious USB Device (BadUSB, Rubber Ducky)",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "field_devices",
+              "label": "[A18] Field Devices (Sensors/Actuators)",
+              "children": [
+                {
+                  "id": "signal_injection",
+                  "label": "[H17] Signal Injection or Tampering",
+                  "children": [
+                    {
+                      "id": "unsecured_wiring",
+                      "label": "[V23] Unsecured or Exposed Wiring",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "social_engineering",
+          "label": "[H18] Social Engineering of Operators/Vendors",
+          "children": [
+            {
+              "id": "phishing",
+              "label": "[A19] Operator Email or Messaging Systems",
+              "children": [
+                {
+                  "id": "fake_maintenance",
+                  "label": "[H19] Fake Maintenance Requests or Alerts",
+                  "children": [
+                    {
+                      "id": "operator_action",
+                      "label": "[H20] Coerced Operator Action (e.g., Disable Alarms)",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "vendor_impersonation",
+              "label": "[A20] Vendor Support Channels",
+              "children": [
+                {
+                  "id": "fake_vendor",
+                  "label": "[H21] Impersonation of Vendor Support",
+                  "children": [
+                    {
+                      "id": "remote_access_abuse",
+                      "label": "[V24] Abuse of Legitimate Remote Access Tools",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "time_sync_attack",
+          "label": "[H22] Time Synchronization Attack",
+          "children": [
+            {
+              "id": "ntp_spoofing",
+              "label": "[A21] NTP Server or Protocol",
+              "children": [
+                {
+                  "id": "ntp_vulnerability",
+                  "label": "[V25] NTP Spoofing or MITM (CVE-2013-5211)",
+                  "children": [
+                    {
+                      "id": "time_desync",
+                      "label": "[H23] Desynchronized Clocks on OT Devices",
+                      "children": [
+                        {
+                          "id": "attacker",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
