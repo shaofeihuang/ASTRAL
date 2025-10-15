@@ -1,0 +1,164 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] Disruption or Stoppage of Cyber-Physical System Operations",
+      "children": [
+        {
+          "id": "asset1",
+          "label": "[A01] Patient Monitoring Devices",
+          "children": [
+            {
+              "id": "vul1",
+              "label": "[V01] CVE-2021-3121 (Authentication Bypass)",
+              "children": [
+                {
+                  "id": "haz1",
+                  "label": "[H01] Incorrect Dosage Delivery",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "asset2",
+          "label": "[A02] Medical Data Storage Systems",
+          "children": [
+            {
+              "id": "vul2",
+              "label": "[V02] CVE-2020-1472 (Zerologon)",
+              "children": [
+                {
+                  "id": "haz2",
+                  "label": "[H02] Unauthorized Access to Sensitive Patient Data",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "asset3",
+          "label": "[A03] Cloud-Based Analytics Platforms",
+          "children": [
+            {
+              "id": "vul3",
+              "label": "[V03] DDoS Vulnerabilities",
+              "children": [
+                {
+                  "id": "haz3",
+                  "label": "[H03] Disruption of Healthcare Services",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "asset4",
+          "label": "[A04] Network Infrastructure",
+          "children": [
+            {
+              "id": "vul4",
+              "label": "[V04] CVE-2020-0601 (Cryptographic Flaw)",
+              "children": [
+                {
+                  "id": "haz4",
+                  "label": "[H04] Lateral Movement to OT Network",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "asset5",
+          "label": "[A05] IoT Gateways",
+          "children": [
+            {
+              "id": "vul5",
+              "label": "[V05] Default Credentials",
+              "children": [
+                {
+                  "id": "haz5",
+                  "label": "[H05] Unauthorized Access to IoT Devices",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "asset6",
+          "label": "[A06] SCADA System",
+          "children": [
+            {
+              "id": "vul6",
+              "label": "[V06] Configuration Tampering",
+              "children": [
+                {
+                  "id": "haz6",
+                  "label": "[H06] Unsafe Environmental Conditions",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "asset7",
+          "label": "[A07] Medical Device Operating Systems",
+          "children": [
+            {
+              "id": "vul7",
+              "label": "[V07] CVE-2021-34527 (Privilege Escalation)",
+              "children": [
+                {
+                  "id": "haz7",
+                  "label": "[H07] Persistent Compromise of Hospital Network",
+                  "children": [
+                    {
+                      "id": "attacker",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
