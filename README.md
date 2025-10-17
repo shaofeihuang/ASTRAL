@@ -6,14 +6,14 @@ This Streamlit web application leverages large language models (LLMs) to support
 
 ## Overview
 
-The application provides an interactive platform for security assessment of cyber-physical systems using LLM-powered analysis. Users can upload system architecture diagrams (images) and receive comprehensive security assessments including:
+The application provides an interactive platform for security assessment of cyber-physical systems using LLM-powered analysis. Users can upload system architecture diagrams (images), query and clarify responses (text) and receive comprehensive security assessments including:
 
 - **Architectural Analysis**: Automated explanation and understanding of system components and data flows
-- **Threat Modeling**: STRIDE-LM methodology-based threat identification and analysis
+- **Threat Modeling**: STRIDE-LM methodology-based threat identification and analysis (Spoofing, Tampering, Repudiation, Impersonation, Denial-of-Service, Elevation of Privileges, Lateral Movement)
 - **Attack Tree Generation**: Hierarchical visualization of potential attack vectors using Mermaid diagrams
 - **Risk Assessment**: DREAD-based risk prioritization (Damage, Reproducibility, Exploitability, Affected Users, Discoverability)
 - **Bayesian Network Analysis**: Probabilistic modeling of security risks and countermeasures
-- **AutomationML Export**: Generation of AutomationML (.aml) files for industrial automation systems
+- **AutomationML Export**: Generation of AutomationML (.aml) files for system representation and analysis
 
 ---
 
@@ -27,7 +27,7 @@ The application provides an interactive platform for security assessment of cybe
 - Generate AutomationML (.aml) files following custom specifications and example references
 - Download generated outputs (explanations, models, trees, assessments, AML files) for offline use or reporting
 - Clean, multi-tab interactive UI guiding through the decision support workflow
-- Support for multiple LLM providers (OpenAI, Anthropic, Mistral)
+- Support for multiple LLM providers (OpenAI, Anthropic, Mistral, and more in the future)
 - Bayesian network modeling for probabilistic risk analysis
 - JSON-structured outputs for easy integration with other tools
 
