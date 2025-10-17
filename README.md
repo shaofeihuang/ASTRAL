@@ -19,17 +19,44 @@ The application provides an interactive platform for security assessment of cybe
 
 ## Features
 
-- Upload architecture or data flow diagram (DFD) images for automated analysis
-- Generate detailed architectural explanations to improve system understanding
-- Create comprehensive threat models using the STRIDE-LM methodology
-- Visualize hierarchical attack trees with Mermaid diagrams
-- Perform DREAD risk assessments to prioritize risks
-- Generate AutomationML (.aml) files following custom specifications and example references
-- Download generated outputs (explanations, models, trees, assessments, AML files) for offline use or reporting
-- Clean, multi-tab interactive UI guiding through the decision support workflow
-- Support for multiple LLM providers (OpenAI, Anthropic, Mistral, and more in the future)
-- Bayesian network modeling for probabilistic risk analysis
-- JSON-structured outputs for easy integration with other tools
+### STRIDE-LM Threat Modeling
+
+The application implements an enhanced STRIDE methodology tailored for cyber-physical systems:
+- Automated identification of assets, trust boundaries, and data flows
+- LLM-powered threat generation based on system context
+- Structured JSON output for integration with security tools
+
+### Mermaid Attack Trees
+
+Hierarchical attack trees visualize:
+- Attack goals and sub-goals
+- Attack vectors and prerequisites
+- AND/OR relationships between attack steps
+- Interactive diagrams for security training and documentation
+
+### DREAD Risk Assessment
+
+Quantitative risk scoring system:
+- Damage: Potential impact of successful attack
+- Reproducibility: Ease of repeating the attack
+- Exploitability: Skill level required to exploit
+- Affected Users: Scope of impact
+- Discoverability: Likelihood of threat discovery
+
+### Bayesian Network Analysis and Countermeasure Simulation
+
+Probabilistic modeling capabilities:
+- Causal relationships between threats and vulnerabilities
+- Countermeasure effectiveness simulation
+- Risk propagation analysis
+
+### Multi-LLM Support
+
+Flexible integration with multiple LLM providers:
+- OpenAI (GPT-4, GPT-3.5)
+- Anthropic (Claude)
+- Mistral AI
+- Easy switching between providers based on availability and cost
 
 ---
 
@@ -195,48 +222,6 @@ The `examples/` directory contains:
 These examples demonstrate the application's capabilities and serve as references for expected input/output formats.
 
 ---
-
-## Features in Detail
-
-### STRIDE-LM Threat Modeling
-
-The application implements an enhanced STRIDE methodology tailored for cyber-physical systems:
-- Automated identification of assets, trust boundaries, and data flows
-- LLM-powered threat generation based on system context
-- Structured JSON output for integration with security tools
-
-### Mermaid Attack Trees
-
-Hierarchical attack trees visualize:
-- Attack goals and sub-goals
-- Attack vectors and prerequisites
-- AND/OR relationships between attack steps
-- Interactive diagrams for security training and documentation
-
-### DREAD Risk Assessment
-
-Quantitative risk scoring system:
-- Damage: Potential impact of successful attack
-- Reproducibility: Ease of repeating the attack
-- Exploitability: Skill level required to exploit
-- Affected Users: Scope of impact
-- Discoverability: Likelihood of threat discovery
-
-### Bayesian Network Analysis and Countermeasure Simulation
-
-Probabilistic modeling capabilities:
-- Causal relationships between threats and vulnerabilities
-- Countermeasure effectiveness simulation
-- Risk propagation analysis
-
-### Multi-LLM Support
-
-Flexible integration with multiple LLM providers:
-- OpenAI (GPT-4, GPT-3.5)
-- Anthropic (Claude)
-- Mistral AI
-- Easy switching between providers based on availability and cost
-
 
 ## License
 
