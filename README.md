@@ -80,10 +80,8 @@ Key dependencies include:
 
 - **Streamlit** (1.50.0): Web application framework
 - **LLM Providers**: OpenAI, Anthropic, MistralAI
-- **Data Science**: pandas, numpy, scipy, scikit-learn
 - **Bayesian Analysis**: pgmpy, pyro-ppl, torch
 - **Security**: azure-keyvault-secrets, azure-identity
-- **Visualization**: plotly, matplotlib
 
 See `requirements.txt` for the complete list of dependencies.
 
