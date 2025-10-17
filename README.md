@@ -55,12 +55,12 @@ The application provides an interactive platform for security assessment of cybe
    ```
 
 3. **Configure API keys**:
-   - Copy the `.env` file and add your API keys:
+   - Add your API keys to Azure Key Vault (default)
+   - Otherwise, add your API keys to a `.env` file for local testing:
    ```bash
    # .env file
    MISTRAL_API_KEY=your_mistral_api_key_here
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
-   # Add OpenAI key if using OpenAI models
    OPENAI_API_KEY=your_openai_api_key_here
    ```
 
@@ -79,10 +79,9 @@ The application provides an interactive platform for security assessment of cybe
 Key dependencies include:
 
 - **Streamlit** (1.50.0): Web application framework
-- **LLM Providers**: openai, anthropic, mistralai
+- **LLM Providers**: OpenAI, Anthropic, MistralAI
 - **Data Science**: pandas, numpy, scipy, scikit-learn
 - **Bayesian Analysis**: pgmpy, pyro-ppl, torch
-- **Image Processing**: Pillow
 - **Security**: azure-keyvault-secrets, azure-identity
 - **Visualization**: plotly, matplotlib
 
@@ -92,19 +91,24 @@ See `requirements.txt` for the complete list of dependencies.
 
 ## Usage Guide
 
-### Step 1: Upload Architecture Diagram
+### Step 1: Configure Settings
 1. Launch the application using `streamlit run main.py`
-2. Navigate to the upload section in the UI
-3. Upload your system architecture diagram or data flow diagram (supports common image formats: PNG, JPG, JPEG)
+2. Select LLM provider and model from pull-down menu
+3. Enter your own API key if needed
+4. Select CPS system context from pull-down menu. Click the input field and enter your own custom context if needed.
 
-### Step 2: Generate Architectural Explanation
-1. Click the "Generate Explanation" button
+### Step 2: Upload Architecture Diagram
+1. Navigate to the upload section in the UI
+2. Upload your system architecture diagram or data flow diagram (supports common image formats: PNG, JPG, JPEG)
+
+### Step 3: Generate Architectural Explanation
+1. Click the "Generate Architectural Explanation" button
 2. The LLM will analyze the diagram and provide a detailed textual explanation of the system components, data flows, and interactions
-3. Review the explanation and download if needed
+3. Review the explanation, optionally add further prompts to the LLM, and download in markdown format if needed
 
-### Step 3: Create Threat Model
+### Step 4: Create Threat Model
 1. Navigate to the "Threat Model" tab
-2. Click "Generate Threat Model"
+2. Click "Generate STRIDE-LM Threat Model"
 3. The system uses STRIDE-LM methodology to identify potential threats:
    - **S**poofing
    - **T**ampering
@@ -112,46 +116,43 @@ See `requirements.txt` for the complete list of dependencies.
    - **I**nformation Disclosure
    - **D**enial of Service
    - **E**levation of Privilege
-4. Review and download the threat model in JSON format
-
-### Step 4: Generate Attack Tree
-1. Move to the "Attack Tree" tab
-2. Click "Generate Attack Tree"
-3. The system creates a hierarchical visualization of attack vectors using Mermaid diagrams
-4. View the interactive diagram and download for documentation
+   - **L**ateral **M**ovement
+4. Review and download the threat model in JSON format if needed.
 
 ### Step 5: DREAD Risk Assessment
 1. Navigate to the "DREAD Assessment" tab
 2. Generate risk assessments for identified threats
 3. Review risk scores based on:
-   - Damage potential
-   - Reproducibility
-   - Exploitability
-   - Affected users
-   - Discoverability
-4. Export the assessment results
+   - **D**amage potential
+   - **R**eproducibility
+   - **E**xploitability
+   - **A**ffected users
+   - **D**iscoverability
+4. Download the assessment results in markdown format if needed.
 
-### Step 6: Bayesian Network Analysis (Optional)
-1. Access the Bayesian analysis section
-2. Generate probabilistic models of security risks
-3. Analyze countermeasure effectiveness
-4. View probability distributions and causal relationships
+### Step 6: Generate Attack Tree and Paths
+1. Move to the "Attack Tree" tab
+2. Click "Generate Attack Tree and Paths"
+3. The system generates attack paths, attack tree code that is compatible with Mermaid, and an attack tree diagram preview
+4. Download the attack tree code for visualization in Mermaid Live, and download the raw attack tree data in JSON format if needed.
 
-### Step 7: Generate AutomationML Files
-1. Navigate to the "AutomationML" tab
-2. Click "Generate AML File"
-3. The system creates AutomationML files following industrial automation standards
-4. Download the .aml file for integration with automation systems
+### Step 7: Generate System Model
+1. Navigate to the "System Model" tab
+2. Click "Generate AutomationML File"
+3. The system creates an AutomationML representation of the system. This process may take several minutes depending on the complexity of the system architecture and threat model
+4. Check the generated AutomationML file and make sure the file starts with "```xml" on the first line. If not, download to edit then upload the edited file
+4. Download the .aml file if needed.
 
-### Output Files
+### Step 8: Bayesian Network Analysis
+1. Navigate to the "Analysis" tab
+2. Optionally change the system installation date if needed
+3. Click "Load Model Attributes". Probabilistic model of exposure (successful attack), severe impact, and risk score is computed automatically
+4. Edit model attribute values, change "Attacker ID" and "Attack Feasibility (AF) Modifier" values, if needed
 
-All generated outputs can be downloaded:
-- Architectural explanations (TXT/JSON)
-- Threat models (JSON)
-- Attack trees (Mermaid format, PNG)
-- DREAD assessments (JSON)
-- Bayesian networks (JSON)
-- AutomationML files (.aml)
+### Step 8: Countermeasure Simulation
+1. Navigate to the "Countermeasures" tab
+2. Change mitigation likelihood values for each vulnerability (i.e. probability that countermeasure(s) will mitigate the vulnerability) to find the most effective combination for reducing risk
+
 
 ---
 
@@ -190,8 +191,8 @@ LLM-DS/
 The `examples/` directory contains:
 
 - **Architecture Diagrams**: Sample CPS architecture diagrams to test the application
-- **Attack Models**: Example threat models and attack trees generated by the system
-- **AutomationML Files**: Sample AutomationML outputs for industrial automation integration
+- **Attack Models**: Example attack models generated by the system
+- **AutomationML Files**: Sample AutomationML system models
 
 These examples demonstrate the application's capabilities and serve as references for expected input/output formats.
 
@@ -223,13 +224,12 @@ Quantitative risk scoring system:
 - Affected Users: Scope of impact
 - Discoverability: Likelihood of threat discovery
 
-### Bayesian Network Analysis
+### Bayesian Network Analysis and Countermeasure Simulation
 
 Probabilistic modeling capabilities:
 - Causal relationships between threats and vulnerabilities
-- Countermeasure effectiveness estimation
+- Countermeasure effectiveness simulation
 - Risk propagation analysis
-- Inference using pgmpy and Pyro
 
 ### Multi-LLM Support
 
@@ -239,40 +239,10 @@ Flexible integration with multiple LLM providers:
 - Mistral AI
 - Easy switching between providers based on availability and cost
 
----
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add new feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-Please ensure your code:
-- Follows Python PEP 8 style guidelines
-- Includes appropriate documentation
-- Passes existing tests
-- Adds new tests for new features
-
----
 
 ## License
 
 This project is provided as-is for research and educational purposes. Please check with the repository owner for specific license terms.
-
----
-
-## Acknowledgments
-
-- STRIDE threat modeling methodology by Microsoft
-- DREAD risk assessment framework
-- AutomationML standard for industrial automation
-- Streamlit for the excellent web framework
-- OpenAI, Anthropic, and Mistral AI for LLM capabilities
-- The open-source community for the various Python libraries used in this project
 
 ---
 
@@ -282,15 +252,3 @@ For questions, issues, or suggestions:
 - Open an issue on GitHub
 - Check existing documentation in the `examples/` directory
 - Review the code comments for implementation details
-
----
-
-## Future Development
-
-Planned enhancements:
-- Additional LLM provider support
-- Enhanced visualization options
-- Export to additional security tool formats
-- Real-time collaboration features
-- Integration with CI/CD pipelines
-- Extended Bayesian network capabilities

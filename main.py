@@ -215,14 +215,15 @@ def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: st
     
 
 def main():
+    # Comment out if not using Azure Key Vault
     if 'azure_key_vault_logged_in' not in st.session_state:
-        # Azure Key Vault
         key_vault_name = "tra-demo"
         key_vault_uri = f"https://{key_vault_name}.vault.azure.net/"
         credential = DefaultAzureCredential()
         st.session_state['client'] = SecretClient(vault_url=key_vault_uri, credential=credential)
         st.session_state['azure_key_vault_logged_in'] = key_vault_name
     
+    # Uncomment to use .env file for local testing
     #load_dotenv()
 
     with st.sidebar:
@@ -509,7 +510,7 @@ def main():
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.download_button(
-                    label="Download Attack Tree Diagram",
+                    label="Download Attack Tree Code (Mermaid)",
                     data=st.session_state['attack_tree'],
                     file_name="attack_tree.md",
                     mime="text/markdown",
