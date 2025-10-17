@@ -15,6 +15,8 @@ The application provides an interactive platform for security assessment of cybe
 - **Bayesian Network Analysis**: Probabilistic modeling of security risks and countermeasures
 - **AutomationML Export**: Generation of AutomationML (.aml) files for system representation and analysis
 
+---
+
 ## Features
 
 ### STRIDE-LM Threat Modeling
