@@ -147,7 +147,7 @@ See `requirements.txt` for the complete list of dependencies.
 3. Click "Load Model Attributes". Probabilistic model of exposure (successful attack), severe impact, and risk score is computed automatically
 4. Edit model attribute values, change "Attacker ID" and "Attack Feasibility (AF) Modifier" values, if needed
 
-### Step 8: Countermeasure Simulation
+### Step 9: Countermeasure Simulation
 1. Navigate to the "Countermeasures" tab
 2. Change mitigation likelihood values for each vulnerability (i.e. probability that countermeasure(s) will mitigate the vulnerability) to find the most effective combination for reducing risk
 
