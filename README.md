@@ -6,7 +6,7 @@ This Streamlit web application leverages large language models (LLMs) to support
 
 ## Overview
 
-The application provides an interactive platform for security assessment of cyber-physical systems using LLM-powered analysis. Users can upload system architecture diagrams (images), query and clarify responses (text) and receive comprehensive security assessments including:
+The application provides an interactive platform for security assessment of cyber-physical systems using LLM-powered analysis. Users can upload system architecture diagrams (images), clarify LLM responses (text) and receive comprehensive security assessments including:
 
 - **Architectural Analysis**: Automated explanation and understanding of system components and data flows
 - **Threat Modeling**: STRIDE-LM methodology-based threat identification and analysis (Spoofing, Tampering, Repudiation, Impersonation, Denial-of-Service, Elevation of Privileges, Lateral Movement)
