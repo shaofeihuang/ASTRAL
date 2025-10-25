@@ -605,7 +605,6 @@ def bbn_inference(node_context: NodeContext, source_node):
         cpd_values_list.append((node, cpd_values.tolist(), cpd.variables, cpd.cardinality))
 
     bbn_exposure.add_cpds(*cpds.values())
-    bbn_graph = bbn_exposure.to_markov_model()
 
     last_node = None
     last_nodes = [e['Element'] for e in aml_data.result_list if e['Number of children'] == 0]
