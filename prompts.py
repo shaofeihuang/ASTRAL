@@ -318,7 +318,7 @@ Your output should be a syntactically valid, complete AutomationML XML file star
 
 Include the SystemUnitClassLib, RoleClassLib, InterfaceClassLib, and AttributeTypeLib definitions exactly as provided.
 
-Strictly output only the AutomationML XML file representing the system architecture, InternalElements, ExternalInterfaces, and InternalLinks per above rules. Do not include comments or anything else.
+Strictly ONLY output the AutomationML XML file representing the system architecture, InternalElements, ExternalInterfaces, and InternalLinks per above rules. Do not include comments or additional text
 
 Output only if the following conditions are met:
 1. All attributes in every InternalElement is populated.

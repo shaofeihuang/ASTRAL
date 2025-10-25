@@ -348,7 +348,7 @@ def compute_bayesian_probabilities():
 
     #print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
-    cpd_prob, cpd_impact = compute_risk_scores(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
+    cpd_prob, cpd_impact = compute_bayesian_probabilities(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
 
     risk_score = cpd_prob * cpd_impact * 100
 

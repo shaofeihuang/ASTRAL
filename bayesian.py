@@ -553,7 +553,7 @@ def check_bbn_models(bbn_exposure, bbn_impact):
     print("[*] Checking BBN (Impact) structure consistency:", bbn_impact.check_model())
 
 
-def compute_risk_scores(inference_exposure, inference_impact, total_elements, source_node, target_node):
+def compute_bayesian_probabilities(inference_exposure, inference_impact, total_elements, source_node, target_node):
     for nodes in total_elements:
         if nodes == target_node:
             prob_failure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
