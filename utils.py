@@ -331,7 +331,7 @@ def load_model_attributes():
     }
 
 
-def compute_bayesian_probabilities():
+def compute_risk_score():
     #check_probability_data(aml_data)
     bbn_exposure, last_node = create_bbn_exposure()
     bbn_impact = create_bbn_impact(bbn_exposure)

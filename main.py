@@ -857,7 +857,7 @@ def main():
                     if idx is not None:
                         st.session_state['aml_data'].VulnerabilityinSystem[idx]['Probability of Mitigation'] = prob
 
-            compute_bayesian_probabilities()
+            compute_risk_score()
 
         else:
                 st.info("Perform analysis first to proceed.")
