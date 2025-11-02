@@ -1,7 +1,7 @@
 # ASTRAL (Architecture-Centric Security Threat & Risk Assessment using LLMs)
 ### Prototype Tool for LLM-Powered CPS Security Assessment
 
-This Streamlit web application leverages large language models (LLMs) to support real-time cyber-physical system (CPS) decision-making by generating architectural reconstruction/explanation, threat models, attack trees, DREAD risk assessments, and AutomationML files based on uploaded architecture diagrams.
+This Streamlit web application leverages large language models (LLMs) to support real-time cyber-physical system (CPS) decision-making by generating architectural reconstruction / narration, threat models, attack trees, DREAD risk assessments, and AutomationML files based on uploaded architecture diagrams.
 
 ---
 
@@ -9,7 +9,7 @@ This Streamlit web application leverages large language models (LLMs) to support
 
 The application provides an interactive platform for security assessment of cyber-physical systems using LLM-powered analysis. Users can upload system architecture diagrams (images), clarify LLM responses (text) and receive comprehensive security assessments including:
 
-- **Architectural Explanation**: Automated extraction and understanding of system components and data flows
+- **Architectural Narration**: Automated extraction and understanding of system components and data flows
 - **Threat Modeling**: STRIDE-LM methodology-based threat identification and analysis (Spoofing, Tampering, Repudiation, Impersonation, Denial-of-Service, Elevation of Privileges, Lateral Movement)
 - **Attack Tree Generation**: Hierarchical visualization of potential attack vectors using Mermaid diagrams
 - **Risk Assessment**: DREAD-based risk prioritization (Damage, Reproducibility, Exploitability, Affected Users, Discoverability)
