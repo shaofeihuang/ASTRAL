@@ -226,7 +226,7 @@ These examples demonstrate the application's capabilities and serve as reference
 
 ## License
 
-This project is provided as-is for research and educational purposes. Please check with the repository owner for specific license terms.
+This project is provided as-is for research and educational purposes. Please refer to the repository for license information.
 
 ---
 
