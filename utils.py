@@ -51,10 +51,10 @@ def tm_json_to_markdown(threat_model, improvement_suggestions):
     return markdown_output
 
 
-def at_json_to_markdown(arch_explanation, threat_model):
-    markdown_output = "## Architecture Explanation\n\n"
+def at_json_to_markdown(arch_narrative, threat_model):
+    markdown_output = "## Architecture Narrative\n\n"
 
-    markdown_output += arch_explanation + "\n\n"
+    markdown_output += arch_narrative + "\n\n"
 
     markdown_output += "## Threat Model\n\n"
 
