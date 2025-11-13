@@ -297,7 +297,7 @@ def main():
             accept_new_options=True,
         )
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "DREAD", "Attack Tree", "System Model", "Analysis", "Countermeasures"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Analysis", "Countermeasures"])
 
 #----------------------------------------------------------------------------------------------
 # Generate Architectural Explanation
@@ -417,48 +417,10 @@ def main():
             )
 
 #----------------------------------------------------------------------------------------------
-# Generate DREAD Risk Assessment
-#----------------------------------------------------------------------------------------------
-
-    with tab3:
-        st.markdown("""
-        DREAD is a structured methodology for evaluating and prioritising risks associated with security threats. It assesses each threat based on five criteria: **D**amage potential, **R**eproducibility, **E**xploitability, **A**ffected users, and **D**iscoverability. By scoring threats on these factors, organisations can calculate an overall risk level, which enables them to focus mitigation efforts on the most critical vulnerabilities first. This method supports consistent risk assessment, improves communication across teams, and helps allocate resources efficiently to protect systems effectively. Use this tab to perform a DREAD risk assessment for your application or system.
-        """)
-        st.markdown("""---""")
-        
-        if 'threat_model' in st.session_state:
-            if st.button(label="Generate DREAD Risk Assessment"):
-                threats_markdown = tm_json_to_markdown(st.session_state['threat_model'], [])
-                dread_assessment_prompt = create_dread_assessment_prompt(threats_markdown, system_context)
-                with st.spinner("Generating DREAD Risk Assessment..."):
-                    max_retries = 3
-                    for attempt in range(max_retries):
-                        try:
-                            st.session_state['dread_assessment'] = get_dread_assessment(st.session_state['api_key'], selected_model, dread_assessment_prompt)
-                            break
-                        except Exception as e:
-                            if attempt == max_retries - 1:
-                                st.error(f"Error generating DREAD risk assessment after {max_retries} attempts: {e}")
-                                
-            if 'dread_assessment' in st.session_state:
-                dread_assessment_markdown = dread_json_to_markdown(st.session_state['dread_assessment'])
-                st.markdown("## DREAD Risk Assessment")
-                st.markdown("The table below shows the DREAD risk assessment for each identified threat. The Risk Score is calculated as the average of the five DREAD categories.")
-                st.markdown(dread_assessment_markdown, unsafe_allow_html=False)
-                st.download_button(
-                    label="Download DREAD Risk Assessment",
-                    data=dread_assessment_markdown,
-                    file_name="dread_assessment.md",
-                    mime="text/markdown",
-                )
-        else:
-            st.info("Generate a threat model first to proceed.")
-
-#----------------------------------------------------------------------------------------------
 # Generate Attack Trees and Attack Paths
 #----------------------------------------------------------------------------------------------
 
-    with tab4:
+    with tab3:
         st.markdown("""
         Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.
         """)
@@ -533,7 +495,7 @@ def main():
 # Generate System Model (AutomationML)
 #----------------------------------------------------------------------------------------------
 
-    with tab5:
+    with tab4:
         st.markdown("""
         Automation Markup Language (AutomationML) is an XML-based open standard for representing industrial automation systems. It builds upon the CAEX (Computer Aided Engineering Exchange) format defined in IEC 62424, which provides an object-oriented data model for system components and their hierarchical relationships. AutomationML facilitates semantic interoperability across diverse CPS domains by enabling standardised, meaningful exchange of data about physical and cyber components, their configurations, and interrelations. Use this tab to generate an AutomationML representation of the CPS system.
         """)
@@ -709,7 +671,7 @@ def main():
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
 
-    with tab6:
+    with tab5:
         st.markdown("""
         Use this page to analyse system model attributes and calculate Bayesian probabilities of exposure and severe impact, along with the resulting risk assessment.
         """)
@@ -820,7 +782,7 @@ def main():
 # Placeholder for Decision Support Module
 #----------------------------------------------------------------------------------------------
 
-    with tab7:
+    with tab6:
         st.markdown("""
         Use this page to view and calibrate the countermeasure porfolio, which includes the probabilities of mitigation for each vulnerability in the system model.
         """)
