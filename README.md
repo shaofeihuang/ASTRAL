@@ -1,7 +1,6 @@
-# ASTRAL (Architecture-Centric Security Threat & Risk Assessment using LLMs)
-### Prototype Tool for LLM-Powered CPS Security Assessment
+### Prototype Tool for demonstrating the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach
 
-ASTRAL is an interactive web application that uses multimodal LLMs to support real-time cyber-physical system (CPS) decision-making by generating architectural narratives, threat models, attack trees, DREAD risk assessments, and AutomationML files based on uploaded architecture diagrams.
+This interactive web application demonstrates the ASTRAL approach, using multimodal LLMs to support architecture-centric threat risk assessments by generating architectural narratives, threat models, attack trees, and probabilistic risk analysis based on uploaded architecture diagrams.
 
 ---
 
@@ -12,7 +11,6 @@ The application provides an interactive platform for security assessment of cybe
 - **Architectural Narration**: Automated extraction and understanding of system components and data flows
 - **Threat Modeling**: STRIDE-LM methodology-based threat identification and analysis (Spoofing, Tampering, Repudiation, Impersonation, Denial-of-Service, Elevation of Privileges, Lateral Movement)
 - **Attack Tree Generation**: Hierarchical visualization of potential attack vectors using Mermaid diagrams
-- **Risk Assessment**: DREAD-based risk prioritization (Damage, Reproducibility, Exploitability, Affected Users, Discoverability)
 - **Bayesian Network Analysis**: Probabilistic modeling of security risks and countermeasures
 - **AutomationML Export**: Generation of AutomationML (.aml) files for system representation and analysis
 
@@ -34,15 +32,6 @@ Hierarchical attack trees visualize:
 - Attack vectors and prerequisites
 - AND/OR relationships between attack steps
 - Interactive diagrams for security training and documentation
-
-### DREAD Risk Assessment
-
-Quantitative risk scoring system:
-- Damage: Potential impact of successful attack
-- Reproducibility: Ease of repeating the attack
-- Exploitability: Skill level required to exploit
-- Affected Users: Scope of impact
-- Discoverability: Likelihood of threat discovery
 
 ### Bayesian Network Analysis and Countermeasure Simulation
 
@@ -145,37 +134,26 @@ See `requirements.txt` for the complete list of dependencies.
    - **L**ateral **M**ovement
 4. Review and download the threat model in JSON format if needed.
 
-### Step 5: DREAD Risk Assessment
-1. Navigate to the "DREAD Assessment" tab
-2. Generate risk assessments for identified threats
-3. Review risk scores based on:
-   - **D**amage potential
-   - **R**eproducibility
-   - **E**xploitability
-   - **A**ffected users
-   - **D**iscoverability
-4. Download the assessment results in markdown format if needed.
-
-### Step 6: Generate Attack Tree and Paths
+### Step 5: Generate Attack Tree and Paths
 1. Move to the "Attack Tree" tab
 2. Click "Generate Attack Tree and Paths"
 3. The system generates attack paths, attack tree code that is compatible with Mermaid, and an attack tree diagram preview
 4. Download the attack tree code for visualization in Mermaid Live, and download the raw attack tree data in JSON format if needed.
 
-### Step 7: Generate System Model
+### Step 6: Generate System Model
 1. Navigate to the "System Model" tab
 2. Click "Generate AutomationML File"
 3. The system creates an AutomationML representation of the system. This process may take several minutes depending on the complexity of the system architecture and threat model
 4. Check the generated AutomationML file and make sure the file starts with "```xml" on the first line. If not, download to edit then upload the edited file
 4. Download the .aml file if needed.
 
-### Step 8: Bayesian Network Analysis
+### Step 7: Bayesian Network Analysis
 1. Navigate to the "Analysis" tab
 2. Optionally change the system installation date if needed
 3. Click "Load Model Attributes". Probabilistic model of exposure (successful attack), severe impact, and risk score is computed automatically
 4. Edit model attribute values, change "Attacker ID" and "Attack Feasibility (AF) Modifier" values, if needed
 
-### Step 9: Countermeasure Simulation
+### Step 8: Countermeasure Simulation
 1. Navigate to the "Countermeasures" tab
 2. Change mitigation likelihood values for each vulnerability (i.e. probability that countermeasure(s) will mitigate the vulnerability) to find the most effective combination for reducing risk
 
@@ -190,7 +168,7 @@ LLM-DS/
 ├── main.py                 # Main Streamlit application entry point
 ├── bayesian.py            # Bayesian network analysis and probabilistic modeling
 ├── prompts.py             # LLM prompt templates for various analysis tasks
-├── utils.py               # Utility functions (attack trees, DREAD, parsing, etc.)
+├── utils.py               # Utility functions
 ├── requirements.txt       # Python package dependencies
 ├── .env                   # API key configuration (not committed to repo)
 ├── README.md              # This file
@@ -205,7 +183,7 @@ LLM-DS/
 
 - **main.py**: Core Streamlit application with multi-tab UI, image upload, LLM integration, and output generation
 - **bayesian.py**: Implements Bayesian network construction, probabilistic inference, and countermeasure analysis
-- **prompts.py**: Contains prompt engineering functions for architectural explanation, threat modeling, attack tree generation, DREAD assessment, and AutomationML generation
+- **prompts.py**: Contains prompt engineering functions for architectural explanation, threat modeling, attack tree generation, and AutomationML generation
 - **utils.py**: Provides utility functions for parsing LLM outputs, generating Mermaid diagrams, calculating risk scores, and formatting data
 - **requirements.txt**: Lists all Python dependencies with version specifications
 - **.env**: Configuration file for API keys (template provided, users must add their own keys)
