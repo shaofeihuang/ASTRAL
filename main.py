@@ -822,7 +822,7 @@ def main():
             compute_risk_score()
 
         else:
-                st.info("Perform analysis first to proceed.")
+                st.info("Perform risk analysis first to proceed.")
 
     display_metrics()
 
