@@ -1,10 +1,10 @@
-def create_arch_expl_prompt(system_context):
+def create_arch_narrative_prompt(system_context):
     prompt = f'''
-You are a Senior Solution Architect tasked with explaining a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your explanation supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
+You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narrative supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
 
 System context: {system_context}
 
-Think deeply to thoroughly analyze the diagram and provide a structured explanation strictly based on visible content, covering:
+Think deeply to thoroughly analyze the diagram and provide a structured narrative strictly based on visible content, covering:
 
 1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
 2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
@@ -26,10 +26,10 @@ Structure your response using these exact section headers only:
 - Attack Entry Points  
 
 IMPORTANT:
-- Base your explanation solely on the provided diagram; do not infer or assume details beyond what is visible.
+- Base your narrative solely on the provided diagram; do not infer or assume details beyond what is visible.
 - Do not start or end with commentary or extra text.
 - Do not infer or guess beyond what is visibly present.
-- Do not provide recommendations—only factual explanation.
+- Do not provide recommendations—only factual narrative.
 - Use only the specified headers and no additional formatting.
 '''
     return prompt
@@ -135,11 +135,11 @@ ONLY RESPOND WITH THE JSON STRUCTURE, NO ADDITIONAL TEXT.
     return prompt
 
 
-def create_aml_prompt_step_1(arch_explanation, threat_model, attack_paths):
+def create_aml_prompt_step_1(arch_narrative, threat_model, attack_paths):
     prompt = f"""
 You are an expert AutomationML (IEC 62714) generator.
 
-Given the following architectural explanation, threat model, and attack paths, generate AutomationML XML blocks defining all nodes as InternalElements with unique ExternalInterfaces.
+Given the following architectural narrative, threat model, and attack paths, generate AutomationML XML blocks defining all nodes as InternalElements with unique ExternalInterfaces.
 
 - Do NOT generate any InternalLink elements in this step.
 - Each node must have a unique ExternalInterface with a unique ID.
@@ -206,8 +206,8 @@ Given the following architectural explanation, threat model, and attack paths, g
   <ExternalInterface .... />
 </InternalElement>
 
-Architecture Explanation:
-{arch_explanation}
+Architecture Narrative:
+{arch_narrative}
 
 Threat Model:
 {threat_model}
