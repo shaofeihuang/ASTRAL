@@ -4,3 +4,5 @@ __pycache__/
 *.json
 *.csv
 *.env
+*.mp4
+*.zip
