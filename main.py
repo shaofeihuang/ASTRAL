@@ -300,11 +300,11 @@ def main():
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Analysis", "Countermeasures"])
 
 #----------------------------------------------------------------------------------------------
-# Generate Architectural Narrative
+# Generate Architectural Narration
 #----------------------------------------------------------------------------------------------
 
     with tab1:
-        st.title("LLM-Powered Real-Time Cyber-Physical System Decision Support")
+        st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using Multimodal LLMs)")
 
         st.markdown("""---""")
 
@@ -319,10 +319,10 @@ def main():
         if uploaded_file is not None:
             image_bytes = uploaded_file.read()
             st.image(image_bytes, caption="Uploaded Image", width="stretch")
-            arch_expl_prompt = create_arch_narrative_prompt(system_context)
+            arch_expl_prompt = create_arch_narration_prompt(system_context)
 
-            if st.button("Generate Architectural Narrative") and uploaded_file is not None:
-                with st.spinner("Generating architectural narrative..."):
+            if st.button("Generate Architectural Narration") and uploaded_file is not None:
+                with st.spinner("Generating architectural narration..."):
                     try:
                         if model_provider == "Mistral API":
                             model_output = call_mistral(
@@ -333,19 +333,19 @@ def main():
                                 st.session_state['token_limit'],
                                 response_as_json=False
                                 )
-                            st.session_state['arch_narrative'] = model_output
+                            st.session_state['arch_narration'] = model_output
                     except Exception as e:
-                        st.error(f"Failed to generate architectural narrative: {str(e)}")
+                        st.error(f"Failed to generate architectural narration: {str(e)}")
         else:
             st.info("Please upload system architecture diagram.")
 
-        if 'arch_narrative' in st.session_state:
-            st.subheader("Architectural Narrative")
-            st.write(st.session_state['arch_narrative'])
+        if 'arch_narration' in st.session_state:
+            st.subheader("Architectural Narration")
+            st.write(st.session_state['arch_narration'])
             st.download_button(
-                label="Download Architectural Narrative",
-                data=st.session_state['arch_narrative'],
-                file_name="arch_narrative.md",
+                label="Download Architectural Narration",
+                data=st.session_state['arch_narration'],
+                file_name="arch_narration.md",
                 mime="text/markdown",
             )
             additional_detail = st.text_area(
@@ -354,8 +354,8 @@ def main():
                 placeholder="Enter extra architectural specifics here.",
                 height=150,
             )
-            if st.button("Re-Generate Architectural Narrative"):
-                with st.spinner("Generating architectural narrative..."):
+            if st.button("Re-Generate Architectural Narration"):
+                with st.spinner("Generating architectural narration..."):
                     try:
                         if model_provider == "Mistral API":
                             model_output = call_mistral(
@@ -366,10 +366,10 @@ def main():
                                 st.session_state['token_limit'],
                                 response_as_json=False
                                 )
-                            st.session_state['arch_narrative'] = model_output
+                            st.session_state['arch_narration'] = model_output
                             st.rerun()
                     except Exception as e:
-                        st.error(f"Failed to generate architectural narrative: {str(e)}")
+                        st.error(f"Failed to generate architectural narration: {str(e)}")
 
 #----------------------------------------------------------------------------------------------
 # Generate Threat Model
@@ -382,7 +382,7 @@ def main():
         st.markdown("""---""")
         threat_model_prompt = create_threat_model_prompt(system_context)
 
-        if 'arch_narrative' in st.session_state:
+        if 'arch_narration' in st.session_state:
             if st.button("Generate STRIDE-LM Threat Model"):
                 with st.spinner("Generating STRIDE-LM threat model..."):
                     try:
@@ -400,7 +400,7 @@ def main():
                     except Exception as e:
                         st.error(f"Failed to generate threat model: {str(e)}")
         else:
-            st.info("Generate an architectural narrative first to proceed.")
+            st.info("Generate an architectural narration first to proceed.")
 
         if 'threat_model' in st.session_state:
             markdown_output = tm_json_to_markdown(
@@ -430,9 +430,9 @@ def main():
             col1, col2 = st.columns(2)
 
         with col1:
-            if all(key in st.session_state for key in ("arch_narrative", "threat_model")):
+            if all(key in st.session_state for key in ("arch_narration", "threat_model")):
                 if st.button("Generate Attack Tree and Paths"):
-                    attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_narrative'), st.session_state.get('threat_model'))
+                    attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_narration'), st.session_state.get('threat_model'))
                     with st.spinner("Generating attack tree and paths..."):
                         try:
                             attack_tree_data = get_attack_tree(st.session_state['api_key'], selected_model, attack_tree_prompt, system_context)
@@ -444,7 +444,7 @@ def main():
                         except Exception as e:
                             st.error(f"Error generating attack tree: {e}")
             else:
-                st.info("Generate an architectural narrative and threat model first, or upload a saved attack tree data file to proceed.")
+                st.info("Generate an architectural narration and threat model first, or upload a saved attack tree data file to proceed.")
 
         with col2:
             uploaded_data = st.file_uploader(
@@ -501,7 +501,7 @@ def main():
         """)
         st.markdown("""---""")
 
-        def generate_aml_stepwise(arch_narrative, threat_model, attack_paths):
+        def generate_aml_stepwise(arch_narration, threat_model, attack_paths):
             max_retries = 3
 
             with st.spinner("Generating AutomationML Model (Step 1) ..."):
@@ -510,7 +510,7 @@ def main():
                         print("[#] Generating AML - Step 1")
                         start_time = time.time()
 
-                        prompt_step1 = create_aml_prompt_step_1(arch_narrative, threat_model, attack_paths)
+                        prompt_step1 = create_aml_prompt_step_1(arch_narration, threat_model, attack_paths)
                         if model_provider == "Mistral API":
                             response_step1 = call_mistral(
                                 st.session_state['api_key'],
@@ -638,15 +638,15 @@ def main():
             col1, col2 = st.columns(2)
 
         with col1:
-            if all(key in st.session_state for key in ("arch_narrative", "threat_model", "attack_paths")):
+            if all(key in st.session_state for key in ("arch_narration", "threat_model", "attack_paths")):
                 if st.button("Generate AutomationML File"):
                     try:
-                        aml_content = generate_aml_stepwise(st.session_state['arch_narrative'], st.session_state['threat_model'], st.session_state['attack_paths'])
+                        aml_content = generate_aml_stepwise(st.session_state['arch_narration'], st.session_state['threat_model'], st.session_state['attack_paths'])
                         st.session_state['aml_file'] = aml_content
                     except Exception as e:
                         st.error(f"Failed to generate AutomationML file: {str(e)}")
             else:
-                st.info("Generate an architectural narrative, threat model, and attack tree first, or upload a saved AutomationML file to proceed.")
+                st.info("Generate an architectural narration, threat model, and attack tree first, or upload a saved AutomationML file to proceed.")
         
         with col2:
             uploaded_aml = st.file_uploader(

@@ -1,10 +1,10 @@
-def create_arch_narrative_prompt(system_context):
+def create_arch_narration_prompt(system_context):
     prompt = f'''
-You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narrative supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
+You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narration supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
 
 System context: {system_context}
 
-Think deeply to thoroughly analyze the diagram and provide a structured narrative strictly based on visible content, covering:
+Think deeply to thoroughly analyze the diagram and provide a structured narration strictly based on visible content, covering:
 
 1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
 2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
@@ -26,10 +26,10 @@ Structure your response using these exact section headers only:
 - Attack Entry Points  
 
 IMPORTANT:
-- Base your narrative solely on the provided diagram; do not infer or assume details beyond what is visible.
+- Base your narration solely on the provided diagram; do not infer or assume details beyond what is visible.
 - Do not start or end with commentary or extra text.
 - Do not infer or guess beyond what is visibly present.
-- Do not provide recommendations—only factual narrative.
+- Do not provide recommendations—only factual narration.
 - Use only the specified headers and no additional formatting.
 '''
     return prompt
@@ -56,12 +56,12 @@ Instructions:
    - `"improvement_suggestions"`: a list of missing information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modeling.
 9. Each threat scenario object must contain the following keys:
    - `"Threat Type"`, based on STRIDE-LM categories (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege, Lateral Movement).
-   - `"Scenario"`: a detailed narrative integrating information about assets, vulnerabilities (including CVE and non-CVE), hazards, and attacker objectives. Include references to any CVEs mentioned, and highlight if they were employed in known attack campaigns.
+   - `"Scenario"`: a detailed narration integrating information about assets, vulnerabilities (including CVE and non-CVE), hazards, and attacker objectives. Include references to any CVEs mentioned, and highlight if they were employed in known attack campaigns.
    - `"Potential Impact"`
 10. Do NOT include general security recommendations or any commentary.
 11. Provide no text outside the JSON structure.
 
-This format ensures each threat scenario provides a clear, integrated explanation of the threat elements in a single narrative field, suitable for detailed CPS threat analysis.
+This format ensures each threat scenario provides a clear, integrated explanation of the threat elements in a single narration field, suitable for detailed CPS threat analysis.
 '''
     return prompt
 
@@ -135,11 +135,11 @@ ONLY RESPOND WITH THE JSON STRUCTURE, NO ADDITIONAL TEXT.
     return prompt
 
 
-def create_aml_prompt_step_1(arch_narrative, threat_model, attack_paths):
+def create_aml_prompt_step_1(arch_narration, threat_model, attack_paths):
     prompt = f"""
 You are an expert AutomationML (IEC 62714) generator.
 
-Given the following architectural narrative, threat model, and attack paths, generate AutomationML XML blocks defining all nodes as InternalElements with unique ExternalInterfaces.
+Given the following architectural narration, threat model, and attack paths, generate AutomationML XML blocks defining all nodes as InternalElements with unique ExternalInterfaces.
 
 - Do NOT generate any InternalLink elements in this step.
 - Each node must have a unique ExternalInterface with a unique ID.
@@ -206,8 +206,8 @@ Given the following architectural narrative, threat model, and attack paths, gen
   <ExternalInterface .... />
 </InternalElement>
 
-Architecture Narrative:
-{arch_narrative}
+Architecture Narration:
+{arch_narration}
 
 Threat Model:
 {threat_model}
