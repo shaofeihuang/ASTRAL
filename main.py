@@ -629,8 +629,8 @@ def main():
                             delay = 2 ** attempt + random.uniform(0, 1)  # exponential backoff with jitter
                             st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
                             time.sleep(delay)
-                
-                final_aml_xml = response_step4
+
+                final_aml_xml = process_aml_content(response_step4)
 
             return final_aml_xml
 

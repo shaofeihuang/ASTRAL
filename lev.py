@@ -80,7 +80,7 @@ def main():
     api_key = args.nvd_api_key
 
     print("--------------------------------------------------------")
-    print(f"Vulnerability Scoring for {cve_id}")
+    print(f"Vulnerability Attributes for {cve_id}")
     print("Date:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     print("--------------------------------------------------------")
 

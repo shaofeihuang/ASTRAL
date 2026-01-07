@@ -19,6 +19,18 @@ def clean_aml_content(aml_content):
     return aml_content
 
 
+def process_aml_content(aml_content):
+    aml_content = clean_aml_content(aml_content)
+    # Check for CVEs in the AML content
+    cve_pattern = r"CVE-\d{4}-\d{4,7}"
+    cves = re.findall(cve_pattern, aml_content)
+    if cves:
+        st.warning(f"Found CVEs in AML content: {', '.join(cves)}")
+    
+
+    return aml_content
+
+
 def clean_json_response(response_text):
     json_pattern = r'```json\s*(.*?)\s*```'
     match = re.search(json_pattern, response_text, re.DOTALL)
