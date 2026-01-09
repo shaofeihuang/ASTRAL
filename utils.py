@@ -271,7 +271,7 @@ def update_exposure_probabilities():
             continue
         else:
             cve = get_attribute_value(internal_element, 'CVE')
-            # For CVE vulnerabilities, update Probability of Exposure using LEV/EPSS/KEV data
+            # For CVE vulnerabilities, update Probability of Exposure using LEV/EPSS/CVSS/KEV data
             if re.match(r"CVE-\d{4}-\d{4,7}", cve):
                 attribute_tag = internal_element.find(f".//caex:Attribute[@Name='Probability of Exposure']", ns)
                 if attribute_tag is not None:
