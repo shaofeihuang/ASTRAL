@@ -13,6 +13,10 @@ from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from azure.core.exceptions import ResourceNotFoundError
 
+
+#----------------------------------------------------------------------------------------------
+# Model Token Limits Dictionary
+#----------------------------------------------------------------------------------------------
 model_token_limits = {
     # OpenAI models
     "OpenAI API:gpt-5": {"default": 128000, "max": 400000},
@@ -44,6 +48,9 @@ model_token_limits = {
 }
 
 
+#----------------------------------------------------------------------------------------------
+# Callback Functions for Model Provider and Selection Changes
+#----------------------------------------------------------------------------------------------
 def on_model_provider_change():
     new_provider = st.session_state['model_provider']
     # Set default model per provider first
@@ -142,6 +149,7 @@ def call_openai(api_key, prompt_text: str, image_bytes: bytes, model_name: str, 
 
     return response_content
 
+
 def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
     client = Anthropic(api_key)
     
@@ -212,8 +220,11 @@ def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: st
         error_message = str(e)
         st.error(f"Error with Anthropic API: {error_message}")
         return e
-    
 
+
+#----------------------------------------------------------------------------------------------
+# Main Application
+#----------------------------------------------------------------------------------------------
 def main():
     # Comment out if not using Azure Key Vault
     if 'azure_key_vault_logged_in' not in st.session_state:
@@ -228,7 +239,6 @@ def main():
 
     with st.sidebar:
         st.image("logo.png")
-        st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs)")
         model_provider = st.selectbox(
         "Select your preferred model provider:",
         ["OpenAI API", "Anthropic API", "Mistral API"],
@@ -238,6 +248,9 @@ def main():
         help="Select the model provider you would like to use. This will determine the models available for selection.",
         )
 
+        #----------------------------------------------------------------------------------------------
+        # Select Model based on Provider
+        #----------------------------------------------------------------------------------------------
         if model_provider == "OpenAI API":
 
             try:
@@ -285,10 +298,16 @@ def main():
                 help="Select the model you would like to use."
             )
 
+        #----------------------------------------------------------------------------------------------
+        # Set token limit based on selected model
+        #----------------------------------------------------------------------------------------------
         if 'token_limit' not in st.session_state:
             model_key = f"{model_provider}:{selected_model}"
             st.session_state['token_limit'] = model_token_limits[model_key]["default"]
 
+        #----------------------------------------------------------------------------------------------
+        # Select CPS System Context
+        #----------------------------------------------------------------------------------------------
         system_context = st.selectbox(
             "CPS System Context",
             ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System", "Smart Grid System", "Smart Healthcare System", "Water Treatment System"],
@@ -297,6 +316,9 @@ def main():
             accept_new_options=True,
         )
 
+    #----------------------------------------------------------------------------------------------
+    # Create Tabs for Different Functionalities
+    #----------------------------------------------------------------------------------------------
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Analysis", "Countermeasures"])
 
 #----------------------------------------------------------------------------------------------
@@ -308,6 +330,9 @@ def main():
 
         st.markdown("""---""")
 
+        #----------------------------------------------------------------------------------------------
+        # Upload System Architecture Diagram
+        #----------------------------------------------------------------------------------------------
         if 'api_key' not in st.session_state:
             st.sidebar.warning("Please enter your API key.")
             st.stop()
@@ -339,6 +364,9 @@ def main():
         else:
             st.info("Please upload system architecture diagram.")
 
+        #----------------------------------------------------------------------------------------------
+        # Display Architectural Narration
+        #----------------------------------------------------------------------------------------------
         if 'arch_narration' in st.session_state:
             st.subheader("Architectural Narration")
             st.write(st.session_state['arch_narration'])
@@ -354,6 +382,10 @@ def main():
                 placeholder="Enter extra architectural specifics here.",
                 height=150,
             )
+
+            #------------------------------------------------------------------------------------------
+            # Re-Generate Architectural Narration with Additional Prompting
+            #------------------------------------------------------------------------------------------
             if st.button("Re-Generate Architectural Narration"):
                 with st.spinner("Generating architectural narration..."):
                     try:
@@ -374,14 +406,19 @@ def main():
 #----------------------------------------------------------------------------------------------
 # Generate Threat Model
 #----------------------------------------------------------------------------------------------
-
     with tab2:
         st.markdown("""
         A threat model helps identify and evaluate potential security threats to applications and systems. It provides a systematic approach to understanding possible vulnerabilities and attack vectors. The STRIDE-LM methodology expands upon the classic STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Using this method, you can comprehensively analyse your system to identify and prioritise security risks, enabling proactive mitigation. Use this tab to generate a threat model tailored to the CPS system using STRIDE-LM.
         """)
         st.markdown("""---""")
+        #----------------------------------------------------------------------------------------------
+        # Create Threat Model Prompt
+        #----------------------------------------------------------------------------------------------
         threat_model_prompt = create_threat_model_prompt(system_context)
 
+        #----------------------------------------------------------------------------------------------
+        # Generate Threat Model
+        #----------------------------------------------------------------------------------------------
         if 'arch_narration' in st.session_state:
             if st.button("Generate STRIDE-LM Threat Model"):
                 with st.spinner("Generating STRIDE-LM threat model..."):
@@ -402,6 +439,9 @@ def main():
         else:
             st.info("Generate an architectural narration first to proceed.")
 
+        #----------------------------------------------------------------------------------------------
+        # Display Threat Model
+        #----------------------------------------------------------------------------------------------
         if 'threat_model' in st.session_state:
             markdown_output = tm_json_to_markdown(
                 st.session_state['threat_model'],
@@ -419,7 +459,6 @@ def main():
 #----------------------------------------------------------------------------------------------
 # Generate Attack Trees and Attack Paths
 #----------------------------------------------------------------------------------------------
-
     with tab3:
         st.markdown("""
         Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.
@@ -460,7 +499,10 @@ def main():
                 st.session_state['attack_tree'] = attack_tree
                 attack_paths = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
                 st.session_state['attack_paths'] = attack_paths
-            
+        
+        #----------------------------------------------------------------------------------------------
+        # Display Attack Tree and Paths
+        #----------------------------------------------------------------------------------------------
         if 'attack_tree' in st.session_state:
             st.write("Attack Paths:")
             st.code(st.session_state['attack_paths'])
@@ -492,18 +534,23 @@ def main():
                 )
 
 #----------------------------------------------------------------------------------------------
-# Generate System Model (AutomationML)
+# Generate System Model in AutomationML
 #----------------------------------------------------------------------------------------------
-
     with tab4:
         st.markdown("""
         Automation Markup Language (AutomationML) is an XML-based open standard for representing industrial automation systems. It builds upon the CAEX (Computer Aided Engineering Exchange) format defined in IEC 62424, which provides an object-oriented data model for system components and their hierarchical relationships. AutomationML facilitates semantic interoperability across diverse CPS domains by enabling standardised, meaningful exchange of data about physical and cyber components, their configurations, and interrelations. Use this tab to generate an AutomationML representation of the CPS system.
         """)
         st.markdown("""---""")
 
+        #------------------------------------------------------------------------------------------
+        # Function to generate AutomationML in stepwise manner with retries
+        #------------------------------------------------------------------------------------------
         def generate_aml_stepwise(arch_narration, threat_model, attack_paths):
             max_retries = 3
 
+            #------------------------------------------------------------------------------------------
+            # Generate Internal Elements based on Architectural Narration and Threat Model
+            #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 1) ..."):
                 for attempt in range(max_retries):
                     try:
@@ -534,6 +581,9 @@ def main():
                             st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
                             time.sleep(delay)
 
+            #------------------------------------------------------------------------------------------
+            # Generate Valid Pairs based on Attack Paths
+            #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 2) ..."):
                 for attempt in range(max_retries):
                     try:
@@ -564,6 +614,9 @@ def main():
                             st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
                             time.sleep(delay)
 
+            #------------------------------------------------------------------------------------------
+            # Generate Internal Links based on Valid Pairs
+            #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 3) ..."):
                 for attempt in range(max_retries):
                     try:
@@ -603,6 +656,9 @@ def main():
                             st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
                             time.sleep(delay)
 
+            #------------------------------------------------------------------------------------------
+            # Final Assembly of AutomationML Model
+            #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 4) ..."):
                 for attempt in range(max_retries):
                     try:
@@ -634,6 +690,7 @@ def main():
 
             return final_aml_xml
 
+
         with st.container():
             col1, col2 = st.columns(2)
 
@@ -659,22 +716,24 @@ def main():
 
         if 'aml_file' in st.session_state:
             st.subheader("Generated AutomationML File")
+            # Display AutomationML File Content
             st.code(st.session_state['aml_file'], language='xml')
+            # Download AutomationML File
             st.download_button(
                 label="Download AutomationML File",
                 data=st.session_state['aml_file'],
                 file_name="system_model.aml",
                 mime="application/xml",
             )
-            if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure):
-                st.success("CVE exposure probabilities updated successfully.")
-                pass
-
+            # Update CVE Exposure Probabilities
+            with st.spinner("Updating CVE exposure probabilities ..."):
+                if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure):
+                    st.success("CVE exposure probabilities updated successfully.")
+                    pass
 
 #----------------------------------------------------------------------------------------------
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
-
     with tab5:
         st.markdown("""
         Use this page to analyse system model attributes and calculate Bayesian probabilities of exposure and severe impact, along with the resulting risk assessment.
@@ -724,7 +783,9 @@ def main():
         else:
             st.info("Generate or upload an AutomationML model first to proceed with model analysis.")
 
-    
+        #----------------------------------------------------------------------------------------------
+        # Editable Data Tables for Model Attributes
+        #----------------------------------------------------------------------------------------------
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
             assets = st.session_state['aml_attributes']['assets']
@@ -769,7 +830,6 @@ def main():
             edited_hazards = st.data_editor(df_hazards, num_rows="dynamic")
             updated_hazards = edited_hazards.to_dict(orient='records')
             hazard_map = {hazard['ID']: hazard for hazard in updated_hazards}
-
             for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
                 hazard_id = internal_element.attrib.get('ID')
                 if hazard_id and hazard_id in hazard_map:
@@ -781,9 +841,8 @@ def main():
                                 st.session_state['aml_data'].HazardinSystem[idx][key] = value
 
 #----------------------------------------------------------------------------------------------
-# Placeholder for Decision Support Module
+# Calibrate Countermeasure Portfolio
 #----------------------------------------------------------------------------------------------
-
     with tab6:
         st.markdown("""
         Use this page to view and calibrate the countermeasure porfolio, which includes the probabilities of mitigation for each vulnerability in the system model.
@@ -828,5 +887,9 @@ def main():
 
     display_metrics()
 
+
+#----------------------------------------------------------------------------------------------
+# Main Entry Point
+#----------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     main()

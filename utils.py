@@ -11,6 +11,11 @@ from anthropic import Anthropic
 from openai import OpenAI
 
 
+# Namespace mapping for XML parsing
+ns = {'caex': 'http://www.dke.de/CAEX'}
+
+# Utility Functions
+
 def clean_aml_content(aml_file):
     aml_content = aml_file.strip()
     if aml_content.startswith("```xml"):
@@ -170,9 +175,79 @@ def final_p_exposure(cve_id, api_key=None, verbose=False):
 
     return finalprob
 
-#def final_p_exposure(cve):
-    # Placeholder function to compute final probability of exposure based on CVE ID
-#    return 0.8888
+
+def parse_cvss_vector(vector):
+    """
+    Parse CVSS 3.1 vector and return dict of metrics.
+    
+    Args:
+        vector (str): Full CVSS vector string
+        
+    Returns:
+        dict: Metrics like {'AV': 'N', 'AC': 'L', ...} or None if invalid
+    """
+    # Regex matches metric: AV:N, AC:L, etc.
+    pattern = r'CVSS:3\.1/([A-Z]+:[A-Z])(/[A-Z]+:[A-Z])*'
+    if not re.match(pattern, vector):
+        return None
+    
+    metrics = {}
+    # Split after version prefix
+    parts = vector.split('/')[1:]
+    for part in parts:
+        if ':' in part:
+            metric, value = part.split(':', 1)
+            metrics[metric] = value
+    
+    required = {'AV', 'AC', 'PR', 'UI'}
+    if not required.issubset(metrics):
+        return None
+    
+    return metrics
+
+
+def get_metric_value(metric, value, scope='U'):
+    """Get numerical value for CVSS 3.1 metric."""
+    values = {
+        'AV': {'N': 0.85, 'A': 0.62, 'L': 0.55, 'P': 0.20},
+        'AC': {'L': 0.77, 'H': 0.44},
+        'UI': {'N': 0.85, 'R': 0.62}
+    }
+    
+    if metric == 'PR':
+        pr_values = {
+            'N': (0.85, 0.85),  # Unchanged, Changed
+            'L': (0.62, 0.68),
+            'H': (0.27, 0.50)
+        }
+        idx = 0 if scope == 'U' else 1
+        return pr_values[value][idx]
+    
+    return values.get(metric, {}).get(value)
+
+
+def calculate_p(vector):
+    """
+    Calculate p = AV x AC x PR x UI from CVSS vector.
+    
+    Returns:
+        tuple: (p_value, metrics_dict, error_msg)
+    """
+    metrics = parse_cvss_vector(vector)
+    if not metrics:
+        return None, None, "Invalid CVSS 3.1 vector"
+    
+    scope = metrics.get('S', 'U')
+    try:
+        av = get_metric_value('AV', metrics['AV'], scope)
+        ac = get_metric_value('AC', metrics['AC'], scope)
+        pr = get_metric_value('PR', metrics['PR'], scope)
+        ui = get_metric_value('UI', metrics['UI'], scope)
+        
+        p = av * ac * pr * ui
+        return round(p, 2), metrics, None
+    except (KeyError, TypeError):
+        return None, metrics, "Missing or invalid metric values"
 
 
 def update_cve_exposure():
@@ -193,10 +268,32 @@ def update_cve_exposure():
                     new_p = final_p_exposure(cve, verbose=False)
                     attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
                     print(f"Updated {cve} Exposure Probability from {old_p} to {new_p}")
+            
+            # If vulnerability is not CVE-linked, compute and update exposure probability using Bayesian confidence calibration technique
             else:
+                # Set Probability of Exposure to "N/A" for non-CVE vulnerabilities
                 attribute_tag = internal_element.find(f".//caex:Attribute[@Name='EPSS']", ns)
                 if attribute_tag is not None:
                     attribute_tag.find(f".//caex:Value", ns).text = "N/A"
+                
+                vector_tag = internal_element.find(f".//caex:Attribute[@Name='CVSS']", ns)
+                if vector_tag is not None:
+                    vector_value = vector_tag.find(f".//caex:Value", ns).text
+                    p, metrics, error = calculate_p(vector_value)
+                    if error:
+                        print(error)
+                    else:
+                        print(f"Vector: {vector_value}")
+                        print(f"Metrics: {metrics}")
+                        print(f"p = AV({metrics['AV']}) x AC({metrics['AC']}) x PR({metrics['PR']}) x UI({metrics['UI']}) = {p}")
+
+                        calibrated_p_mean = ((0.5/0.0025) + (p/0.04)) / (1/0.0025 + 1/0.04)
+                        calibrated_p_variance = 1 / (1/0.0025 + 1/0.04)
+                        calibrated_p_stddev = calibrated_p_variance ** 0.5
+                        lower_bound = max(0, calibrated_p_mean - 1.96 * calibrated_p_stddev)
+                        upper_bound = min(1, calibrated_p_mean + 1.96 * calibrated_p_stddev)
+                        print(f"Calibrated p: Mean={calibrated_p_mean:.4f}, 95% CI=({lower_bound:.4f}, {upper_bound:.4f})")
+                        
                 
         
     st.session_state['aml_file'] = ET.tostring(root, encoding='unicode').replace('ns0:', '').replace('xmlns:ns0', 'xmlns')

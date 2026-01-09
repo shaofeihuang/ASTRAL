@@ -1,3 +1,5 @@
+# Utility Functions for Prompt Creation
+
 def create_arch_narration_prompt(system_context):
     prompt = f'''
 You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narration supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.

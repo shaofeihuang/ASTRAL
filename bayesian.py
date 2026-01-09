@@ -10,13 +10,15 @@ from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference import VariableElimination
 
+# Namespace mapping for XML parsing
 ns = {'caex': 'http://www.dke.de/CAEX'}
+
+# Data Classes
 
 @dataclass
 class Environment:
     element_tree_root: object
     t: object
-
 
 @dataclass
 class AMLData:
@@ -30,7 +32,6 @@ class AMLData:
     connections_mapped: object
     result_list: object
 
-
 @dataclass
 class NodeContext:
     num_parents: object
@@ -38,6 +39,8 @@ class NodeContext:
     matching_vulnerability_nodes: list = field(default_factory=list)
     matching_asset_nodes: list = field(default_factory=list)
 
+
+# Functions
 
 def setup_environment(aml_content):
     ET_root = ET.fromstring(aml_content)
@@ -60,6 +63,8 @@ def get_attribute_value(internal_element, attribute_name):
     return None
 
 
+# Probability Calculation Functions
+
 def calculate_probability_of_failure(failure_rate_value, t):
     failure_rate = float(failure_rate_value)
     return 1 - math.exp(-(failure_rate * t))
@@ -78,6 +83,8 @@ def check_probability_data(aml_data: AMLData):
             "Prob of Impact:", data['Probability of Impact'], "Prob of Mitigation:", data['Probability of Mitigation'],
             "Prob of Human Error:", data['Probability of Human Error'])
 
+
+# AML Processing Function
 
 def process_AML_file(root, t):
     max_num_parents = 0
@@ -293,6 +300,8 @@ def process_AML_file(root, t):
     return probability_data, AssetinSystem, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
 
 
+# Bayesian Network Functions
+
 def generate_cpd_values_hazard(num_parents):
     cpd_values = [[0] * (2 ** num_parents) for _ in range(2)]
     for i in range(2 ** num_parents):
@@ -339,10 +348,7 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
         if ref_base_for_node.startswith ('AssetOfICS/'):
             probability_of_failure_for_node = node_context.matching_asset_nodes[0]['Probability of Failure']
 
-###########################################################################################################
-#   Scaling Algorithm
-###########################################################################################################
-
+            # Calculate probability of failure based on connected vulnerabilities
             connections_from_to = defaultdict(list)
 
             for connection in aml_data.connections_mapped:
@@ -370,8 +376,6 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
                     scaling_factor = 1.0 / num_vulns
                     probability_of_failure_for_node = min(1.0, scaling_factor * sum_mitigation)
                     #print("Asset:", asset, "Probability of failure:", probability_of_failure_for_node)
-
-###########################################################################################################
 
             if probability_of_failure_for_node:
                 poff = float(probability_of_failure_for_node)
