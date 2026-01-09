@@ -16,6 +16,7 @@ ns = {'caex': 'http://www.dke.de/CAEX'}
 
 # Utility Functions
 
+# Clean AML content by removing code block markers
 def clean_aml_content(aml_file):
     aml_content = aml_file.strip()
     if aml_content.startswith("```xml"):
@@ -25,6 +26,7 @@ def clean_aml_content(aml_file):
     return aml_content
 
 
+# Retrieve latest EPSS score for a CVE from FIRST.org
 def get_epss_score(cve_id):
     url = f"https://api.first.org/data/v1/epss?cve={cve_id}"
     response = requests.get(url)
@@ -35,6 +37,7 @@ def get_epss_score(cve_id):
     return data[0]["epss"]
 
 
+# Retrieve EPSS time series data for a CVE from FIRST.org
 def get_epss_time_series(cve_id):
     """
     Retrieve EPSS time series data (daily) for a CVE from FIRST.org.
@@ -45,7 +48,6 @@ def get_epss_time_series(cve_id):
     response = requests.get(url)
     response.raise_for_status()
     data = response.json().get("data", [])
-
     epss_scores = []
     if data:
         if "time-series" in data[0] and data[0]["time-series"]:
@@ -55,9 +57,11 @@ def get_epss_time_series(cve_id):
             epss_scores.append(data[0]["epss"])
     return epss_scores
 
+
+# Calculate Likely Exploited Vulnerability (LEV) probability from EPSS time series
 def calculate_lev(epss_scores):
     """
-    Calculate LEV from list of EPSS probabilities.
+    Calculate LEV probability from list of EPSS probabilities.
     """
     if not epss_scores:
         return None
@@ -72,6 +76,7 @@ def calculate_lev(epss_scores):
     return 1 - prob_no_exploit
 
 
+# Retrieve CVSS base score from NVD API v2
 def get_cvss_score(cve_id, api_key=None):
     """Retrieve CVSS base score from NVD API v2."""
     url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cve_id}"
@@ -85,6 +90,7 @@ def get_cvss_score(cve_id, api_key=None):
         return None
 
 
+# Check if CVE is in CISA KEV catalog
 def check_kev_status(cve_id):
     """Check if CVE is in CISA KEV catalog."""
     url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
@@ -97,6 +103,7 @@ def check_kev_status(cve_id):
     return False
 
 
+# Compute final exploitation probability using EPSS, LEV, and KEV data
 def final_p_exposure(cve_id, api_key=None, verbose=False):
     if verbose:
         print("--------------------------------------------------------")
@@ -176,6 +183,7 @@ def final_p_exposure(cve_id, api_key=None, verbose=False):
     return finalprob
 
 
+# Parse CVSS 3.1 vector into metrics
 def parse_cvss_vector(vector):
     """
     Parse CVSS 3.1 vector and return dict of metrics.
@@ -206,6 +214,7 @@ def parse_cvss_vector(vector):
     return metrics
 
 
+# Get numerical value for CVSS 3.1 metric
 def get_metric_value(metric, value, scope='U'):
     """Get numerical value for CVSS 3.1 metric."""
     values = {
@@ -226,6 +235,7 @@ def get_metric_value(metric, value, scope='U'):
     return values.get(metric, {}).get(value)
 
 
+# Calculate p = AV x AC x PR x UI from CVSS vector
 def calculate_p(vector):
     """
     Calculate p = AV x AC x PR x UI from CVSS vector.
@@ -250,7 +260,8 @@ def calculate_p(vector):
         return None, metrics, "Missing or invalid metric values"
 
 
-def update_cve_exposure():
+# Update exposure probabilities in AML content
+def update_exposure_probabilities():
     aml_content = clean_aml_content(st.session_state['aml_file'])
     root = ET.fromstring(aml_content)
     internal_elements = root.findall(".//caex:InternalElement", ns)
@@ -260,7 +271,7 @@ def update_cve_exposure():
             continue
         else:
             cve = get_attribute_value(internal_element, 'CVE')
-            # If CVE format is valid, compute and update exposure probability
+            # For CVE vulnerabilities, update Probability of Exposure using LEV/EPSS/KEV data
             if re.match(r"CVE-\d{4}-\d{4,7}", cve):
                 attribute_tag = internal_element.find(f".//caex:Attribute[@Name='Probability of Exposure']", ns)
                 if attribute_tag is not None:
@@ -268,17 +279,17 @@ def update_cve_exposure():
                     new_p = final_p_exposure(cve, verbose=False)
                     attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
                     print(f"Updated {cve} Exposure Probability from {old_p} to {new_p}")
-            
-            # If vulnerability is not CVE-linked, compute and update exposure probability using Bayesian confidence calibration technique
+
+            # For non-CVE vulnerabilities, set EPSS to "N/A" and compute Bayesian confidence calibrated exposure probability from proxy CVSS vector
             else:
                 # Set Probability of Exposure to "N/A" for non-CVE vulnerabilities
-                attribute_tag = internal_element.find(f".//caex:Attribute[@Name='EPSS']", ns)
-                if attribute_tag is not None:
-                    attribute_tag.find(f".//caex:Value", ns).text = "N/A"
-                
-                vector_tag = internal_element.find(f".//caex:Attribute[@Name='CVSS']", ns)
-                if vector_tag is not None:
-                    vector_value = vector_tag.find(f".//caex:Value", ns).text
+                epss_tag = internal_element.find(f".//caex:Attribute[@Name='EPSS']", ns)
+                if epss_tag is not None:
+                    epss_tag.find(f".//caex:Value", ns).text = "N/A"
+
+                cvss_tag = internal_element.find(f".//caex:Attribute[@Name='CVSS']", ns)
+                if cvss_tag is not None:
+                    vector_value = cvss_tag.find(f".//caex:Value", ns).text
                     p, metrics, error = calculate_p(vector_value)
                     if error:
                         print(error)
@@ -293,13 +304,14 @@ def update_cve_exposure():
                         lower_bound = max(0, calibrated_p_mean - 1.96 * calibrated_p_stddev)
                         upper_bound = min(1, calibrated_p_mean + 1.96 * calibrated_p_stddev)
                         print(f"Calibrated p: Mean={calibrated_p_mean:.4f}, 95% CI=({lower_bound:.4f}, {upper_bound:.4f})")
-                        
+
                 
         
     st.session_state['aml_file'] = ET.tostring(root, encoding='unicode').replace('ns0:', '').replace('xmlns:ns0', 'xmlns')
     return None
 
 
+# Clean JSON response from code block markers
 def clean_json_response(response_text):
     json_pattern = r'```json\s*(.*?)\s*```'
     match = re.search(json_pattern, response_text, re.DOTALL)
@@ -314,6 +326,7 @@ def clean_json_response(response_text):
     return response_text.strip()
 
 
+# Convert threat model JSON to Markdown
 def tm_json_to_markdown(threat_model, improvement_suggestions):
     markdown_output = "## Threat Model\n\n"
 
@@ -332,6 +345,7 @@ def tm_json_to_markdown(threat_model, improvement_suggestions):
     return markdown_output
 
 
+# Convert architecture narration and threat model JSON to Markdown
 def at_json_to_markdown(arch_narration, threat_model):
     markdown_output = "## Architecture narration\n\n"
 
@@ -350,6 +364,7 @@ def at_json_to_markdown(arch_narration, threat_model):
     return markdown_output
 
 
+# Convert DREAD assessment JSON to Markdown
 def dread_json_to_markdown(dread_assessment):
     # Create a clean Markdown table with proper spacing
     markdown_output = "| Threat Type | Scenario | Damage Potential | Reproducibility | Exploitability | Affected Users | Discoverability | Risk Score |\n"
@@ -400,6 +415,7 @@ def dread_json_to_markdown(dread_assessment):
     return markdown_output
 
 
+# Create JSON schema for attack tree
 def create_attack_tree_schema():
     return {
         "type": "json_schema",
@@ -447,6 +463,7 @@ def create_attack_tree_schema():
     }
 
 
+# Convert attack tree JSON to attack paths
 def attack_tree_to_attack_paths(tree_data):
     attack_path_lines = []
 
@@ -468,6 +485,7 @@ def attack_tree_to_attack_paths(tree_data):
     return "\n".join(attack_path_lines)
 
 
+# Convert attack tree JSON to Mermaid syntax
 def convert_tree_to_mermaid(tree_data):
     mermaid_lines = ["graph BT"]
 
@@ -494,6 +512,7 @@ def convert_tree_to_mermaid(tree_data):
     return "\n".join(mermaid_lines)
 
 
+# Extract Mermaid code from text
 def extract_mermaid_code(text):
     mermaid_pattern = r'```mermaid\s*(graph[\s\S]*?)```'
     match = re.search(mermaid_pattern, text, re.MULTILINE)
@@ -518,6 +537,7 @@ def extract_mermaid_code(text):
     return code
 
 
+# Clean Mermaid syntax to ensure proper formatting
 def clean_mermaid_syntax(code):
     code = re.sub(r'(\w+|\]|\)|\})(-->|==>|-.->)(\w+|\[|\(|\{)', r'\1 \2 \3', code)
 
@@ -547,6 +567,7 @@ def clean_mermaid_syntax(code):
     return code
 
 
+# Render Mermaid diagram in Streamlit
 def mermaid(code: str, height: int = 500) -> None:
     components.html(
         f"""
@@ -563,6 +584,7 @@ def mermaid(code: str, height: int = 500) -> None:
     )
     
 
+# Generate attack tree using Mistral API
 def get_attack_tree(api_key, selected_model, prompt, system_context):
     client = Mistral(api_key=api_key)
     system_prompt = create_attack_tree_prompt(system_context)
@@ -581,6 +603,7 @@ def get_attack_tree(api_key, selected_model, prompt, system_context):
         return extract_mermaid_code(response.choices[0].message.content) # Fallback: try to extract Mermaid code if JSON parsing fails
 
 
+# Generate DREAD assessment using Mistral API
 def get_dread_assessment(api_key, selected_model, prompt):
     client = Mistral(api_key=api_key)
 
@@ -599,6 +622,7 @@ def get_dread_assessment(api_key, selected_model, prompt):
     return dread_assessment
 
 
+# Load model attributes from AML file into session state
 def load_model_attributes():
     print(st.session_state['aml_file'][:500])
     aml_content = clean_aml_content(st.session_state['aml_file'])
@@ -613,6 +637,7 @@ def load_model_attributes():
     }
 
 
+# Compute risk score using Bayesian networks
 def compute_risk_score():
     #check_probability_data(aml_data)
     bbn_exposure, last_node = create_bbn_exposure()
@@ -646,6 +671,7 @@ def compute_risk_score():
     print('[+] Risk score: {:.2f}%'.format(risk_score))
 
 
+# Display risk metrics in sidebar
 def display_metrics():
     st.sidebar.metric("Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
     st.sidebar.metric("Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")

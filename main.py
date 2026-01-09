@@ -725,10 +725,10 @@ def main():
                 file_name="system_model.aml",
                 mime="application/xml",
             )
-            # Update CVE Exposure Probabilities
-            with st.spinner("Updating CVE exposure probabilities ..."):
-                if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure):
-                    st.success("CVE exposure probabilities updated successfully.")
+            # Update Exposure Probabilities
+            with st.spinner("Updating exposure probabilities ..."):
+                if st.button("Update Exposure Probabilities", on_click=update_exposure_probabilities):
+                    st.success("Exposure probabilities updated successfully.")
                     pass
 
 #----------------------------------------------------------------------------------------------
