@@ -22,22 +22,28 @@ def clean_aml_content(aml_file):
 
 def final_p_exposure(cve):
     # Placeholder function to compute final probability of exposure based on CVE ID
-    return 0.88
+    return 0.8888
 
 
 def update_cve_exposure():
-    for i, entry in enumerate(st.session_state['aml_data'].VulnerabilityinSystem):
-        if re.match(r"CVE-\d{4}-\d{4,7}", entry):
-            old_p = entry.get('Probability of Exposure', 0)
-            new_p = final_p_exposure(entry)
-
-        print(f"Index {i}: {entry}")
-        if isinstance(entry, dict):
-            print(f"  Keys: {list(entry.keys())}")
-            print(f"  CVE: {entry.get('CVE', 'N/A')}")
-    idx = next((i for i, a in enumerate(st.session_state['aml_data'].VulnerabilityinSystem) if a['CVE'] == cve), None)
-    st.session_state['aml_data'].VulnerabilityinSystem[idx]['Value'] = new_p
-    st.info(f"Updated {cve} Exposure Probability from {old_p} to {new_p}")
+    aml_content = clean_aml_content(st.session_state['aml_file'])
+    root = ET.fromstring(aml_content)
+    internal_elements = root.findall(".//caex:InternalElement", ns)
+    for internal_element in internal_elements:
+        ref_base_system_unit_path = internal_element.get('RefBaseSystemUnitPath')
+        if (ref_base_system_unit_path != 'VulnerabilityforSystem/Vulnerability'):
+            continue
+        else:
+            cve = get_attribute_value(internal_element, 'CVE')
+            if re.match(r"CVE-\d{4}-\d{4,7}", cve):
+                new_p = final_p_exposure(cve)
+                attribute_tag = internal_element.find(f".//caex:Attribute[@Name='Probability of Exposure']", ns)
+                if attribute_tag is not None:
+                    old_p = float(attribute_tag.find(f".//caex:Value", ns).text)
+                    attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
+                    print(f"Updated {cve} Exposure Probability from {old_p} to {new_p}")
+        
+    st.session_state['aml_file'] = ET.tostring(root, encoding='unicode').replace('ns0:', '').replace('xmlns:ns0', 'xmlns')
     return None
 
 
@@ -341,6 +347,7 @@ def get_dread_assessment(api_key, selected_model, prompt):
 
 
 def load_model_attributes():
+    print(st.session_state['aml_file'][:500])
     aml_content = clean_aml_content(st.session_state['aml_file'])
     env = Environment(*setup_environment(aml_content))
     aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))

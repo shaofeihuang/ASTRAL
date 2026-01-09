@@ -656,6 +656,9 @@ def main():
                 aml_content = uploaded_aml.read().decode("utf-8")
                 st.session_state['aml_file'] = aml_content
                 st.success("AutomationML file uploaded successfully.")
+                if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure()):
+                    st.success("CVE exposure probabilities updated successfully.")
+                    pass
 
         if 'aml_file' in st.session_state:
             st.subheader("Generated AutomationML File")
@@ -697,10 +700,6 @@ def main():
                         if st.button("Load Model Attributes"):
                             load_model_attributes()
                             st.success("Attributes extracted successfully.")
-
-                        if st.button("Update CVE Exposure Probabilities"):
-                            update_cve_exposure()
-                            st.success("CVE exposure probabilities updated successfully.")
 
                 with col2:
                     if 'aml_attributes' in st.session_state:
