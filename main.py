@@ -224,7 +224,7 @@ def main():
         st.session_state['azure_key_vault_logged_in'] = key_vault_name
     
     # Uncomment to use .env file for local testing
-    #load_dotenv()
+    # load_dotenv()
 
     with st.sidebar:
         st.image("logo.png")
@@ -652,11 +652,11 @@ def main():
             uploaded_aml = st.file_uploader(
                 "Upload AutomationML file (.xml, .aml)", type=["xml", "aml"]
             )
-            if uploaded_aml is not None:
+            if uploaded_aml is not None and 'aml_file' not in st.session_state:
                 aml_content = uploaded_aml.read().decode("utf-8")
                 st.session_state['aml_file'] = aml_content
                 st.success("AutomationML file uploaded successfully.")
-                if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure()):
+                if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure):
                     st.success("CVE exposure probabilities updated successfully.")
                     pass
 
