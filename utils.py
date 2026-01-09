@@ -185,6 +185,7 @@ def update_cve_exposure():
             continue
         else:
             cve = get_attribute_value(internal_element, 'CVE')
+            # If CVE format is valid, compute and update exposure probability
             if re.match(r"CVE-\d{4}-\d{4,7}", cve):
                 attribute_tag = internal_element.find(f".//caex:Attribute[@Name='Probability of Exposure']", ns)
                 if attribute_tag is not None:
@@ -192,6 +193,11 @@ def update_cve_exposure():
                     new_p = final_p_exposure(cve, verbose=False)
                     attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
                     print(f"Updated {cve} Exposure Probability from {old_p} to {new_p}")
+            else:
+                attribute_tag = internal_element.find(f".//caex:Attribute[@Name='EPSS']", ns)
+                if attribute_tag is not None:
+                    attribute_tag.find(f".//caex:Value", ns).text = "N/A"
+                
         
     st.session_state['aml_file'] = ET.tostring(root, encoding='unicode').replace('ns0:', '').replace('xmlns:ns0', 'xmlns')
     return None

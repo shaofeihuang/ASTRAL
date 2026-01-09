@@ -228,7 +228,7 @@ def main():
 
     with st.sidebar:
         st.image("logo.png")
-    
+        st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs)")
         model_provider = st.selectbox(
         "Select your preferred model provider:",
         ["OpenAI API", "Anthropic API", "Mistral API"],
@@ -291,7 +291,7 @@ def main():
 
         system_context = st.selectbox(
             "CPS System Context",
-            ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System"],
+            ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System", "Smart Grid System", "Smart Healthcare System", "Water Treatment System"],
             index=0,
             placeholder="Select or enter a custom description",
             accept_new_options=True,
@@ -656,9 +656,6 @@ def main():
                 aml_content = uploaded_aml.read().decode("utf-8")
                 st.session_state['aml_file'] = aml_content
                 st.success("AutomationML file uploaded successfully.")
-                if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure):
-                    st.success("CVE exposure probabilities updated successfully.")
-                    pass
 
         if 'aml_file' in st.session_state:
             st.subheader("Generated AutomationML File")
@@ -669,6 +666,9 @@ def main():
                 file_name="system_model.aml",
                 mime="application/xml",
             )
+            if st.button("Update CVE Exposure Probabilities", on_click=update_cve_exposure):
+                st.success("CVE exposure probabilities updated successfully.")
+                pass
 
 
 #----------------------------------------------------------------------------------------------

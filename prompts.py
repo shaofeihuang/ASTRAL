@@ -180,12 +180,18 @@ Given the following architectural narration, threat model, and attack paths, gen
 
 <InternalElement Name="...." ID="[V01] ...." RefBaseSystemUnitPath="VulnerabilityforSystem/Vulnerability">
   <Attribute Name="Vulnerability" AttributeDataType="xs:string" RefAttributeType="AttributeTypeLib/Vulnerability">
-    <Attribute Name="CVE" AttributeDataType="xs:string" />
-    <Attribute Name="CVSS" AttributeDataType="xs:string">
-      <Value>....</Value>
+    <Attribute Name="CVE" AttributeDataType="xs:string">
+      <Value>CVE-2025-12345</Value>
     </Attribute>
-    <Attribute Name="EPSS" AttributeDataType="xs:string" />
-    <Attribute Name="Attack Name" AttributeDataType="xs:string" />
+    <Attribute Name="CVSS" AttributeDataType="xs:string">
+      <Value>AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</Value>
+    </Attribute>
+    <Attribute Name="EPSS" AttributeDataType="xs:string">
+      <Value>0.001</Value>
+    </Attribute>
+    <Attribute Name="Attack Name" AttributeDataType="xs:string">
+      <Value>...</Value>
+    </Attribute>
     <Attribute Name="Probability of Impact" AttributeDataType="xs:string">
       <Value>....</Value>
     </Attribute>
@@ -322,7 +328,7 @@ Strictly ONLY output the AutomationML XML file representing the system architect
 
 Output only if the following conditions are met:
 1. All attributes in every InternalElement is populated.
-2. CVSS is numeric.
+2. CVSS is in a vector format such as AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H.
 3. EPSS, FailureRatePerHour, Impact Rating, Probability of Exposure, Probability of Impact, Probability of Mitigation are between 0 and 1.
 4. Where CVEs are not applicable or not available from the input data, their values are 'N/A'.
 5. Validate that all InternalLinks adhere to relationship rules and connect valid pairs only.
