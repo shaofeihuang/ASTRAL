@@ -630,7 +630,7 @@ def main():
                             st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
                             time.sleep(delay)
 
-                final_aml_xml = process_aml_content(response_step4)
+                final_aml_xml = response_step4
 
             return final_aml_xml
 
@@ -667,6 +667,7 @@ def main():
                 mime="application/xml",
             )
 
+
 #----------------------------------------------------------------------------------------------
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
@@ -697,6 +698,10 @@ def main():
                             load_model_attributes()
                             st.success("Attributes extracted successfully.")
 
+                        if st.button("Update CVE Exposure Probabilities"):
+                            update_cve_exposure()
+                            st.success("CVE exposure probabilities updated successfully.")
+
                 with col2:
                     if 'aml_attributes' in st.session_state:
                         st.session_state['start_node'] = st.selectbox(
@@ -722,8 +727,6 @@ def main():
 
     
         if 'aml_attributes' in st.session_state:
-            ns = {'caex': 'http://www.dke.de/CAEX'}
-
             st.subheader("Asset Attributes")
             assets = st.session_state['aml_attributes']['assets']
             df_assets = pd.DataFrame(assets)

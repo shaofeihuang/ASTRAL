@@ -1,3 +1,4 @@
+from io import StringIO
 import json, re
 import streamlit as st
 import streamlit.components.v1 as components
@@ -10,8 +11,8 @@ from anthropic import Anthropic
 from openai import OpenAI
 
 
-def clean_aml_content(aml_content):
-    aml_content = aml_content.strip()
+def clean_aml_content(aml_file):
+    aml_content = aml_file.strip()
     if aml_content.startswith("```xml"):
         aml_content = aml_content[len("```xml"):].strip()
     if aml_content.endswith("```"):
@@ -19,16 +20,25 @@ def clean_aml_content(aml_content):
     return aml_content
 
 
-def process_aml_content(aml_content):
-    aml_content = clean_aml_content(aml_content)
-    # Check for CVEs in the AML content
-    cve_pattern = r"CVE-\d{4}-\d{4,7}"
-    cves = re.findall(cve_pattern, aml_content)
-    if cves:
-        st.warning(f"Found CVEs in AML content: {', '.join(cves)}")
-    
+def final_p_exposure(cve):
+    # Placeholder function to compute final probability of exposure based on CVE ID
+    return 0.88
 
-    return aml_content
+
+def update_cve_exposure():
+    for i, entry in enumerate(st.session_state['aml_data'].VulnerabilityinSystem):
+        if re.match(r"CVE-\d{4}-\d{4,7}", entry):
+            old_p = entry.get('Probability of Exposure', 0)
+            new_p = final_p_exposure(entry)
+
+        print(f"Index {i}: {entry}")
+        if isinstance(entry, dict):
+            print(f"  Keys: {list(entry.keys())}")
+            print(f"  CVE: {entry.get('CVE', 'N/A')}")
+    idx = next((i for i, a in enumerate(st.session_state['aml_data'].VulnerabilityinSystem) if a['CVE'] == cve), None)
+    st.session_state['aml_data'].VulnerabilityinSystem[idx]['Value'] = new_p
+    st.info(f"Updated {cve} Exposure Probability from {old_p} to {new_p}")
+    return None
 
 
 def clean_json_response(response_text):

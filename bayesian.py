@@ -10,6 +10,7 @@ from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference import VariableElimination
 
+ns = {'caex': 'http://www.dke.de/CAEX'}
 
 @dataclass
 class Environment:
@@ -48,12 +49,14 @@ def setup_environment(aml_content):
 
 
 def get_attribute_value(internal_element, attribute_name):
-    ValueTag=".//{http://www.dke.de/CAEX}Value"
-    attribute_tag = internal_element.find(f".//{{http://www.dke.de/CAEX}}Attribute[@Name='{attribute_name}']")
+    attribute_tag = internal_element.find(f".//caex:Attribute[@Name='{attribute_name}']", ns)
     if attribute_tag is not None:
-        value_element = attribute_tag.find(ValueTag)
+        value_element = attribute_tag.find(f".//caex:Value", ns)
         if value_element is not None:
-            return float(value_element.text)
+            try:
+                return float(value_element.text)
+            except ValueError:
+                return value_element.text  # Return as string
     return None
 
 
@@ -99,8 +102,6 @@ def process_AML_file(root, t):
     result_list = []
     total_elements = set()
     
-    ns = {'caex': 'http://www.dke.de/CAEX'}
-
     for k in root.findall('.//'):
         allinone_attrib.append(k.attrib)
         allinone_tags.append(k.tag)
@@ -133,7 +134,7 @@ def process_AML_file(root, t):
             if rpa is not None and rpb is not None:
                 InternalLinks.append({rpa.text, rpb.text})
 
-    internal_elements = root.findall(".//{http://www.dke.de/CAEX}InternalElement")
+    internal_elements = root.findall(".//caex:InternalElement", ns)
 
     for internal_element in internal_elements:
         internal_element_id = internal_element.get('ID')
@@ -197,8 +198,8 @@ def process_AML_file(root, t):
 
         probability_data.append(internal_element_data)
 
-    for internal_element in root.findall(".//{http://www.dke.de/CAEX}InternalElement"):
-        external_interfaces = internal_element.findall(".//{http://www.dke.de/CAEX}ExternalInterface")
+    for internal_element in root.findall(".//caex:InternalElement", ns):
+        external_interfaces = internal_element.findall(".//caex:ExternalInterface", ns)
         if len(external_interfaces) < 5:
             internal_element_id = internal_element.get('ID')
             internal_element_name = internal_element.get('Name')
@@ -220,7 +221,7 @@ def process_AML_file(root, t):
         internal_element_id = external_interface['InternalElement ID']
         interface_to_element_map[external_interface_id] = internal_element_id
 
-    for internal_link in root.findall(".//{http://www.dke.de/CAEX}InternalLink"):
+    for internal_link in root.findall(".//caex:InternalLink", ns):
         ref_partner_a = internal_link.get('RefPartnerSideA')
         ref_partner_b = internal_link.get('RefPartnerSideB')
         if ref_partner_a in interface_to_element_map and ref_partner_b in interface_to_element_map:
@@ -230,7 +231,6 @@ def process_AML_file(root, t):
             connections.append(connection)
 
     if len(connections) == 0:
-        ns = {'caex': 'http://www.dke.de/CAEX'}
         for internal_link in root.findall('.//caex:InternalLink', ns):
             rpa = internal_link.find('caex:RefPartnerSideA', ns)
             rpb = internal_link.find('caex:RefPartnerSideB', ns)
