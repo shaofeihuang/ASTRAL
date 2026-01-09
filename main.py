@@ -716,8 +716,13 @@ def main():
 
         if 'aml_file' in st.session_state:
             st.subheader("Generated AutomationML File")
-            # Display AutomationML File Content
-            st.code(st.session_state['aml_file'], language='xml')
+
+            # Update Exposure Probabilities
+            with st.spinner("Updating exposure probabilities ..."):
+                if st.button("Update Exposure Probabilities", on_click=update_exposure_probabilities):
+                    st.success("Exposure probabilities updated successfully.")
+                    pass
+
             # Download AutomationML File
             st.download_button(
                 label="Download AutomationML File",
@@ -725,11 +730,9 @@ def main():
                 file_name="system_model.aml",
                 mime="application/xml",
             )
-            # Update Exposure Probabilities
-            with st.spinner("Updating exposure probabilities ..."):
-                if st.button("Update Exposure Probabilities", on_click=update_exposure_probabilities):
-                    st.success("Exposure probabilities updated successfully.")
-                    pass
+            
+            # Display AutomationML File Content
+            st.code(st.session_state['aml_file'], language='xml')
 
 #----------------------------------------------------------------------------------------------
 # Analyse System Model and Compute Bayesian Probabilities

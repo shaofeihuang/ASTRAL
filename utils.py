@@ -184,34 +184,27 @@ def final_p_exposure(cve_id, api_key=None, verbose=False):
 
 
 # Parse CVSS 3.1 vector into metrics
-def parse_cvss_vector(vector):
-    """
-    Parse CVSS 3.1 vector and return dict of metrics.
+def parse_cvss_vector(vector):    
+    # Handle full CVSS prefix and no-slash case
+    if vector.startswith('CVSS:3.1/'):
+        parts = vector[8:].split('/')
+    elif vector.startswith('CVSS:3.1'):
+        parts = vector[7:].split('/')
+    else:
+        parts = vector.split('/')
     
-    Args:
-        vector (str): Full CVSS vector string
-        
-    Returns:
-        dict: Metrics like {'AV': 'N', 'AC': 'L', ...} or None if invalid
-    """
-    # Regex matches metric: AV:N, AC:L, etc.
-    pattern = r'CVSS:3\.1/([A-Z]+:[A-Z])(/[A-Z]+:[A-Z])*'
-    if not re.match(pattern, vector):
-        return None
+    # Remove empty parts and filter valid metric parts
+    parts = [p.strip() for p in parts if ':' in p and len(p.split(':')) == 2]
     
     metrics = {}
-    # Split after version prefix
-    parts = vector.split('/')[1:]
     for part in parts:
         if ':' in part:
             metric, value = part.split(':', 1)
-            metrics[metric] = value
-    
-    required = {'AV', 'AC', 'PR', 'UI'}
-    if not required.issubset(metrics):
-        return None
+            if len(metric) >= 2 and len(value) >= 1:  # Valid metric format
+                metrics[metric] = value
     
     return metrics
+
 
 
 # Get numerical value for CVSS 3.1 metric
@@ -237,13 +230,8 @@ def get_metric_value(metric, value, scope='U'):
 
 # Calculate p = AV x AC x PR x UI from CVSS vector
 def calculate_p(vector):
-    """
-    Calculate p = AV x AC x PR x UI from CVSS vector.
-    
-    Returns:
-        tuple: (p_value, metrics_dict, error_msg)
-    """
     metrics = parse_cvss_vector(vector)
+    
     if not metrics:
         return None, None, "Invalid CVSS 3.1 vector"
     
@@ -277,8 +265,13 @@ def update_exposure_probabilities():
                 if attribute_tag is not None:
                     old_p = float(attribute_tag.find(f".//caex:Value", ns).text)
                     new_p = final_p_exposure(cve, verbose=False)
+                    #new_p = 0.8888
                     attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
+                    element_id = internal_element.get('ID')
+                    print("------------------------------------------------------------------------")
+                    print(f"Element ID: {element_id}")
                     print(f"Updated {cve} Exposure Probability from {old_p} to {new_p}")
+                    print("------------------------------------------------------------------------")
 
             # For non-CVE vulnerabilities, set EPSS to "N/A" and compute Bayesian confidence calibrated exposure probability from proxy CVSS vector
             else:
@@ -294,19 +287,28 @@ def update_exposure_probabilities():
                     if error:
                         print(error)
                     else:
-                        print(f"Vector: {vector_value}")
-                        print(f"Metrics: {metrics}")
-                        print(f"p = AV({metrics['AV']}) x AC({metrics['AC']}) x PR({metrics['PR']}) x UI({metrics['UI']}) = {p}")
+                        print("------------------------------------------------------------------------")
+                        attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
+                        element_id = internal_element.get('ID')
+                        print(f"Element ID: {element_id}")
+                        print(f"CVSS vector: {vector_value}")
+                        print(f"[*] P(Exposure) = AV({metrics['AV']}) x AC({metrics['AC']}) x PR({metrics['PR']}) x UI({metrics['UI']}) = {p}")
 
+                        # Bayesian calibration with prior mean=0.5, prior variance=0.0025, likelihood variance=0.04
                         calibrated_p_mean = ((0.5/0.0025) + (p/0.04)) / (1/0.0025 + 1/0.04)
                         calibrated_p_variance = 1 / (1/0.0025 + 1/0.04)
                         calibrated_p_stddev = calibrated_p_variance ** 0.5
                         lower_bound = max(0, calibrated_p_mean - 1.96 * calibrated_p_stddev)
                         upper_bound = min(1, calibrated_p_mean + 1.96 * calibrated_p_stddev)
-                        print(f"Calibrated p: Mean={calibrated_p_mean:.4f}, 95% CI=({lower_bound:.4f}, {upper_bound:.4f})")
+                        print(f"[*] Calibrated P(Exposure): Mean={calibrated_p_mean:.4f}, 95% CI=({lower_bound:.4f}, {upper_bound:.4f})")
 
-                
-        
+                        attribute_tag = internal_element.find(f".//caex:Attribute[@Name='Probability of Exposure']", ns)
+                        if attribute_tag is not None:
+                            old_p = float(attribute_tag.find(f".//caex:Value", ns).text)
+                            new_p = calibrated_p_mean
+                            print(f"Updated Exposure Probability from {old_p} to {new_p}")
+                        print("------------------------------------------------------------------------")
+
     st.session_state['aml_file'] = ET.tostring(root, encoding='unicode').replace('ns0:', '').replace('xmlns:ns0', 'xmlns')
     return None
 
