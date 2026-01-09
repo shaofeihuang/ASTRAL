@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 from bayesian import *
 from prompts import *
+from lev import *
 from mistralai import Mistral
 from anthropic import Anthropic
 from openai import OpenAI
@@ -20,9 +21,9 @@ def clean_aml_content(aml_file):
     return aml_content
 
 
-def final_p_exposure(cve):
+#def final_p_exposure(cve):
     # Placeholder function to compute final probability of exposure based on CVE ID
-    return 0.8888
+#    return 0.8888
 
 
 def update_cve_exposure():

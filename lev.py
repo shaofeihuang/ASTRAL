@@ -70,6 +70,7 @@ def check_kev_status(cve_id):
             return True
     return False
 
+'''
 def main():
     parser = argparse.ArgumentParser(description="Fetch vulnerability attributes (EPSS, CVSS, KEV) for a CVE ID.")
     parser.add_argument("cve", type=str, help="CVE identifier (e.g. CVE-2023-24236)")
@@ -78,7 +79,9 @@ def main():
 
     cve_id = args.cve
     api_key = args.nvd_api_key
+'''
 
+def final_p_exposure(cve_id, api_key=None):
     print("--------------------------------------------------------")
     print(f"Vulnerability Attributes for {cve_id}")
     print("Date:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -136,12 +139,13 @@ def main():
             elif latest_epss is not None:
                 finalprob = float(latest_epss)
             else:
-                finalprob = "N/A"
+                finalprob = 0 #"N/A"
             print(f"[*] Exploitation Probability for {cve_id} = {finalprob:.4f}")
     except Exception as e:
         print(f"Error calculating exploitation probability: {e}")
 
     print("--------------------------------------------------------")
 
-if __name__ == "__main__":
-    main()
+    return finalprob
+#if __name__ == "__main__":
+#    main()
