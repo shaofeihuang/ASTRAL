@@ -718,10 +718,11 @@ def main():
             st.subheader("Generated AutomationML File")
 
             # Update Exposure Probabilities
-            with st.spinner("Updating exposure probabilities ..."):
-                if st.button("Update Exposure Probabilities", on_click=update_exposure_probabilities):
+            if st.button("Update Exposure Probabilities"):
+                with st.spinner("Updating exposure probabilities..."):
+                    # Actual update logic here
+                    update_exposure_probabilities()  # Call your real function
                     st.success("Exposure probabilities updated successfully.")
-                    pass
 
             # Download AutomationML File
             st.download_button(
