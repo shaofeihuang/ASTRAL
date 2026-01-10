@@ -1,4 +1,4 @@
-![alt text](logo.jpeg =300x300)
+<img src="logo.jpeg" alt="ASTRAL Prototype Tool" width="140" height="140" style="display: block; margin: 0 auto 20px;">
 
 # Prototype Tool for demonstrating the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach
 
