@@ -252,7 +252,7 @@ def main():
     # load_dotenv()
 
     with st.sidebar:
-        st.image("logo.jpeg")
+        st.image("logo.png")
         model_provider = st.selectbox(
         "Select your preferred model provider:",
         ["OpenAI API", "Anthropic API", "Mistral API"],
