@@ -327,7 +327,7 @@ def main():
 
     with tab1:
         st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using Multimodal LLMs)")
-
+        st.info("ASTRAL is an AI-powered tool designed to assist security professionals in generating architectural narrations, threat models, attack trees, and system models for cyber-physical systems (CPS). By leveraging multimodal large language models (LLMs), ASTRAL streamlines the process of identifying potential security threats, vulnerabilities, and risks within complex CPS architectures, and supports Bayesian and multi-objective decision support for CPS incident response.")
         st.markdown("""---""")
 
         #----------------------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ def main():
                     except Exception as e:
                         st.error(f"Failed to generate architectural narration: {str(e)}")
         else:
-            st.info("Please upload system architecture diagram.")
+            st.info("To get started, please upload an architecture or data flow diagram image of the CPS system.")
 
         #----------------------------------------------------------------------------------------------
         # Display Architectural Narration
@@ -407,9 +407,8 @@ def main():
 # Generate Threat Model
 #----------------------------------------------------------------------------------------------
     with tab2:
-        st.markdown("""
-        A threat model helps identify and evaluate potential security threats to applications and systems. It provides a systematic approach to understanding possible vulnerabilities and attack vectors. The STRIDE-LM methodology expands upon the classic STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Using this method, you can comprehensively analyse your system to identify and prioritise security risks, enabling proactive mitigation. Use this tab to generate a threat model tailored to the CPS system using STRIDE-LM.
-        """)
+        st.info("A threat model helps identify and evaluate potential security threats to applications and systems. It provides a systematic approach to understanding possible vulnerabilities and attack vectors. The STRIDE-LM methodology expands upon the classic STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Using this method, you can comprehensively analyse your system to identify and prioritise security risks, enabling proactive mitigation.")
+        st.info("Use this tab to generate a threat model tailored to the CPS system using STRIDE-LM. Architecture suggestions for improving the threat model will also be provided.")
         st.markdown("""---""")
         #----------------------------------------------------------------------------------------------
         # Create Threat Model Prompt
@@ -460,9 +459,8 @@ def main():
 # Generate Attack Trees and Attack Paths
 #----------------------------------------------------------------------------------------------
     with tab3:
-        st.markdown("""
-        Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.
-        """)
+        st.info("Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.")
+        st.info("Use this tab to generate an attack tree and corresponding attack paths based on the architectural narration and threat model. You can also upload a previously saved attack tree data file in JSON format to visualise and extract attack paths.")
         st.markdown("""---""")
 
         with st.container():
@@ -538,8 +536,11 @@ def main():
 #----------------------------------------------------------------------------------------------
     with tab4:
         st.markdown("""
-        Automation Markup Language (AutomationML) is an XML-based open standard for representing industrial automation systems. It builds upon the CAEX (Computer Aided Engineering Exchange) format defined in IEC 62424, which provides an object-oriented data model for system components and their hierarchical relationships. AutomationML facilitates semantic interoperability across diverse CPS domains by enabling standardised, meaningful exchange of data about physical and cyber components, their configurations, and interrelations. Use this tab to generate an AutomationML representation of the CPS system.
+        Automation Markup Language (AutomationML) is an XML-based open standard for representing industrial automation systems. AutomationML facilitates semantic interoperability across diverse CPS domains by enabling standardised, meaningful exchange of data about physical and cyber components, their configurations, and interrelations.
         """)
+        st.info("Use this tab to generate a comprehensive AutomationML system model for the CPS architecture. The model will incorporate internal elements and links based on the architectural narration, threat model, and identified attack paths. You can also upload a previously saved AutomationML system model file in XML format.")
+        st.warning("Generating the AutomationML system model may take several minutes depending on the complexity of the architecture and threat model. Please be patient. You may see intermittent warnings about retries - these are normal and indicate the system is handling transient issues with the model provider.")
+        st.info("Click on the 'Update Exposure Probabilities' button after generating the system model to update the vulnerability exposure probabilities.")
         st.markdown("""---""")
 
         #------------------------------------------------------------------------------------------
@@ -738,9 +739,8 @@ def main():
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
     with tab5:
-        st.markdown("""
-        Use this page to analyse system model attributes and calculate Bayesian probabilities of exposure and severe impact, along with the resulting risk assessment.
-        """)
+        st.info("Use this tab to analyse the generated AutomationML system model. Based on the model attributes, Bayesian probabilities of successful attacks will be computed to support risk assessment and decision-making.")
+        st.info("Set the system installation date and load the model attributes. You can adjust the Attack Feasibility (AF) modifier to calibrate the analysis.")
         st.markdown("""---""")
 
         if 'aml_file' in st.session_state:
@@ -847,9 +847,7 @@ def main():
 # Calibrate Countermeasure Portfolio
 #----------------------------------------------------------------------------------------------
     with tab6:
-        st.markdown("""
-        Use this page to view and calibrate the countermeasure porfolio, which includes the probabilities of mitigation for each vulnerability in the system model.
-        """)
+        st.info("Use this tab to view and calibrate the countermeasure portfolio, which includes the probabilities of mitigation for each vulnerability in the system model.")
         st.markdown("""---""")
 
         if 'aml_attributes' in st.session_state:

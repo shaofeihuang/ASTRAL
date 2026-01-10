@@ -51,7 +51,7 @@ Instructions:
 3. Focus your analysis on cyber-physical systems. Address system-level impacts such as disruption of physical processes, loss of control, cascading failures, or safety hazards rather than purely IT-centric threats.
 4. Consider multiple potential attacker objectives (e.g., power disruption, asset damage, persistent foothold in isolated OT environments, bypassing safety controls).
 5. Leverage and extract from the accompanying documentation to reflect the assets, vulnerabilities (both CVE-linked and non-CVE-linked), hazards, and objectives in each scenario.
-6. Identify and list CVEs specific to the vulnerabilities visible in the accompanying documentation. For each CVE, provide the CVE identifier and a brief description. Indicate if the CVE has been observed in known attack campaigns (e.g., BlackEnergy, FrostyGoop), with references.
+6. Identify and list real CVEs specific to the vulnerabilities visible in the accompanying documentation. For each CVE, provide the CVE identifier and a brief description. Indicate if the CVE has been observed in known attack campaigns (e.g., BlackEnergy, FrostyGoop), with references.
 7. Apply FMECA-style reasoning where applicable to identify failure modes, their effects, and potential cascading consequences.
 8. Format your response strictly as JSON with these top-level keys:
    - `"threat_model"`: an array of threat scenario objects.
@@ -301,7 +301,7 @@ Important structural and semantic requirements related to InternalElements:
   - *Do not assign CVEs that are not shown or mentioned in the provided input data.* Instead, assign assign CVE the value "N/A" and provide a synthetic CVSS vector reflecting the vulnerability description as the CVSS attribute.
   - Compute the Probability of Exposure attribute from the CVSS vector as Probability of Exposure = AV * AC * PR * UI, where AV, AC, PR, and UI come from the CVSS vector.
   - For vulnerabilities that are not linked to known CVEs based on the input information, assign the EPSS score (0 to 1) to both the EPSS attribute and Probability of Exposure attribute.
-  - Do not assign EPSS scores to vulnerabilities that are not linked known CVEs.
+  - Assign "N/A" to EPSS scores for vulnerabilities that are not linked to known CVEs.
   - Assign an estimate FailureRatePerHour (0 to 1) for assets if not shown or mentioned in the input information.
   - Assign an estimate Impact Rating (0 to 1) for assets and hazards based on the input information.
 
