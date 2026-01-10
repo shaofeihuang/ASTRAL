@@ -1,3 +1,5 @@
+![alt text](logo.jpeg)
+
 # Prototype Tool for demonstrating the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach
 
 This interactive web application demonstrates the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach, using multimodal LLMs to support architecture-centric threat risk assessments by generating architectural narrations, threat models, attack trees, and probabilistic risk analysis based on uploaded architecture diagrams.
@@ -144,11 +146,11 @@ See `requirements.txt` for the complete list of dependencies.
 1. Navigate to the "System Model" tab
 2. Click "Generate AutomationML File"
 3. The system creates an AutomationML representation of the system. This process may take several minutes depending on the complexity of the system architecture and threat model
-4. Check the generated AutomationML file and make sure the file starts with "```xml" on the first line. If not, download to edit then upload the edited file
-4. Download the .aml file if needed.
+4. Check the generated AutomationML file and update the exposure probabilities with real-world data
+5. Download the .aml file if needed
 
 ### Step 7: Bayesian Network Analysis
-1. Navigate to the "Analysis" tab
+1. Navigate to the "Bayesian Analysis" tab
 2. Optionally change the system installation date if needed
 3. Click "Load Model Attributes". Probabilistic model of exposure (successful attack), severe impact, and risk score is computed automatically
 4. Edit model attribute values, change "Attacker ID" and "Attack Feasibility (AF) Modifier" values, if needed
@@ -157,6 +159,9 @@ See `requirements.txt` for the complete list of dependencies.
 1. Navigate to the "Countermeasures" tab
 2. Change mitigation likelihood values for each vulnerability (i.e. probability that countermeasure(s) will mitigate the vulnerability) to find the most effective combination for reducing risk
 
+### Step 9: Multi-Objective Optimisation
+1. Navigate to the "Optimisation" tab
+2. Execute optimisation runs to identify and analyse Pareto-optimal mitigation configurations
 
 ---
 
