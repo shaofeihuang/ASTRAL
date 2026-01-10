@@ -1,12 +1,23 @@
-import json, re, requests
+# Standard library imports
+import csv
+import json
+import os
+import pickle
+import re
+from datetime import datetime
+import requests
+import xml.etree.ElementTree as ET
+
+# Third-party imports
+import optuna
 import streamlit as st
 import streamlit.components.v1 as components
-import xml.etree.ElementTree as ET
-from datetime import datetime
+
+# Local application imports
 from bayesian import *
 from prompts import *
-from mistralai import Mistral
 from anthropic import Anthropic
+from mistralai import Mistral
 from openai import OpenAI
 
 
@@ -626,7 +637,6 @@ def get_dread_assessment(api_key, selected_model, prompt):
 
 # Load model attributes from AML file into session state
 def load_model_attributes():
-    print(st.session_state['aml_file'][:500])
     aml_content = clean_aml_content(st.session_state['aml_file'])
     env = Environment(*setup_environment(aml_content))
     aml_data = AMLData(*process_AML_file(env.element_tree_root, env.t))
@@ -668,13 +678,81 @@ def compute_risk_score():
     print('--------------------------')
     print(datetime.now())
     print('--------------------------')
-    print('[+] P(Exposure): {:.4f}%'.format(cpd_prob))
-    print('[+] P(Severe Impact): {:.4f}%'.format(cpd_impact))
-    print('[+] Risk score: {:.2f}%'.format(risk_score))
-
+    print('[+] P(Exposure): {:.4f}%'.format(cpd_prob), 'P(Severe Impact): {:.4f}%'.format(cpd_impact), 'Risk score: {:.2f}%'.format(risk_score))
 
 # Display risk metrics in sidebar
 def display_metrics():
     st.sidebar.metric("Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
     st.sidebar.metric("Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
     st.sidebar.metric("Risk Score", value=f"{st.session_state.get('risk_score', 0):.2f}%")
+
+
+# Objective function for Optuna optimization
+def objective(trial):
+    mitigation_prob_dict = {}
+
+    with open("session.json", "rb") as f:
+        try:
+            data = pickle.load(f)
+            st.session_state.update(data)
+        except json.JSONDecodeError:
+            st.session_state = {}
+
+    n_vulns = len(st.session_state['aml_data'].VulnerabilityinSystem)
+
+    for i in range(1, n_vulns + 1):
+        prob_mitigation_value = trial.suggest_float(f'Mitigation_V{i:02d}', 0, 1)
+        mitigation_prob_dict[f'{i}'] = prob_mitigation_value
+
+    for element in st.session_state['aml_data'].VulnerabilityinSystem:
+            match = re.match(r'\[(V0*)(\d+)\]', element['ID'])
+            if match:
+                index = match.group(2).lstrip('0')
+                index = index if index != '' else '0'
+            else:
+                index = element['ID'].lstrip('V')
+            if index.isdigit() and 1 <= int(index) <= n_vulns:
+                element['Probability of Mitigation'] = mitigation_prob_dict[index]
+
+    return bbn_inference(st.session_state['start_node'])
+
+
+# Optimize risk model using Optuna
+def run_study(n_trials, graph, verbose, output):
+    run_id, _ = os.path.splitext('-'.join(output.split('-')[1:3]))
+    study = optuna.create_study(directions=["minimize", "minimize", "maximize"])
+    study.optimize(objective, n_trials, timeout=300)
+
+    if graph:
+        fig = optuna.visualization.plot_pareto_front(study, target_names=["Likelihood", "Impact", "Availability"])
+        fig.show()
+
+    trial_with_highest_availability = max(study.best_trials, key=lambda t: t.values[2])
+
+    if verbose:
+        print(f"Run ID: {run_id}")
+        print(f"Number of trials on the Pareto front: {len(study.best_trials)}")
+        print("Trial with highest availability: ")
+        print(f"\tTrial: {trial_with_highest_availability.number}")
+        print(f"\tParams: {trial_with_highest_availability.params}")
+        print(f"\tLikelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}")
+
+    best_trial = f"{run_id}-{datetime.now():%H%M%S%f}"
+    best_trial_filename = f"{best_trial}.txt"
+    with open(best_trial_filename, "w", newline="") as file:
+        file.write(f"Run ID: {run_id}\n")
+        file.write(f"Number of trials on the Pareto front: {len(study.best_trials)}\n")
+        file.write("Trial with highest availability:\n")
+        file.write(f"Trial: {trial_with_highest_availability.number}\n")
+        file.write(f"Params: {trial_with_highest_availability.params}\n")
+        file.write(f"Likelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}\n")
+
+    params = trial_with_highest_availability.params
+    values = trial_with_highest_availability.values
+    sorted_params = sorted(enumerate(params.values()), key=lambda item: item[1], reverse=True)
+    sorted_indices = [item[0] for item in sorted_params]
+    row = sorted_indices + [f"{best_trial}", f"{values[0]:.3f}", f"{values[1]:.3f}", f"{values[2]:.3f}"]
+
+    with open(output, "a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(row)

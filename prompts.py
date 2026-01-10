@@ -321,7 +321,6 @@ Important structural and semantic requirements related to InternalElements:
 
 Your output should be a syntactically valid, complete AutomationML XML file starting with:
 
-<?xml version="1.0" encoding="utf-8"?>
 <CAEXFile SchemaVersion="3.0" FileName="cps.aml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.dke.de/CAEX" xsi:schemaLocation="http://www.dke.de/CAEX CAEX_ClassModel_V.3.0.xsd">
 
 Include the SystemUnitClassLib, RoleClassLib, InterfaceClassLib, and AttributeTypeLib definitions exactly as provided.
@@ -329,10 +328,10 @@ Include the SystemUnitClassLib, RoleClassLib, InterfaceClassLib, and AttributeTy
 Strictly ONLY output the AutomationML XML file representing the system architecture, InternalElements, ExternalInterfaces, and InternalLinks per above rules. Do not include comments or additional text
 
 Output only if the following conditions are met:
-1. All attributes in every InternalElement is populated.
+1. All attributes in every InternalElement are populated.
 2. CVSS is in a vector format such as AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H.
-3. EPSS, FailureRatePerHour, Impact Rating, Probability of Exposure, Probability of Impact, Probability of Mitigation are between 0 and 1.
-4. Where CVEs are not applicable or not available from the input data, their values are 'N/A'.
+3. FailureRatePerHour, Impact Rating, Probability of Exposure, Probability of Impact, Probability of Mitigation are float numbers between 0 and 1.
+4. Where EPSS and CVEs are not applicable or not available from the input data, their values are 'N/A'.
 5. Validate that all InternalLinks adhere to relationship rules and connect valid pairs only.
 
 

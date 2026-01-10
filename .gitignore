@@ -6,3 +6,6 @@ __pycache__/
 *.env
 *.mp4
 *.zip
+202*.txt
+results_*.csv
+session.json

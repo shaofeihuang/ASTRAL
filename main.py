@@ -1,17 +1,31 @@
-import json, time, random
-import streamlit as st
-import pandas as pd
+# Standard library imports
+import ast
+import glob
+import json
+import logging
+import os
+import random
+import re
+import time
+from concurrent.futures import ProcessPoolExecutor
 from datetime import date
+
+# Third-party imports
+import dill
+import pandas as pd
+import streamlit as st
 from dotenv import load_dotenv
+from azure.core.exceptions import ResourceNotFoundError
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+from anthropic import Anthropic
+from mistralai import Mistral
+from openai import OpenAI
+
+# Local application imports
 from prompts import *
 from utils import *
 from bayesian import *
-from mistralai import Mistral
-from anthropic import Anthropic
-from openai import OpenAI
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-from azure.core.exceptions import ResourceNotFoundError
 
 
 #----------------------------------------------------------------------------------------------
@@ -233,7 +247,7 @@ def main():
         credential = DefaultAzureCredential()
         st.session_state['client'] = SecretClient(vault_url=key_vault_uri, credential=credential)
         st.session_state['azure_key_vault_logged_in'] = key_vault_name
-    
+
     # Uncomment to use .env file for local testing
     # load_dotenv()
 
@@ -319,7 +333,7 @@ def main():
     #----------------------------------------------------------------------------------------------
     # Create Tabs for Different Functionalities
     #----------------------------------------------------------------------------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Analysis", "Countermeasures"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Bayesian Analysis", "Countermeasures", "Optimisation"])
 
 #----------------------------------------------------------------------------------------------
 # Generate Architectural Narration
@@ -362,7 +376,7 @@ def main():
                     except Exception as e:
                         st.error(f"Failed to generate architectural narration: {str(e)}")
         else:
-            st.info("To get started, please upload an architecture or data flow diagram image of the CPS system.")
+            st.warning("To get started, please upload an architecture or data flow diagram image of the CPS system.")
 
         #----------------------------------------------------------------------------------------------
         # Display Architectural Narration
@@ -407,8 +421,7 @@ def main():
 # Generate Threat Model
 #----------------------------------------------------------------------------------------------
     with tab2:
-        st.info("A threat model helps identify and evaluate potential security threats to applications and systems. It provides a systematic approach to understanding possible vulnerabilities and attack vectors. The STRIDE-LM methodology expands upon the classic STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Using this method, you can comprehensively analyse your system to identify and prioritise security risks, enabling proactive mitigation.")
-        st.info("Use this tab to generate a threat model tailored to the CPS system using STRIDE-LM. Architecture suggestions for improving the threat model will also be provided.")
+        st.info("Use this tab to generate a threat model tailored to the CPS system using the STRIDE-LM methodology, which expands upon the Microsoft STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Architecture suggestions for improving the threat model will also be provided.")
         st.markdown("""---""")
         #----------------------------------------------------------------------------------------------
         # Create Threat Model Prompt
@@ -436,7 +449,7 @@ def main():
                     except Exception as e:
                         st.error(f"Failed to generate threat model: {str(e)}")
         else:
-            st.info("Generate an architectural narration first to proceed.")
+            st.warning("Generate an architectural narration first to proceed.")
 
         #----------------------------------------------------------------------------------------------
         # Display Threat Model
@@ -459,7 +472,6 @@ def main():
 # Generate Attack Trees and Attack Paths
 #----------------------------------------------------------------------------------------------
     with tab3:
-        st.info("Attack trees provide a systematic method to analyse the security of cyber-physical systems. They depict potential attack scenarios in a hierarchical structure, with the attacker’s ultimate objective at the root and various paths to reach that objective represented as branches. By illustrating attack paths and their impact on critical assets, attack trees support prioritisation of mitigation strategies and enhance real-time decision-making for system resilience.")
         st.info("Use this tab to generate an attack tree and corresponding attack paths based on the architectural narration and threat model. You can also upload a previously saved attack tree data file in JSON format to visualise and extract attack paths.")
         st.markdown("""---""")
 
@@ -481,7 +493,7 @@ def main():
                         except Exception as e:
                             st.error(f"Error generating attack tree: {e}")
             else:
-                st.info("Generate an architectural narration and threat model first, or upload a saved attack tree data file to proceed.")
+                st.warning("Generate an architectural narration and threat model first, or upload a saved attack tree data file to proceed.")
 
         with col2:
             uploaded_data = st.file_uploader(
@@ -535,12 +547,7 @@ def main():
 # Generate System Model in AutomationML
 #----------------------------------------------------------------------------------------------
     with tab4:
-        st.markdown("""
-        Automation Markup Language (AutomationML) is an XML-based open standard for representing industrial automation systems. AutomationML facilitates semantic interoperability across diverse CPS domains by enabling standardised, meaningful exchange of data about physical and cyber components, their configurations, and interrelations.
-        """)
         st.info("Use this tab to generate a comprehensive AutomationML system model for the CPS architecture. The model will incorporate internal elements and links based on the architectural narration, threat model, and identified attack paths. You can also upload a previously saved AutomationML system model file in XML format.")
-        st.warning("Generating the AutomationML system model may take several minutes depending on the complexity of the architecture and threat model. Please be patient. You may see intermittent warnings about retries - these are normal and indicate the system is handling transient issues with the model provider.")
-        st.info("Click on the 'Update Exposure Probabilities' button after generating the system model to update the vulnerability exposure probabilities.")
         st.markdown("""---""")
 
         #------------------------------------------------------------------------------------------
@@ -699,12 +706,13 @@ def main():
             if all(key in st.session_state for key in ("arch_narration", "threat_model", "attack_paths")):
                 if st.button("Generate AutomationML File"):
                     try:
+                        st.warning("Generating the AutomationML system model may take several minutes depending on the complexity of the architecture and threat model. Please be patient. You may see intermittent warnings about retries - these are normal and indicate the system is handling transient issues with the model provider.")
                         aml_content = generate_aml_stepwise(st.session_state['arch_narration'], st.session_state['threat_model'], st.session_state['attack_paths'])
                         st.session_state['aml_file'] = aml_content
                     except Exception as e:
                         st.error(f"Failed to generate AutomationML file: {str(e)}")
             else:
-                st.info("Generate an architectural narration, threat model, and attack tree first, or upload a saved AutomationML file to proceed.")
+                st.warning("Generate an architectural narration, threat model, and attack tree first, or upload a previously saved AutomationML file to proceed.")
         
         with col2:
             uploaded_aml = st.file_uploader(
@@ -716,6 +724,8 @@ def main():
                 st.success("AutomationML file uploaded successfully.")
 
         if 'aml_file' in st.session_state:
+            st.info("Click on the 'Update Exposure Probabilities' button after generating the system model to update the vulnerability exposure probabilities.")
+        
             st.subheader("Generated AutomationML File")
 
             # Update Exposure Probabilities
@@ -739,8 +749,7 @@ def main():
 # Analyse System Model and Compute Bayesian Probabilities
 #----------------------------------------------------------------------------------------------
     with tab5:
-        st.info("Use this tab to analyse the generated AutomationML system model. Based on the model attributes, Bayesian probabilities of successful attacks will be computed to support risk assessment and decision-making.")
-        st.info("Set the system installation date and load the model attributes. You can adjust the Attack Feasibility (AF) modifier to calibrate the analysis.")
+        st.info("Use this tab to analyse the generated AutomationML system model. Based on the model attributes, Bayesian probabilities of successful attacks will be computed to support risk assessment and decision-making. Enter the system installation date and load the model attributes to proceed with the analysis.")
         st.markdown("""---""")
 
         if 'aml_file' in st.session_state:
@@ -761,7 +770,7 @@ def main():
                         
                         if st.button("Load Model Attributes"):
                             load_model_attributes()
-                            st.success("Attributes extracted successfully.")
+                            st.success("Attributes extracted successfully. You can now adjust the attack feasibility (AF) modifier to incorporate attack characteristics in the analysis.")
 
                 with col2:
                     if 'aml_attributes' in st.session_state:
@@ -777,17 +786,17 @@ def main():
                             "Attack Feasibility (AF) Modifier",
                             min_value=0.0,
                             max_value=1.0,
-                            value=0.01,
+                            value=0.5,
                             step=0.01,
-                            help="Adjust to factor attack feasibility (such as attacker skill, system security posture, etc.). "
+                            help="Adjust to incorporate attack characteristics (such as attacker skill, system security posture, etc.). "
                                 "Higher value indicates a higher chance of a successful attack."
                         )
 
         else:
-            st.info("Generate or upload an AutomationML model first to proceed with model analysis.")
+            st.warning("Generate or upload an AutomationML model first to proceed with Bayesian analysis.")
 
         #----------------------------------------------------------------------------------------------
-        # Editable Data Tables for Model Attributes
+        # Data Tables for Model Attributes
         #----------------------------------------------------------------------------------------------
         if 'aml_attributes' in st.session_state:
             st.subheader("Asset Attributes")
@@ -843,6 +852,7 @@ def main():
                             if idx is not None:
                                 st.session_state['aml_data'].HazardinSystem[idx][key] = value
 
+
 #----------------------------------------------------------------------------------------------
 # Calibrate Countermeasure Portfolio
 #----------------------------------------------------------------------------------------------
@@ -881,16 +891,123 @@ def main():
                     if idx is not None:
                         st.session_state['aml_data'].VulnerabilityinSystem[idx]['Probability of Mitigation'] = prob
 
+            saved_session_state = {
+                key: st.session_state[key]
+                for key in st.session_state.keys()
+            }
+            with open("session.json", "wb") as f:
+                dill.dump(saved_session_state, f)
+
             compute_risk_score()
 
         else:
-                st.info("Perform risk analysis first to proceed.")
+                st.warning("Perform Bayesian analysis first to proceed.")
 
     display_metrics()
 
+#----------------------------------------------------------------------------------------------
+# Multi-Objective Optimisation
+#----------------------------------------------------------------------------------------------
+    with tab7:
+        st.info("Use this tab to perform multi-objective optimisation to identify optimal mitigation priority values for each vulnerability in the system model. The optimisation aims to minimize Likelihood and Impact, and maximize Availability metrics simultaneously using Bayesian probabilities computed from the system model analysis.")
+        st.markdown("""---""")
+
+        if 'aml_attributes' in st.session_state:
+            st.subheader("Multi-Objective Optimisation Parameters")
+            n_trials = st.number_input("Number of Trials per Run", min_value=10, max_value=10000, value=1000, step=10)
+            n_runs = st.number_input("Number of Optimisation Runs", min_value=1, max_value=20, value=1, step=1)
+
+            if 'aml_data' in st.session_state:
+                st.write("Number of vulnerabilitiies detected in model: {}".format(len(st.session_state['aml_data'].VulnerabilityinSystem)) )
+            
+            verbose = st.checkbox("Verbose Console Output", value=True)
+            graph = st.checkbox("Show Optimisation Graph", value=False)
+
+            if st.button("Start Optimisation"):
+                files_to_remove = glob.glob("results-*.csv")
+                for file_path in files_to_remove:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+
+                files_to_remove = glob.glob("202*.txt")
+                for file_path in files_to_remove:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                st.session_state['output_filename'] = f"results-{timestamp}.csv"
+
+                start_time = datetime.now()
+
+                with st.spinner("Optimisation in progress... This may take several minutes."):
+                    with ProcessPoolExecutor() as executor:
+                        futures = [
+                            executor.submit(run_study, n_trials, graph, verbose, st.session_state['output_filename'])
+                            for run in range(n_runs)
+                        ]
+                        for future in futures:
+                            future.result()  # Wait for all processes to complete
+
+                total_time = datetime.now() - start_time  # Compute duration
+                hours, remainder = divmod(total_time.seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                st.success(f"Optimisation completed! Total execution time: {hours} hours {minutes} minutes {seconds} seconds")
+                st.session_state['optimisation_done'] = True
+
+            if st.session_state.get('optimisation_done', False):
+                st.markdown("""---""")
+                st.subheader("Optimisation Results")
+                st.info("The table below summarises the mitigation priority values assigned to each vulnerability for the most Pareto-optimal trial in each optimisation run, along with the corresponding Likelihood, Impact, and Availability metrics.")
+
+                df = pd.read_csv(st.session_state['output_filename'], header=None)
+                v_headers = [f"V{str(i + 1).zfill(2)}" for i in range(len(df.columns) - 4)]
+                new_header_row = v_headers + ["Best Trial ID", "Likelihood", "Impact", "Availability"]
+                df.columns = new_header_row
+                df.insert(0, "Run ID", range(1, len(df) + 1))
+                st.dataframe(df)
+
+                st.markdown("""
+                **Table explanation:**
+                - Run ID: Unique identifier for each optimisation run.
+                - V01, V02, ...: Mitigation priority values for each vulnerability (0 = highest priority, 1 = second highest, etc.).
+                """)
+
+                st.info("The bar chart below displays the average mitigation priority assigned to each vulnerability across Pareto-optimal solutions from the optimisation runs. Vulnerabilities with lower average values have been prioritised for mitigation more frequently, indicating higher mitigation importance.")
+
+                v_columns = df.columns[1:-3]
+                v_data = df[v_columns].apply(pd.to_numeric, errors='coerce')
+                v_means = v_data.mean()
+                st.bar_chart(v_means)
+
+                st.info("You can visualise the mitigation effectiveness of the most Pareto-optimal trial from each optimisation run by selecting a Trial ID below. Higher parameter values indicate greater effectiveness of mitigation strategies against the corresponding vulnerabilities.")
+
+                trial_ids = df.iloc[:, -4].dropna().astype(str).tolist()
+                selected_trial_id = st.selectbox("Select a Trial ID", trial_ids)
+
+                if selected_trial_id:
+                    filename = f"{selected_trial_id}.txt"
+                    if os.path.exists(filename):
+                        with open(filename, "r") as file:
+                            lines = file.readlines()
+                            for line in lines:
+                                if line.strip().startswith("Params:"):
+                                    params_str = line.strip().split("Params:")[1].strip()
+                                    params = ast.literal_eval(params_str)
+                                    df_trials = pd.DataFrame([params], index=[selected_trial_id])
+                                    st.bar_chart(df_trials.T)
+                                    break
+                    else:
+                        st.warning(f"File {filename} does not exist.")
+                else:
+                    st.info("Select a trial ID to view its parameter values.")
+
+        else:
+                st.warning("Perform Bayesian analysis first to proceed.")
 
 #----------------------------------------------------------------------------------------------
 # Main Entry Point
 #----------------------------------------------------------------------------------------------
 if __name__ == "__main__":
+    logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.WARNING)
+    logging.getLogger('azure.identity').setLevel(logging.WARNING)
     main()

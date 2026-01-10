@@ -1,14 +1,19 @@
-import numpy as np
-import xml.etree.ElementTree as ET
-import networkx as nx
-import math, re
-import streamlit as st
-from datetime import date
-from dataclasses import dataclass, field
+# Standard library imports
 from collections import defaultdict
-from pgmpy.models import DiscreteBayesianNetwork
+from dataclasses import dataclass, field
+from datetime import date
+import math
+import re
+import xml.etree.ElementTree as ET
+
+# Third-party imports
+import networkx as nx
+import numpy as np
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference import VariableElimination
+from pgmpy.models import DiscreteBayesianNetwork
+import streamlit as st
+
 
 # Namespace mapping for XML parsing
 ns = {'caex': 'http://www.dke.de/CAEX'}
@@ -564,21 +569,17 @@ def compute_bayesian_probabilities(inference_exposure, inference_impact, total_e
             prob_impact = inference_impact.query(variables=[nodes], evidence={source_node:1})
             cpd_prob = prob_failure.values
             cpd_impact = prob_impact.values
-#            print("[*] CPT (Exposure):\n", prob_failure)
-#            print("[*] CPT (Impact):\n", prob_impact)
-#            print('--------------------------------------------------------')
-            print("[+] P(Exposure): {:.4f}".format(cpd_prob[0]), "P(Severe Impact): {:.4f}".format(cpd_impact[0]))
+#            print("[+] P(Exposure): {:.4f}".format(cpd_prob[0]), "P(Severe Impact): {:.4f}".format(cpd_impact[0]))
             return cpd_prob[0], cpd_impact[0]
         else:
             pass
 
 
-def bbn_inference(node_context: NodeContext, source_node):
+def bbn_inference(source_node):
     cpds = {}
     cpd_values_list = []
     last_node = None
     aml_data = st.session_state['aml_data']
-    num_parents = node_context.num_parents
 
     bbn_exposure = DiscreteBayesianNetwork()
     bbn_impact = DiscreteBayesianNetwork()
@@ -588,22 +589,27 @@ def bbn_inference(node_context: NodeContext, source_node):
     bbn_impact.add_edges_from([(connection['from'], connection['to']) for connection in aml_data.connections])
 
     for node in bbn_exposure.nodes():
-        num_parents = len(bbn_exposure.get_parents(node))
-        matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
-        matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
+        node_context = NodeContext(
+        num_parents = len(bbn_exposure.get_parents(node)),
+        matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node],
+        matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node],
         matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
+        )
 
         cpd_values = None
 
-        if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_exposure(node_context, "Hazard")
-        elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_exposure(node_context, "Vulnerability")
-        elif matching_asset_nodes:
-            cpd_values = generate_cpd_values_exposure(node_context, "Asset")
+        if node_context.matching_hazard_nodes:
+            cpd_values = generate_cpd_values_impact(node, node_context, "Hazard")
+        elif node_context.matching_vulnerability_nodes:
+            cpd_values = generate_cpd_values_impact(node, node_context, "Vulnerability")
+        elif node_context.matching_asset_nodes:
+            cpd_values = generate_cpd_values_impact(node, node_context, "Asset")
+
+        if cpd_values is None or np.any(np.isnan(cpd_values)):
+            raise ValueError(f"Missing or invalid CPD values for node {node}")
 
         cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
-                        evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
+                        evidence=bbn_exposure.get_parents(node), evidence_card=[2] * node_context.num_parents)
 
         cpds[node] = cpd
         cpd_values_list.append((node, cpd_values.tolist(), cpd.variables, cpd.cardinality))
@@ -615,22 +621,27 @@ def bbn_inference(node_context: NodeContext, source_node):
     last_node = last_nodes[0] if last_nodes else None
 
     for node in bbn_impact.nodes():
-        num_parents = len(bbn_exposure.get_parents(node))
+        node_context = NodeContext(
+        num_parents = len(bbn_exposure.get_parents(node)),
+        matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node],
+        matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node],
+        matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
+        )
+        
         cpd_values = None
 
-        matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node]
-        matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node]
-        matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
+        if node_context.matching_hazard_nodes:
+            cpd_values = generate_cpd_values_impact(node, node_context, "Hazard")
+        elif node_context.matching_vulnerability_nodes:
+            cpd_values = generate_cpd_values_impact(node, node_context, "Vulnerability")
+        elif node_context.matching_asset_nodes:
+            cpd_values = generate_cpd_values_impact(node, node_context, "Asset")
 
-        if matching_hazard_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Hazard")
-        elif matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Vulnerability")
-        elif matching_asset_nodes:
-            cpd_values = generate_cpd_values_impact(node, num_parents, aml_data, node_context, "Asset")
+        if cpd_values is None or np.any(np.isnan(cpd_values)):
+            raise ValueError(f"Missing or invalid CPD values for node {node}")
 
         cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
-                        evidence=bbn_exposure.get_parents(node), evidence_card=[2] * num_parents)
+                        evidence=bbn_exposure.get_parents(node), evidence_card=[2] * node_context.num_parents)
 
         cpds[node] = cpd
         cpd_values_list.append((node, cpd_values.tolist(), cpd.variables, cpd.cardinality))
@@ -647,7 +658,7 @@ def bbn_inference(node_context: NodeContext, source_node):
             prob_failure = inference_impact.query(variables=[nodes], evidence={source_node:1})
             cpd_prob = prob_exposure.values
             cpd_impact = prob_failure.values
-            print(", ".join(values), ",", cpd_prob[0], ",", cpd_impact[0], ", {:.2f}%".format(cpd_prob[0] * cpd_impact[0] * 100))
+            st.write(", ".join(values), ",", cpd_prob[0], ",", cpd_impact[0], ", {:.2f}%".format(cpd_prob[0] * cpd_impact[0] * 100))
             return cpd_prob[0], 1 - cpd_impact[0], cpd_prob[0] * cpd_impact[0] * 100
         else:
             pass
