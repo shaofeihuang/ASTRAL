@@ -22,6 +22,7 @@ def clean_aml_content(aml_file):
         aml_content = aml_content[len("```xml"):].strip()
     if aml_content.endswith("```"):
         aml_content = aml_content[:-len("```")].strip()
+    aml_content = aml_content.replace('&', '&amp;')
     return aml_content
 
 
@@ -287,7 +288,6 @@ def update_exposure_probabilities():
                         print(error)
                     else:
                         print("------------------------------------------------------------------------")
-                        attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
                         element_id = internal_element.get('ID')
                         print(f"Element ID: {element_id}")
                         print(f"CVSS vector: {vector_value}")
@@ -305,10 +305,11 @@ def update_exposure_probabilities():
                         if attribute_tag is not None:
                             old_p = float(attribute_tag.find(f".//caex:Value", ns).text)
                             new_p = calibrated_p_mean
+                            attribute_tag.find(f".//caex:Value", ns).text = str(new_p)
                             print(f"Updated Exposure Probability from {old_p} to {new_p}")
                         print("------------------------------------------------------------------------")
 
-    st.session_state['aml_file'] = ET.tostring(root, encoding='unicode').replace('ns0:', '').replace('xmlns:ns0', 'xmlns')
+    st.session_state['aml_file'] = ET.tostring(root, encoding='unicode').replace('ns0:', '').replace('xmlns:ns0', 'xmlns').replace('&amp;', '&')
     return None
 
 
@@ -328,7 +329,7 @@ def clean_json_response(response_text):
 
 
 # Convert threat model JSON to Markdown
-def tm_json_to_markdown(threat_model, improvement_suggestions):
+def tm_json_to_markdown(threat_model, arch_suggestions):
     markdown_output = "## Threat Model\n\n"
 
     # Start the markdown table with headers
@@ -339,8 +340,8 @@ def tm_json_to_markdown(threat_model, improvement_suggestions):
     for threat in threat_model:
         markdown_output += f"| {threat['Threat Type']} | {threat['Scenario']} | {threat['Potential Impact']} |\n"
 
-    markdown_output += "\n\n## Improvement Suggestions\n\n"
-    for suggestion in improvement_suggestions:
+    markdown_output += "\n\n## Architecture Suggestions\n\n"
+    for suggestion in arch_suggestions:
         markdown_output += f"- {suggestion}\n"
 
     return markdown_output

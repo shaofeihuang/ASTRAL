@@ -377,7 +377,7 @@ def main():
                 mime="text/markdown",
             )
             additional_detail = st.text_area(
-                "Additional Details (Optional)",
+                "Enter Additional Architectural Details (Optional)",
                 value="",
                 placeholder="Enter extra architectural specifics here.",
                 height=150,
@@ -433,7 +433,7 @@ def main():
                                 response_as_json=True
                                 )
                             st.session_state['threat_model'] = model_output.get("threat_model", [])
-                            st.session_state['improvement_suggestions'] = model_output.get("improvement_suggestions", [])
+                            st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
                     except Exception as e:
                         st.error(f"Failed to generate threat model: {str(e)}")
         else:
@@ -445,7 +445,7 @@ def main():
         if 'threat_model' in st.session_state:
             markdown_output = tm_json_to_markdown(
                 st.session_state['threat_model'],
-                st.session_state.get('improvement_suggestions', [])
+                st.session_state.get('arch_suggestions', [])
             )
             st.subheader("Generated STRIDE-LM Threat Model")
             st.markdown(markdown_output)

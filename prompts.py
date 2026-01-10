@@ -55,7 +55,7 @@ Instructions:
 7. Apply FMECA-style reasoning where applicable to identify failure modes, their effects, and potential cascading consequences.
 8. Format your response strictly as JSON with these top-level keys:
    - `"threat_model"`: an array of threat scenario objects.
-   - `"improvement_suggestions"`: a list of missing information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modeling.
+   - `"arch_suggestions"`: a list of missing architectural information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modeling.
 9. Each threat scenario object must contain the following keys:
    - `"Threat Type"`, based on STRIDE-LM categories (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege, Lateral Movement).
    - `"Scenario"`: a detailed narration integrating information about assets, vulnerabilities (including CVE and non-CVE), hazards, and attacker objectives. Include references to any CVEs mentioned, and highlight if they were employed in known attack campaigns.
