@@ -1,8 +1,8 @@
 # Standard library imports
 import csv
+import dill
 import json
 import os
-import pickle
 import re
 from datetime import datetime
 import requests
@@ -693,7 +693,7 @@ def objective(trial):
 
     with open("session.json", "rb") as f:
         try:
-            data = pickle.load(f)
+            data = dill.load(f)
             st.session_state.update(data)
         except json.JSONDecodeError:
             st.session_state = {}
