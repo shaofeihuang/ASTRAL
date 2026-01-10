@@ -1,4 +1,4 @@
-![alt text](logo.jpeg)
+![alt text](logo.jpeg =300x300)
 
 # Prototype Tool for demonstrating the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach
 
