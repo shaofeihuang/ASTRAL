@@ -720,8 +720,7 @@ def main():
             # Update Exposure Probabilities
             if st.button("Update Exposure Probabilities"):
                 with st.spinner("Updating exposure probabilities..."):
-                    # Actual update logic here
-                    update_exposure_probabilities()  # Call your real function
+                    update_exposure_probabilities()
                     st.success("Exposure probabilities updated successfully.")
 
             # Download AutomationML File
