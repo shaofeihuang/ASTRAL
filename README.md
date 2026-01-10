@@ -64,8 +64,8 @@ Flexible integration with multiple LLM providers:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/shaofeihuang/LLM-DS.git
-   cd LLM-DS
+   git clone https://github.com/shaofeihuang/ASTRAL.git
+   cd ASTRAL
    ```
 
 2. **Install dependencies**:
@@ -168,8 +168,13 @@ See `requirements.txt` for the complete list of dependencies.
 ## Project Structure
 
 ```
-LLM-DS/
+ASTRAL/
 │
+├── .gitignore              # Git ignore file
+├── ASTRAL Example Pipeline.pdf  # Example pipeline documentation
+├── LICENSE                      # MIT License
+├── logo.jpeg                    # Project logo
+├── Tool Walkthrough Video.mp4   # Tool demonstration video
 ├── main.py                 # Main Streamlit application entry point
 ├── bayesian.py            # Bayesian network analysis and probabilistic modeling
 ├── prompts.py             # LLM prompt templates for various analysis tasks
