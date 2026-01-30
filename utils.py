@@ -5,6 +5,8 @@ import json
 import os
 import re
 from datetime import datetime
+from collections import defaultdict, deque
+from dataclasses import asdict
 import requests
 import xml.etree.ElementTree as ET
 
@@ -635,6 +637,121 @@ def get_dread_assessment(api_key, selected_model, prompt):
     return dread_assessment
 
 
+# Extract ID and Probability of Mitigation from AML data
+def extract_id_mitigation():
+    data_dict = asdict(st.session_state['aml_data'])
+    
+    result = {}
+    for value in data_dict.values():
+        if isinstance(value, list):
+            for item in value:
+                if (
+                    isinstance(item, dict)
+                    and "ID" in item
+                    and "Probability of Mitigation" in item
+                ):
+                    result[item["ID"]] = item["Probability of Mitigation"]
+    return result
+
+
+# Calculate weighted entropy (1-mitigation) of attack tree from Mermaid syntax
+def calculate_entropy(id_mitigation_dict):
+    # Parse node definitions: id["description"]
+    node_pattern = r'(\w+)\["([^"]*)"]'
+    nodes = {}
+    for match in re.finditer(node_pattern, st.session_state['attack_tree']):
+        node_id = match.group(1)
+        desc = match.group(2)
+        nodes[node_id] = desc
+
+    # Enrich nodes with mitigations (1 - mitigation for weighting)
+    for node_id, desc in list(nodes.items()):
+        id_match = re.search(r'\[(\w+)\]', desc)
+        if id_match:
+            node_code = id_match.group(1)
+            target_key = next((k for k in id_mitigation_dict if k.startswith(f'[{node_code}]')), None)
+            raw_mit = id_mitigation_dict.get(target_key, 0.0)
+        else:
+            raw_mit = 0.0
+        mitigation = 1.0 - raw_mit  # Replace: (1 - mitigation) vulnerability/effort
+        nodes[node_id] = {"description": desc, "mitigation": mitigation}  # Now stores (1-mit)
+        #print(f"Node: {node_id}, Description: {desc}, Mitigation (1-raw): {mitigation}")
+
+    # Parse edges: child --> parent (Mermaid BT top-down)
+    edge_pattern = r'(\w+)\s*-->\s*(\w+)'
+    edges = []
+    for match in re.finditer(edge_pattern, st.session_state['attack_tree']):
+        child = match.group(1)
+        parent = match.group(2)
+        edges.append((child, parent))
+
+    # Build graph: parent -> children
+    graph = defaultdict(list)
+    for child, parent in edges:
+        graph[parent].append(child)
+
+    # t: terminal nodes (no children)
+    terminal_nodes = [node for node in nodes if node not in graph or len(graph[node]) == 0]
+    t = len(terminal_nodes)
+
+    # Compute weighted degrees: degree * (1-mitigation) for each node
+    degree_of = {}
+    sequential_id = {}
+    current_id = 1
+    visited = set()
+
+    root = 'root'
+    if root in nodes:
+        mit = nodes[root]["mitigation"]  # Now (1-raw_mit)
+        degree_of[root] = 1 * mit
+        sequential_id[root] = current_id
+        current_id += 1
+        visited.add(root)
+
+    # BFS: propagate weighted depths
+    if root in graph:
+        queue = deque([root])
+        while queue:
+            node = queue.popleft()
+            for child in graph[node]:
+                if child not in visited:
+                    child_mit = nodes[child]["mitigation"]  # (1-raw_mit)
+                    degree_of[child] = degree_of[node] + (1 * child_mit)
+                    sequential_id[child] = current_id
+                    current_id += 1
+                    visited.add(child)
+                    queue.append(child)
+
+    n = len(nodes)
+    V = sum(degree_of.values())  # Sum of (1-mit) weighted depths
+    m = len(edges)
+
+    def entropy(V, m, degree_of, t):
+        sum_term = 0.0
+        for dn in degree_of.values():
+            p = dn / V
+            if p > 0:
+                sum_term += p * math.log2(p)
+        term1 = -(V / (2 * m)) * sum_term
+        term2 = -(t / (2 * m)) * math.log2(V / (2 * m))
+        H = term1 + term2
+        return H
+
+    H = entropy(V, m, degree_of, t)
+
+    # Print counts and entropy
+    #print ("--------------------------------------------------------")
+    #print("Attack Tree Metrics:")
+    #print(f"n (nodes): {n}")
+    #print(f"g (terminal nodes): {t}")
+    #print(f"V (sum of degrees): {V}")
+    #print(f"m (edges): {m}")
+    #print(f"H (entropy): {H:.4f}")
+    #print ("--------------------------------------------------------")
+
+    return H
+
+
 # Load model attributes from AML file into session state
 def load_model_attributes():
     aml_content = clean_aml_content(st.session_state['aml_file'])
@@ -674,17 +791,21 @@ def compute_risk_score():
     st.session_state['cpd_prob'] = cpd_prob
     st.session_state['cpd_impact'] = cpd_impact
     st.session_state['risk_score'] = risk_score
+    st.session_state['entropy'] = calculate_entropy(extract_id_mitigation())
 
     print('--------------------------')
     print(datetime.now())
     print('--------------------------')
     print('[+] P(Exposure): {:.4f}%'.format(cpd_prob), 'P(Severe Impact): {:.4f}%'.format(cpd_impact), 'Risk score: {:.2f}%'.format(risk_score))
+    print('[+] Entropy of Attack Tree: {:.4f}'.format(st.session_state['entropy']))
+
 
 # Display risk metrics in sidebar
 def display_metrics():
     st.sidebar.metric("Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
     st.sidebar.metric("Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
     st.sidebar.metric("Risk Score", value=f"{st.session_state.get('risk_score', 0):.2f}%")
+    st.sidebar.metric("Entropy of Attack Tree", value=f"{st.session_state.get('entropy', 0):.4f}")
 
 
 # Objective function for Optuna optimization
@@ -720,35 +841,48 @@ def objective(trial):
 # Optimize risk model using Optuna
 def run_study(n_trials, graph, verbose, output):
     run_id, _ = os.path.splitext('-'.join(output.split('-')[1:3]))
-    study = optuna.create_study(directions=["minimize", "minimize", "maximize"])
+#    study = optuna.create_study(directions=["minimize", "minimize", "maximize"])
+    study = optuna.create_study(directions=["minimize", "minimize", "minimize"])
     study.optimize(objective, n_trials, timeout=300)
 
     if graph:
-        fig = optuna.visualization.plot_pareto_front(study, target_names=["Likelihood", "Impact", "Availability"])
+#        fig = optuna.visualization.plot_pareto_front(study, target_names=["Likelihood", "Impact", "Availability"])
+        fig = optuna.visualization.plot_pareto_front(study, target_names=["Likelihood", "Impact", "Entropy"])
         fig.show()
 
-    trial_with_highest_availability = max(study.best_trials, key=lambda t: t.values[2])
+#    trial_with_highest_availability = max(study.best_trials, key=lambda t: t.values[2])
+    trial_with_lowest_entropy = min(study.best_trials, key=lambda t: t.values[2])
 
     if verbose:
         print(f"Run ID: {run_id}")
         print(f"Number of trials on the Pareto front: {len(study.best_trials)}")
-        print("Trial with highest availability: ")
-        print(f"\tTrial: {trial_with_highest_availability.number}")
-        print(f"\tParams: {trial_with_highest_availability.params}")
-        print(f"\tLikelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}")
+#        print("Trial with highest availability: ")
+#        print(f"\tTrial: {trial_with_highest_availability.number}")
+#        print(f"\tParams: {trial_with_highest_availability.params}")
+#        print(f"\tLikelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}")
+        print("Trial with lowest entropy: ")
+        print(f"\tTrial: {trial_with_lowest_entropy.number}")
+        print(f"\tParams: {trial_with_lowest_entropy.params}")
+        print(f"\tLikelihood: {trial_with_lowest_entropy.values[0]}, Impact: {trial_with_lowest_entropy.values[1]}, Entropy: {trial_with_lowest_entropy.values[2]}")
 
     best_trial = f"{run_id}-{datetime.now():%H%M%S%f}"
     best_trial_filename = f"{best_trial}.txt"
     with open(best_trial_filename, "w", newline="") as file:
         file.write(f"Run ID: {run_id}\n")
         file.write(f"Number of trials on the Pareto front: {len(study.best_trials)}\n")
-        file.write("Trial with highest availability:\n")
-        file.write(f"Trial: {trial_with_highest_availability.number}\n")
-        file.write(f"Params: {trial_with_highest_availability.params}\n")
-        file.write(f"Likelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}\n")
+#        file.write("Trial with highest availability:\n")
+#        file.write(f"Trial: {trial_with_highest_availability.number}\n")
+#        file.write(f"Params: {trial_with_highest_availability.params}\n")
+#        file.write(f"Likelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}\n")
+        file.write("Trial with lowest entropy:\n")
+        file.write(f"Trial: {trial_with_lowest_entropy.number}\n")
+        file.write(f"Params: {trial_with_lowest_entropy.params}\n")
+        file.write(f"Likelihood: {trial_with_lowest_entropy.values[0]}, Impact: {trial_with_lowest_entropy.values[1]}, Entropy: {trial_with_lowest_entropy.values[2]}\n")
 
-    params = trial_with_highest_availability.params
-    values = trial_with_highest_availability.values
+#    params = trial_with_highest_availability.params
+#    values = trial_with_highest_availability.values
+    params = trial_with_lowest_entropy.params
+    values = trial_with_lowest_entropy.values
     sorted_params = sorted(enumerate(params.values()), key=lambda item: item[1], reverse=True)
     sorted_indices = [item[0] for item in sorted_params]
     row = sorted_indices + [f"{best_trial}", f"{values[0]:.3f}", f"{values[1]:.3f}", f"{values[2]:.3f}"]
