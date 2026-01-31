@@ -708,6 +708,7 @@ def main():
                     try:
                         st.warning("Generating the AutomationML system model may take several minutes depending on the complexity of the architecture and threat model. Please be patient. You may see intermittent warnings about retries - these are normal and indicate the system is handling transient issues with the model provider.")
                         aml_content = generate_aml_stepwise(st.session_state['arch_narration'], st.session_state['threat_model'], st.session_state['attack_paths'])
+                        aml_content = clean_aml_content(aml_content)
                         st.session_state['aml_file'] = aml_content
                     except Exception as e:
                         st.error(f"Failed to generate AutomationML file: {str(e)}")
@@ -720,6 +721,7 @@ def main():
             )
             if uploaded_aml is not None and 'aml_file' not in st.session_state:
                 aml_content = uploaded_aml.read().decode("utf-8")
+                aml_content = clean_aml_content(aml_content)
                 st.session_state['aml_file'] = aml_content
                 st.success("AutomationML file uploaded successfully.")
 
@@ -919,9 +921,23 @@ def main():
 
             if 'aml_data' in st.session_state:
                 st.write("Number of vulnerabilitiies detected in model: {}".format(len(st.session_state['aml_data'].VulnerabilityinSystem)) )
-            
             verbose = st.checkbox("Verbose Console Output", value=True)
             graph = st.checkbox("Show Optimisation Graph", value=False)
+            objective = st.radio(
+                "Optimisation Objectives",
+                [
+                    "Minimize Exposure and Impact Probabilities, Maximize Availability",
+                    "Minimize Exposure and Impact Probabilities, as well as Attack Tree Entropy",
+                ],
+                index=0,
+            )
+
+            if objective == "Minimize Exposure and Impact Probabilities, Maximize Availability":
+                st.session_state['optimization_objective'] = 0
+            elif objective == "Minimize Exposure and Impact Probabilities, as well as Attack Tree Entropy":
+                st.session_state['optimization_objective'] = 1
+            else:
+                st.session_state['optimization_objective'] = 0  # Default
 
             if st.button("Start Optimisation"):
                 files_to_remove = glob.glob("results-*.csv")
@@ -942,7 +958,7 @@ def main():
                 with st.spinner("Optimisation in progress... This may take several minutes."):
                     with ProcessPoolExecutor() as executor:
                         futures = [
-                            executor.submit(run_study, n_trials, graph, verbose, st.session_state['output_filename'])
+                            executor.submit(run_study, n_trials, graph, verbose, st.session_state['output_filename'], st.session_state['optimization_objective'])
                             for run in range(n_runs)
                         ]
                         for future in futures:
