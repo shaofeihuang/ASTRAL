@@ -1,302 +1,314 @@
 graph BT
-    root["[G00] Disrupt or Stop Cyber-Physical System Operations in a Nuclear Power Plant"]
-    spoofing["[H01] Spoofing of Legitimate Commands or Data"]
-    spoofing --> root
-    hmi_spoof["[H02] Spoof HMI Commands to PLCs"]
-    hmi_spoof --> spoofing
-    weak_auth_hmi["[V01] Weak or Default HMI Authentication (e.g., CVE-2017-9627)"]
-    weak_auth_hmi --> hmi_spoof
-    hmi_software["[A01] HMI Software (e.g., Siemens WinCC, Rockwell FactoryTalk)"]
-    hmi_software --> weak_auth_hmi
+    root["[G01] Disrupt or Stop Cyber-Physical System Operations in Nuclear Power Plant"]
+    compromise_corporate_it["[G02] Compromise Corporate IT Systems to Gain OT Access"]
+    compromise_corporate_it --> root
+    exploit_vpn_gateway["[V01] Exploit VPN Gateway Vulnerabilities (e.g., CVE-2019-11510)"]
+    exploit_vpn_gateway --> compromise_corporate_it
+    vpn_gateway["[A01] VPN Gateway (Corporate IT Perimeter)"]
+    vpn_gateway --> exploit_vpn_gateway
     attacker["[U01] Attacker"]
-    attacker --> hmi_software
-    unencrypted_comms["[V02] Unencrypted HMI-PLC Communication (e.g., Modbus TCP, DNP3)"]
-    unencrypted_comms --> hmi_spoof
-    network_sniffing_tools["[A02] Network Sniffing Tools (e.g., Wireshark, tcpdump)"]
-    network_sniffing_tools --> unencrypted_comms
+    attacker --> vpn_gateway
+    phishing_operator["[V02] Phishing Attack on Operator Workstations"]
+    phishing_operator --> compromise_corporate_it
+    operator_workstation_it["[A02] Operator Workstation (Corporate IT)"]
+    operator_workstation_it --> phishing_operator
     attacker["[U01] Attacker"]
-    attacker --> network_sniffing_tools
-    sensor_spoof["[H03] Spoof Sensor Data to Mislead Control Logic"]
-    sensor_spoof --> spoofing
-    unauthenticated_fieldbus["[V03] Unauthenticated Fieldbus Protocols (e.g., HART, Profibus)"]
-    unauthenticated_fieldbus --> sensor_spoof
-    field_devices["[A03] Field Devices (Sensors/Actuators)"]
-    field_devices --> unauthenticated_fieldbus
+    attacker --> operator_workstation_it
+    exploit_email_server["[V03] Exploit Email Server Zero-Day (e.g., CVE-2021-44228)"]
+    exploit_email_server --> compromise_corporate_it
+    email_server["[A03] Email Server (Corporate IT)"]
+    email_server --> exploit_email_server
     attacker["[U01] Attacker"]
-    attacker --> field_devices
-    default_credentials["[V04] Default Credentials on Intelligent Electronic Devices (IEDs)"]
-    default_credentials --> sensor_spoof
-    ieds["[A04] Intelligent Electronic Devices (IEDs)"]
-    ieds --> default_credentials
+    attacker --> email_server
+    compromise_dmz["[G03] Compromise DMZ to Bridge IT-OT Gap"]
+    compromise_dmz --> root
+    misconfigured_proxy["[V04] Misconfigured Proxy Server in DMZ"]
+    misconfigured_proxy --> compromise_dmz
+    proxy_server["[A04] Proxy Server (DMZ)"]
+    proxy_server --> misconfigured_proxy
     attacker["[U01] Attacker"]
-    attacker --> ieds
-    tampering["[H04] Tampering with Safety or Control Logic"]
-    tampering --> root
-    sis_tamper["[H05] Tamper with Safety Instrumented Systems (SIS)"]
-    sis_tamper --> tampering
-    engineering_workstation_access["[V05] Unauthorized Access to Engineering Workstations (e.g., CVE-2018-4837)"]
-    engineering_workstation_access --> sis_tamper
-    engineering_workstations["[A05] Engineering Workstations (e.g., Siemens TIA Portal, Schneider Unity Pro)"]
-    engineering_workstations --> engineering_workstation_access
+    attacker --> proxy_server
+    opc_ua_weak_auth["[V05] Weak Authentication in OPC UA Server (e.g., Anonymous Bind)"]
+    opc_ua_weak_auth --> compromise_dmz
+    opc_ua_server["[A05] OPC UA Server (DMZ)"]
+    opc_ua_server --> opc_ua_weak_auth
     attacker["[U01] Attacker"]
-    attacker --> engineering_workstations
-    firmware_backdoor["[V06] Backdoored Firmware in SIS Controllers"]
-    firmware_backdoor --> sis_tamper
-    sis_controllers["[A06] SIS Controllers (e.g., Honeywell Safety Manager, Siemens S7-400F)"]
-    sis_controllers --> firmware_backdoor
+    attacker --> opc_ua_server
+    unpatched_data_historian["[V06] Unpatched Data Historian (e.g., OSIsoft PI System CVE-2020-6973)"]
+    unpatched_data_historian --> compromise_dmz
+    data_historian["[A06] Data Historian (DMZ)"]
+    data_historian --> unpatched_data_historian
     attacker["[U01] Attacker"]
-    attacker --> sis_controllers
-    plc_tamper["[H06] Tamper with PLC Control Logic"]
-    plc_tamper --> tampering
-    unauthorized_logic_upload["[V07] Unauthorized PLC Logic Upload (e.g., via compromised engineering software)"]
-    unauthorized_logic_upload --> plc_tamper
-    plc_programming_software["[A07] PLC Programming Software (e.g., Rockwell Studio 5000, Siemens Step 7)"]
-    plc_programming_software --> unauthorized_logic_upload
+    attacker --> data_historian
+    compromise_scada["[G04] Compromise SCADA/DCS Systems for Process Control"]
+    compromise_scada --> root
+    exploit_hmi_vulnerability["[V07] Exploit HMI Software Vulnerability (e.g., Siemens WinCC CVE-2020-15782)"]
+    exploit_hmi_vulnerability --> compromise_scada
+    hmi_workstation["[A07] HMI Workstation (Level 3)"]
+    hmi_workstation --> exploit_hmi_vulnerability
     attacker["[U01] Attacker"]
-    attacker --> plc_programming_software
-    plc_memory_corruption["[V08] PLC Memory Corruption via Buffer Overflow (e.g., CVE-2020-25159)"]
-    plc_memory_corruption --> plc_tamper
-    plcs["[A08] Programmable Logic Controllers (PLCs)"]
-    plcs --> plc_memory_corruption
+    attacker --> hmi_workstation
+    modify_scada_logic["[V08] Modify SCADA Logic via Engineering Workstation"]
+    modify_scada_logic --> compromise_scada
+    engineering_workstation_scada["[A08] Engineering Workstation (SCADA, Level 3)"]
+    engineering_workstation_scada --> modify_scada_logic
     attacker["[U01] Attacker"]
-    attacker --> plcs
-    repudiation["[H07] Repudiation via Log or Audit Trail Manipulation"]
-    repudiation --> root
-    historian_tamper["[H08] Tamper with Historian Server Logs"]
-    historian_tamper --> repudiation
-    weak_integrity_checks["[V09] Weak Integrity Checks on Historian Data (e.g., no digital signatures)"]
-    weak_integrity_checks --> historian_tamper
-    historian_servers["[A09] Historian Servers (e.g., OSIsoft PI, Honeywell PHD)"]
-    historian_servers --> weak_integrity_checks
+    attacker --> engineering_workstation_scada
+    spoof_scada_communication["[V09] Spoof SCADA Communication (e.g., Modbus/DNP3)"]
+    spoof_scada_communication --> compromise_scada
+    scada_communication_link["[A09] SCADA Communication Link (Level 3 ↔ Level 2)"]
+    scada_communication_link --> spoof_scada_communication
     attacker["[U01] Attacker"]
-    attacker --> historian_servers
-    unauthorized_historian_access["[V10] Unauthorized Access to Historian (e.g., via exploited credentials)"]
-    unauthorized_historian_access --> historian_tamper
-    historian_access_credentials["[A10] Historian Access Credentials (e.g., stored in cleartext)"]
-    historian_access_credentials --> unauthorized_historian_access
-    attacker["[U01] Attacker"]
-    attacker --> historian_access_credentials
-    syslog_tamper["[H09] Tamper with Network Device Logs (e.g., Firewalls, Switches)"]
-    syslog_tamper --> repudiation
-    default_syslog_credentials["[V11] Default Credentials on Network Devices (e.g., Cisco, Hirschmann)"]
-    default_syslog_credentials --> syslog_tamper
-    network_devices["[A11] Network Devices (Switches, Routers, Firewalls)"]
-    network_devices --> default_syslog_credentials
-    attacker["[U01] Attacker"]
-    attacker --> network_devices
-    unencrypted_syslog["[V12] Unencrypted Syslog Transmission"]
-    unencrypted_syslog --> syslog_tamper
-    syslog_servers["[A12] Syslog Servers"]
-    syslog_servers --> unencrypted_syslog
-    attacker["[U01] Attacker"]
-    attacker --> syslog_servers
-    info_disclosure["[H10] Information Disclosure via Unauthorized Access"]
-    info_disclosure --> root
-    network_traffic_intercept["[H11] Intercept Unencrypted Network Traffic"]
-    network_traffic_intercept --> info_disclosure
-    unencrypted_ics_protocols["[V13] Use of Unencrypted ICS Protocols (e.g., Modbus, DNP3)"]
-    unencrypted_ics_protocols --> network_traffic_intercept
-    industrial_switches["[A13] Industrial Switches/Routers (e.g., Cisco IE, Moxa)"]
-    industrial_switches --> unencrypted_ics_protocols
-    attacker["[U01] Attacker"]
-    attacker --> industrial_switches
-    mitm_attack["[V14] Man-in-the-Middle (MITM) via ARP Spoofing or DNS Poisoning"]
-    mitm_attack --> network_traffic_intercept
-    network_infrastructure["[A14] Network Infrastructure (e.g., VLANs, Subnets)"]
-    network_infrastructure --> mitm_attack
-    attacker["[U01] Attacker"]
-    attacker --> network_infrastructure
-    data_exfiltration["[H12] Exfiltrate Sensitive Operational Data"]
-    data_exfiltration --> info_disclosure
-    unsecured_remote_access["[V15] Unsecured Remote Access Gateways (e.g., VPN, RDP)"]
-    unsecured_remote_access --> data_exfiltration
-    remote_access_gateways["[A15] Remote Access Gateways (e.g., OpenVPN, Microsoft RDP)"]
-    remote_access_gateways --> unsecured_remote_access
-    attacker["[U01] Attacker"]
-    attacker --> remote_access_gateways
-    unmonitored_data_transfers["[V16] Unmonitored Data Transfers via USB or Removable Media"]
-    unmonitored_data_transfers --> data_exfiltration
-    removable_media["[A16] Removable Media (USB Drives, External HDDs)"]
-    removable_media --> unmonitored_data_transfers
-    attacker["[U01] Attacker"]
-    attacker --> removable_media
-    dos["[H13] Denial of Service (DoS) on Critical Systems"]
-    dos --> root
-    network_dos["[H14] Network Flooding or Protocol-Specific DoS"]
-    network_dos --> dos
-    unpatched_network_devices["[V17] Unpatched Network Devices (e.g., CVE-2016-1404)"]
-    unpatched_network_devices --> network_dos
-    industrial_firewalls["[A17] Industrial Firewalls (e.g., Palo Alto, Fortinet)"]
-    industrial_firewalls --> unpatched_network_devices
-    attacker["[U01] Attacker"]
-    attacker --> industrial_firewalls
-    protocol_fuzzing["[V18] Protocol Fuzzing (e.g., Modbus, DNP3)"]
-    protocol_fuzzing --> network_dos
-    protocol_fuzzing_tools["[A18] Protocol Fuzzing Tools (e.g., Sulley, Boofuzz)"]
-    protocol_fuzzing_tools --> protocol_fuzzing
-    attacker["[U01] Attacker"]
-    attacker --> protocol_fuzzing_tools
-    plc_dos["[H15] PLC or RTU Overload via Malicious Commands"]
-    plc_dos --> dos
-    plc_resource_exhaustion["[V19] PLC Resource Exhaustion (e.g., excessive I/O scans)"]
-    plc_resource_exhaustion --> plc_dos
-    plcs_rtus["[A19] PLCs/RTUs (e.g., Siemens S7, Schneider Quantum)"]
-    plcs_rtus --> plc_resource_exhaustion
-    attacker["[U01] Attacker"]
-    attacker --> plcs_rtus
-    firmware_corruption["[V20] PLC Firmware Corruption via Malformed Packets"]
-    firmware_corruption --> plc_dos
-    plc_firmware["[A20] PLC Firmware (e.g., outdated or vulnerable versions)"]
-    plc_firmware --> firmware_corruption
+    attacker --> scada_communication_link
+    compromise_dcs_plc["[G05] Compromise DCS/PLC for Direct Process Manipulation"]
+    compromise_dcs_plc --> root
+    exploit_plc_firmware["[V10] Exploit PLC Firmware Vulnerability (e.g., Schneider Modicon CVE-2019-10956)"]
+    exploit_plc_firmware --> compromise_dcs_plc
+    plc_firmware["[A10] PLC Firmware (Level 1)"]
+    plc_firmware --> exploit_plc_firmware
     attacker["[U01] Attacker"]
     attacker --> plc_firmware
-    privilege_escalation["[H16] Elevation of Privilege in ICS Systems"]
-    privilege_escalation --> root
-    exploit_software_vulnerabilities["[H17] Exploit Software Vulnerabilities for Privilege Escalation"]
-    exploit_software_vulnerabilities --> privilege_escalation
-    unpatched_ics_software["[V21] Unpatched ICS Software (e.g., CVE-2020-6973)"]
-    unpatched_ics_software --> exploit_software_vulnerabilities
-    ics_software["[A21] ICS Software (e.g., SCADA, DCS, HMI)"]
-    ics_software --> unpatched_ics_software
+    tamper_plc_ladder_logic["[V11] Tamper with PLC Ladder Logic via Engineering Workstation"]
+    tamper_plc_ladder_logic --> compromise_dcs_plc
+    engineering_workstation_plc["[A11] Engineering Workstation (PLC, Level 2)"]
+    engineering_workstation_plc --> tamper_plc_ladder_logic
     attacker["[U01] Attacker"]
-    attacker --> ics_software
-    privilege_escalation_exploits["[V22] Known Privilege Escalation Exploits (e.g., DirtyCow, EternalBlue)"]
-    privilege_escalation_exploits --> exploit_software_vulnerabilities
-    exploit_databases["[A22] Exploit Databases (e.g., Metasploit, Exploit-DB)"]
-    exploit_databases --> privilege_escalation_exploits
+    attacker --> engineering_workstation_plc
+    disable_sis_interlocks["[V12] Disable Safety Instrumented System (SIS) Interlocks"]
+    disable_sis_interlocks --> compromise_dcs_plc
+    sis_plc["[A12] SIS PLC (Level 1, Safety Zone)"]
+    sis_plc --> disable_sis_interlocks
     attacker["[U01] Attacker"]
-    attacker --> exploit_databases
-    credential_theft["[H18] Steal or Forge Credentials for Higher Privileges"]
-    credential_theft --> privilege_escalation
-    weak_password_storage["[V23] Weak Password Storage (e.g., plaintext, reversible encryption)"]
-    weak_password_storage --> credential_theft
-    credential_stores["[A23] Credential Stores (e.g., Windows SAM, Linux /etc/shadow)"]
-    credential_stores --> weak_password_storage
+    attacker --> sis_plc
+    compromise_field_devices["[G06] Compromise Field Devices for Sensor/Actuator Manipulation"]
+    compromise_field_devices --> root
+    spoof_sensor_data["[V13] Spoof Sensor Data (e.g., Temperature/Pressure Readings)"]
+    spoof_sensor_data --> compromise_field_devices
+    field_sensor["[A13] Field Sensor (Level 0)"]
+    field_sensor --> spoof_sensor_data
     attacker["[U01] Attacker"]
-    attacker --> credential_stores
-    pass_the_hash["[V24] Pass-the-Hash or Kerberoasting Attacks"]
-    pass_the_hash --> credential_theft
-    authentication_protocols["[A24] Authentication Protocols (e.g., NTLM, Kerberos)"]
-    authentication_protocols --> pass_the_hash
+    attacker --> field_sensor
+    manipulate_actuator["[V14] Manipulate Actuator (e.g., Valve/Pump Control)"]
+    manipulate_actuator --> compromise_field_devices
+    field_actuator["[A14] Field Actuator (Level 0)"]
+    field_actuator --> manipulate_actuator
     attacker["[U01] Attacker"]
-    attacker --> authentication_protocols
-    lateral_movement["[H19] Lateral Movement from IT to OT Networks"]
-    lateral_movement --> root
-    exploit_weak_segmentation["[H20] Exploit Weak Network Segmentation"]
-    exploit_weak_segmentation --> lateral_movement
-    misconfigured_firewalls["[V25] Misconfigured Firewalls or ACLs"]
-    misconfigured_firewalls --> exploit_weak_segmentation
-    firewall_rules["[A25] Firewall Rules and Access Control Lists (ACLs)"]
-    firewall_rules --> misconfigured_firewalls
+    attacker --> field_actuator
+    exploit_wireless_io["[V15] Exploit Wireless I/O Network Vulnerabilities"]
+    exploit_wireless_io --> compromise_field_devices
+    wireless_io_network["[A15] Wireless I/O Network (Level 0 ↔ Level 1)"]
+    wireless_io_network --> exploit_wireless_io
     attacker["[U01] Attacker"]
-    attacker --> firewall_rules
-    default_vlan_configurations["[V26] Default VLAN Configurations Allowing Inter-VLAN Routing"]
-    default_vlan_configurations --> exploit_weak_segmentation
-    vlan_configurations["[A26] VLAN Configurations (e.g., Cisco VLANs, Moxa Turbo Ring)"]
-    vlan_configurations --> default_vlan_configurations
+    attacker --> wireless_io_network
+    compromise_remote_access["[G07] Compromise Remote Access for External Control"]
+    compromise_remote_access --> root
+    exploit_vendor_portal["[V16] Exploit Vendor Remote Access Portal (e.g., Siemens TIA Portal)"]
+    exploit_vendor_portal --> compromise_remote_access
+    vendor_remote_portal["[A16] Vendor Remote Access Portal (DMZ/Level 3)"]
+    vendor_remote_portal --> exploit_vendor_portal
     attacker["[U01] Attacker"]
-    attacker --> vlan_configurations
-    abuse_trusted_relationships["[H21] Abuse Trusted Relationships Between Systems"]
-    abuse_trusted_relationships --> lateral_movement
-    trusted_automatic_logins["[V27] Trusted Automatic Logins (e.g., Windows Domain Trusts, SSH Keys)"]
-    trusted_automatic_logins --> abuse_trusted_relationships
-    trust_relationships["[A27] Trust Relationships (e.g., Active Directory Trusts, SSH Authorized Keys)"]
-    trust_relationships --> trusted_automatic_logins
+    attacker --> vendor_remote_portal
+    compromise_vpn_credentials["[V17] Compromise VPN Credentials via Social Engineering"]
+    compromise_vpn_credentials --> compromise_remote_access
+    vpn_credentials["[A17] VPN Credentials (Corporate IT/OT)"]
+    vpn_credentials --> compromise_vpn_credentials
     attacker["[U01] Attacker"]
-    attacker --> trust_relationships
-    shared_service_accounts["[V28] Shared Service Accounts with Excessive Privileges"]
-    shared_service_accounts --> abuse_trusted_relationships
-    service_accounts["[A28] Service Accounts (e.g., SQL Server Accounts, ICS Service Users)"]
-    service_accounts --> shared_service_accounts
+    attacker --> vpn_credentials
+    exploit_rdp_vulnerability["[V18] Exploit RDP Vulnerability (e.g., BlueKeep CVE-2019-0708)"]
+    exploit_rdp_vulnerability --> compromise_remote_access
+    rdp_server["[A18] RDP Server (DMZ/Level 3)"]
+    rdp_server --> exploit_rdp_vulnerability
     attacker["[U01] Attacker"]
-    attacker --> service_accounts
-    supply_chain["[H22] Supply Chain Compromise"]
-    supply_chain --> root
-    compromised_vendor_updates["[H23] Compromised Vendor Software or Firmware Updates"]
-    compromised_vendor_updates --> supply_chain
-    unverified_update_sources["[V29] Unverified Update Sources (e.g., no cryptographic signing)"]
-    unverified_update_sources --> compromised_vendor_updates
-    vendor_update_portals["[A29] Vendor Update Portals (e.g., Siemens TIA Portal Updates, Rockwell Patch Manager)"]
-    vendor_update_portals --> unverified_update_sources
+    attacker --> rdp_server
+    compromise_physical_security["[G08] Compromise Physical Security for Direct Access"]
+    compromise_physical_security --> root
+    bypass_access_control["[V19] Bypass Physical Access Control (e.g., Tailgating)"]
+    bypass_access_control --> compromise_physical_security
+    physical_access_system["[A19] Physical Access Control System (Level 0-3)"]
+    physical_access_system --> bypass_access_control
     attacker["[U01] Attacker"]
-    attacker --> vendor_update_portals
-    backdoored_firmware["[V30] Backdoored Firmware in PLCs or IEDs"]
-    backdoored_firmware --> compromised_vendor_updates
-    firmware_images["[A30] Firmware Images (e.g., PLC, RTU, IED Firmware)"]
-    firmware_images --> backdoored_firmware
+    attacker --> physical_access_system
+    exploit_usb_drive["[V20] Exploit USB Drive for Malware Introduction"]
+    exploit_usb_drive --> compromise_physical_security
+    engineering_workstation_usb["[A20] Engineering Workstation with USB Port (Level 2/3)"]
+    engineering_workstation_usb --> exploit_usb_drive
     attacker["[U01] Attacker"]
-    attacker --> firmware_images
-    counterfeit_components["[H24] Counterfeit or Tampered Hardware Components"]
-    counterfeit_components --> supply_chain
-    unverified_hardware_sources["[V31] Unverified Hardware Sources (e.g., gray market suppliers)"]
-    unverified_hardware_sources --> counterfeit_components
-    hardware_procurement["[A31] Hardware Procurement Channels (e.g., Distributors, Resellers)"]
-    hardware_procurement --> unverified_hardware_sources
+    attacker --> engineering_workstation_usb
+    tamper_field_device["[V21] Tamper with Field Device via Direct Physical Access"]
+    tamper_field_device --> compromise_physical_security
+    field_device_physical["[A21] Field Device (Level 0, Physical Access)"]
+    field_device_physical --> tamper_field_device
     attacker["[U01] Attacker"]
-    attacker --> hardware_procurement
-    hardware_trojan_horses["[V32] Hardware Trojan Horses in Field Devices"]
-    hardware_trojan_horses --> counterfeit_components
-    field_device_hardware["[A32] Field Device Hardware (e.g., Sensors, Actuators, IEDs)"]
-    field_device_hardware --> hardware_trojan_horses
+    attacker --> field_device_physical
+    exploit_supply_chain["[G09] Exploit Supply Chain for Persistent Compromise"]
+    exploit_supply_chain --> root
+    compromise_vendor_software["[V22] Compromise Vendor-Supplied Software (e.g., DCS Patch)"]
+    compromise_vendor_software --> exploit_supply_chain
+    vendor_software_update["[A22] Vendor Software Update (Supply Chain)"]
+    vendor_software_update --> compromise_vendor_software
     attacker["[U01] Attacker"]
-    attacker --> field_device_hardware
-    physical_intrusion["[H25] Physical Intrusion and Local Access Exploits"]
-    physical_intrusion --> root
-    unauthorized_physical_access["[H26] Unauthorized Physical Access to Control Rooms or Field Devices"]
-    unauthorized_physical_access --> physical_intrusion
-    weak_physical_security["[V33] Weak Physical Security (e.g., unsecured doors, lack of mantraps)"]
-    weak_physical_security --> unauthorized_physical_access
-    physical_access_points["[A33] Physical Access Points (e.g., Control Room Doors, Field Device Enclosures)"]
-    physical_access_points --> weak_physical_security
+    attacker --> vendor_software_update
+    hardware_trojan_plc["[V23] Introduce Hardware Trojan in PLC/IED"]
+    hardware_trojan_plc --> exploit_supply_chain
+    plc_hardware["[A23] PLC/IED Hardware (Supply Chain)"]
+    plc_hardware --> hardware_trojan_plc
     attacker["[U01] Attacker"]
-    attacker --> physical_access_points
-    social_engineering["[V34] Social Engineering (e.g., tailgating, impersonation)"]
-    social_engineering --> unauthorized_physical_access
-    plant_personnel["[A34] Plant Personnel (e.g., Operators, Engineers, Security Guards)"]
-    plant_personnel --> social_engineering
+    attacker --> plc_hardware
+    compromise_third_party_maintenance["[V24] Compromise Third-Party Maintenance Credentials"]
+    compromise_third_party_maintenance --> exploit_supply_chain
+    third_party_credentials["[A24] Third-Party Maintenance Credentials (Supply Chain)"]
+    third_party_credentials --> compromise_third_party_maintenance
     attacker["[U01] Attacker"]
-    attacker --> plant_personnel
-    local_device_exploitation["[H27] Exploit Local Device Interfaces (e.g., USB, Serial, Local HMI)"]
-    local_device_exploitation --> physical_intrusion
-    unsecured_local_interfaces["[V35] Unsecured Local Interfaces (e.g., USB ports, serial consoles)"]
-    unsecured_local_interfaces --> local_device_exploitation
-    local_interfaces["[A35] Local Interfaces (e.g., PLC USB Ports, HMI Consoles)"]
-    local_interfaces --> unsecured_local_interfaces
+    attacker --> third_party_credentials
+    exploit_human_factor["[G10] Exploit Human Factors for Insider Threats"]
+    exploit_human_factor --> root
+    social_engineer_operator["[V25] Social Engineer Operator to Execute Malicious Actions"]
+    social_engineer_operator --> exploit_human_factor
+    operator_hmi["[A25] Operator HMI Console (Level 3)"]
+    operator_hmi --> social_engineer_operator
     attacker["[U01] Attacker"]
-    attacker --> local_interfaces
-    default_local_credentials["[V36] Default Local Credentials on Field Devices"]
-    default_local_credentials --> local_device_exploitation
-    local_credentials["[A36] Local Credentials (e.g., Default PLC Passwords, HMI Local Accounts)"]
-    local_credentials --> default_local_credentials
+    attacker --> operator_hmi
+    misuse_privileged_access["[V26] Misuse Privileged Access (e.g., Engineer with Admin Rights)"]
+    misuse_privileged_access --> exploit_human_factor
+    privileged_engineer_access["[A26] Privileged Engineer Access (Level 2/3)"]
+    privileged_engineer_access --> misuse_privileged_access
     attacker["[U01] Attacker"]
-    attacker --> local_credentials
-    time_synchronization_attack["[H28] Time Synchronization Attacks"]
-    time_synchronization_attack --> root
-    ntp_amplification["[H29] NTP Amplification or Spoofing"]
-    ntp_amplification --> time_synchronization_attack
-    unsecured_ntp_servers["[V37] Unsecured NTP Servers (e.g., no authentication, open to internet)"]
-    unsecured_ntp_servers --> ntp_amplification
-    ntp_servers["[A37] NTP Servers (e.g., Local NTP, GPS-Clock References)"]
-    ntp_servers --> unsecured_ntp_servers
+    attacker --> privileged_engineer_access
+    bypass_safety_procedures["[V27] Bypass Safety Procedures via Human Error"]
+    bypass_safety_procedures --> exploit_human_factor
+    safety_procedure_bypass["[A27] Safety Procedure Bypass (Human Factor)"]
+    safety_procedure_bypass --> bypass_safety_procedures
     attacker["[U01] Attacker"]
-    attacker --> ntp_servers
-    ntp_protocol_vulnerabilities["[V38] NTP Protocol Vulnerabilities (e.g., CVE-2013-5211)"]
-    ntp_protocol_vulnerabilities --> ntp_amplification
-    ntp_protocol["[A38] NTP Protocol Implementation"]
-    ntp_protocol --> ntp_protocol_vulnerabilities
+    attacker --> safety_procedure_bypass
+    disrupt_network_infra["[G11] Disrupt Network Infrastructure for Communication Failure"]
+    disrupt_network_infra --> root
+    dos_industrial_switch["[V28] DoS Attack on Industrial Switch (e.g., Cisco CVE-2019-18218)"]
+    dos_industrial_switch --> disrupt_network_infra
+    industrial_switch["[A28] Industrial Network Switch (Level 1-3)"]
+    industrial_switch --> dos_industrial_switch
     attacker["[U01] Attacker"]
-    attacker --> ntp_protocol
-    ptp_delay_attack["[H30] PTP Delay Attack on Industrial Clocks"]
-    ptp_delay_attack --> time_synchronization_attack
-    unsecured_ptp_networks["[V39] Unsecured PTP Networks (e.g., no encryption, no authentication)"]
-    unsecured_ptp_networks --> ptp_delay_attack
-    ptp_networks["[A39] PTP Networks (e.g., IEEE 1588, Industrial Ethernet)"]
-    ptp_networks --> unsecured_ptp_networks
+    attacker --> industrial_switch
+    exploit_router_vulnerability["[V29] Exploit Router Vulnerability for Traffic Redirection"]
+    exploit_router_vulnerability --> disrupt_network_infra
+    industrial_router["[A29] Industrial Router (Level 2/3)"]
+    industrial_router --> exploit_router_vulnerability
     attacker["[U01] Attacker"]
-    attacker --> ptp_networks
-    ptp_injection["[V40] PTP Packet Injection or Replay"]
-    ptp_injection --> ptp_delay_attack
-    ptp_packets["[A40] PTP Packets (e.g., Sync, Follow_Up, Delay_Req)"]
-    ptp_packets --> ptp_injection
+    attacker --> industrial_router
+    jamming_wireless_communication["[V30] Jam Wireless Communication (e.g., WirelessHART)"]
+    jamming_wireless_communication --> disrupt_network_infra
+    wireless_communication["[A30] Wireless Communication Link (Level 0 ↔ Level 1)"]
+    wireless_communication --> jamming_wireless_communication
     attacker["[U01] Attacker"]
-    attacker --> ptp_packets
+    attacker --> wireless_communication
+    manipulate_safety_systems["[G12] Manipulate Safety Systems for Catastrophic Failure"]
+    manipulate_safety_systems --> root
+    disable_emergency_shutdown["[V31] Disable Emergency Shutdown Mechanisms (e.g., Reactor Trip System)"]
+    disable_emergency_shutdown --> manipulate_safety_systems
+    emergency_shutdown_system["[A31] Emergency Shutdown System (SIS, Level 1)"]
+    emergency_shutdown_system --> disable_emergency_shutdown
+    attacker["[U01] Attacker"]
+    attacker --> emergency_shutdown_system
+    tamper_radiation_monitors["[V32] Tamper with Radiation Monitors to Mask Leaks"]
+    tamper_radiation_monitors --> manipulate_safety_systems
+    radiation_monitor["[A32] Radiation Monitoring System (Level 0/1)"]
+    radiation_monitor --> tamper_radiation_monitors
+    attacker["[U01] Attacker"]
+    attacker --> radiation_monitor
+    compromise_diesel_generators["[V33] Compromise Emergency Diesel Generators (EDG)"]
+    compromise_diesel_generators --> manipulate_safety_systems
+    emergency_diesel_generator["[A33] Emergency Diesel Generator Controller (Level 1)"]
+    emergency_diesel_generator --> compromise_diesel_generators
+    attacker["[U01] Attacker"]
+    attacker --> emergency_diesel_generator
+    exploit_protocol_weaknesses["[G13] Exploit Industrial Protocol Weaknesses"]
+    exploit_protocol_weaknesses --> root
+    modbus_unauthenticated_write["[V34] Exploit Modbus Unauthenticated Write (FC5/6)"]
+    modbus_unauthenticated_write --> exploit_protocol_weaknesses
+    modbus_communication["[A34] Modbus Communication Link (Level 1 ↔ Level 2)"]
+    modbus_communication --> modbus_unauthenticated_write
+    attacker["[U01] Attacker"]
+    attacker --> modbus_communication
+    dnp3_replay_attack["[V35] DNP3 Replay Attack for Command Spoofing"]
+    dnp3_replay_attack --> exploit_protocol_weaknesses
+    dnp3_communication["[A35] DNP3 Communication Link (Level 1 ↔ Level 2)"]
+    dnp3_communication --> dnp3_replay_attack
+    attacker["[U01] Attacker"]
+    attacker --> dnp3_communication
+    opc_ua_weak_encryption["[V36] Exploit OPC UA Weak Encryption/Certificate Validation"]
+    opc_ua_weak_encryption --> exploit_protocol_weaknesses
+    opc_ua_communication["[A36] OPC UA Communication Link (DMZ ↔ Level 3)"]
+    opc_ua_communication --> opc_ua_weak_encryption
+    attacker["[U01] Attacker"]
+    attacker --> opc_ua_communication
+    persistent_compromise["[G14] Achieve Persistent Compromise in OT Environment"]
+    persistent_compromise --> root
+    install_malware_plc["[V37] Install Malware on PLC (e.g., Stuxnet-like Rootkit)"]
+    install_malware_plc --> persistent_compromise
+    plc_malware["[A37] PLC with Malware (Level 1)"]
+    plc_malware --> install_malware_plc
+    attacker["[U01] Attacker"]
+    attacker --> plc_malware
+    backdoor_engineering_workstation["[V38] Backdoor Engineering Workstation for Future Access"]
+    backdoor_engineering_workstation --> persistent_compromise
+    engineering_workstation_backdoor["[A38] Backdoored Engineering Workstation (Level 2/3)"]
+    engineering_workstation_backdoor --> backdoor_engineering_workstation
+    attacker["[U01] Attacker"]
+    attacker --> engineering_workstation_backdoor
+    compromise_firmware_update["[V39] Compromise Firmware Update Mechanism"]
+    compromise_firmware_update --> persistent_compromise
+    firmware_update_mechanism["[A39] Firmware Update Server (Level 3)"]
+    firmware_update_mechanism --> compromise_firmware_update
+    attacker["[U01] Attacker"]
+    attacker --> firmware_update_mechanism
+    cause_physical_damage["[G15] Cause Physical Damage to Critical Infrastructure"]
+    cause_physical_damage --> root
+    overheat_reactor_core["[H01] Overheat Reactor Core via Coolant Pump Manipulation"]
+    overheat_reactor_core --> cause_physical_damage
+    coolant_pump_controller["[A40] Coolant Pump Controller (Level 1)"]
+    coolant_pump_controller --> overheat_reactor_core
+    attacker["[U01] Attacker"]
+    attacker --> coolant_pump_controller
+    damage_turbine["[H02] Damage Turbine via Erratic Steam Flow Control"]
+    damage_turbine --> cause_physical_damage
+    turbine_control_system["[A41] Turbine Control System (Level 1/2)"]
+    turbine_control_system --> damage_turbine
+    attacker["[U01] Attacker"]
+    attacker --> turbine_control_system
+    disrupt_grid_synchronization["[H03] Disrupt Grid Synchronization via IED Manipulation"]
+    disrupt_grid_synchronization --> cause_physical_damage
+    grid_interface_ieds["[A42] Grid Interface IEDs (Level 0/1)"]
+    grid_interface_ieds --> disrupt_grid_synchronization
+    attacker["[U01] Attacker"]
+    attacker --> grid_interface_ieds
+    cause_steam_explosion["[H04] Cause Steam Explosion via Pressure Valve Tampering"]
+    cause_steam_explosion --> cause_physical_damage
+    pressure_valve_controller["[A43] Pressure Valve Controller (Level 1)"]
+    pressure_valve_controller --> cause_steam_explosion
+    attacker["[U01] Attacker"]
+    attacker --> pressure_valve_controller
+    disable_containment_systems["[H05] Disable Containment Systems for Radiation Leak"]
+    disable_containment_systems --> cause_physical_damage
+    containment_system_controller["[A44] Containment System Controller (Level 1, Safety Zone)"]
+    containment_system_controller --> disable_containment_systems
+    attacker["[U01] Attacker"]
+    attacker --> containment_system_controller
+    cause_operational_disruption["[G16] Cause Prolonged Operational Disruption"]
+    cause_operational_disruption --> root
+    disable_hvac_control["[H06] Disable HVAC Control for Equipment Overheating"]
+    disable_hvac_control --> cause_operational_disruption
+    hvac_control_system["[A45] HVAC Control System (Level 2)"]
+    hvac_control_system --> disable_hvac_control
+    attacker["[U01] Attacker"]
+    attacker --> hvac_control_system
+    corrupt_data_historian["[H07] Corrupt Data Historian for False Process Trends"]
+    corrupt_data_historian --> cause_operational_disruption
+    data_historian_corruption["[A46] Data Historian (Level 3/4)"]
+    data_historian_corruption --> corrupt_data_historian
+    attacker["[U01] Attacker"]
+    attacker --> data_historian_corruption
+    disrupt_fuel_handling["[H08] Disrupt Fuel Handling Systems for Outage Extension"]
+    disrupt_fuel_handling --> cause_operational_disruption
+    fuel_handling_system["[A47] Fuel Handling System Controller (Level 1)"]
+    fuel_handling_system --> disrupt_fuel_handling
+    attacker["[U01] Attacker"]
+    attacker --> fuel_handling_system

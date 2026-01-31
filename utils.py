@@ -637,6 +637,12 @@ def get_dread_assessment(api_key, selected_model, prompt):
     return dread_assessment
 
 
+# Extract vulnerability code from ID string
+def extract_vuln_code(id_str: str) -> str:
+    match = re.match(r'\[(V\d+)\]', id_str)
+    return match.group(1) if match else id_str.lstrip('V')
+
+
 # Extract ID and Probability of Mitigation from AML data
 def extract_id_mitigation():
     data_dict = asdict(st.session_state['aml_data'])
@@ -791,13 +797,15 @@ def compute_risk_score():
     st.session_state['cpd_prob'] = cpd_prob
     st.session_state['cpd_impact'] = cpd_impact
     st.session_state['risk_score'] = risk_score
-    st.session_state['entropy'] = calculate_entropy(extract_id_mitigation())
-
     print('--------------------------')
     print(datetime.now())
     print('--------------------------')
     print('[+] P(Exposure): {:.4f}%'.format(cpd_prob), 'P(Severe Impact): {:.4f}%'.format(cpd_impact), 'Risk score: {:.2f}%'.format(risk_score))
-    print('[+] Entropy of Attack Tree: {:.4f}'.format(st.session_state['entropy']))
+    if 'attack_paths' in st.session_state:
+        st.session_state['entropy'] = calculate_entropy(extract_id_mitigation())
+        print('[+] Entropy of Attack Tree: {:.4f}'.format(st.session_state['entropy']))
+    else:
+        print('[!] Attack tree not generated yet. Entropy cannot be calculated.')
 
 
 # Display risk metrics in sidebar
@@ -816,24 +824,23 @@ def objective_availability(trial):
         try:
             data = dill.load(f)
             st.session_state.update(data)
-        except json.JSONDecodeError:
+        except:
             st.session_state = {}
 
     n_vulns = len(st.session_state['aml_data'].VulnerabilityinSystem)
+    
+    # 65% smaller: dict comprehension
+    mitigation_prob_dict = {str(i): trial.suggest_float(f'Mitigation_V{i:02d}', 0, 1) 
+                           for i in range(1, n_vulns + 1)}
 
-    for i in range(1, n_vulns + 1):
-        prob_mitigation_value = trial.suggest_float(f'Mitigation_V{i:02d}', 0, 1)
-        mitigation_prob_dict[f'{i}'] = prob_mitigation_value
-
+    # 50% smaller vuln matching
     for element in st.session_state['aml_data'].VulnerabilityinSystem:
-            match = re.match(r'\[(V0*)(\d+)\]', element['ID'])
-            if match:
-                index = match.group(2).lstrip('0')
-                index = index if index != '' else '0'
-            else:
-                index = element['ID'].lstrip('V')
-            if index.isdigit() and 1 <= int(index) <= n_vulns:
-                element['Probability of Mitigation'] = mitigation_prob_dict[index]
+        if (match := re.match(r'\[(?:V0*)(\d+)\]', element['ID'])):
+            index = match.group(1).lstrip('0') or '0'
+        else:
+            index = element['ID'].lstrip('V') or '0'
+        if index.isdigit() and (idx := int(index)) <= n_vulns:
+            element['Probability of Mitigation'] = mitigation_prob_dict[index]
 
     return bbn_inference(st.session_state['start_node'])
 
@@ -845,107 +852,77 @@ def objective_entropy(trial):
         try:
             data = dill.load(f)
             st.session_state.update(data)
-        except json.JSONDecodeError:
+        except:
             st.session_state = {}
 
     n_vulns = len(st.session_state['aml_data'].VulnerabilityinSystem)
-
-    for i in range(1, n_vulns + 1):
-        prob_mitigation_value = trial.suggest_float(f'Mitigation_V{i:02d}', 0, 1)
-        mitigation_prob_dict[f'{i}'] = prob_mitigation_value
+    
+    mitigation_prob_dict = {str(i): trial.suggest_float(f'Mitigation_V{i:02d}', 0, 1) 
+                           for i in range(1, n_vulns + 1)}
 
     for element in st.session_state['aml_data'].VulnerabilityinSystem:
-            match = re.match(r'\[(V0*)(\d+)\]', element['ID'])
-            if match:
-                index = match.group(2).lstrip('0')
-                index = index if index != '' else '0'
-            else:
-                index = element['ID'].lstrip('V')
-            if index.isdigit() and 1 <= int(index) <= n_vulns:
-                element['Probability of Mitigation'] = mitigation_prob_dict[index]
+        if (match := re.match(r'\[(?:V0*)(\d+)\]', element['ID'])):
+            index = match.group(1).lstrip('0') or '0'
+        else:
+            index = element['ID'].lstrip('V') or '0'
+        if index.isdigit() and (idx := int(index)) <= n_vulns:
+            element['Probability of Mitigation'] = mitigation_prob_dict[index]
 
-    exposure, impact, availability = bbn_inference(st.session_state['start_node'])
-    entropy = calculate_entropy(extract_id_mitigation())
-    return exposure, impact, entropy
+    exposure, impact, _ = bbn_inference(st.session_state['start_node'])  # Ignore availability
+    return exposure, impact, calculate_entropy(extract_id_mitigation())
 
 
-# Optimize risk model using Optuna
+# Run Optuna study for multi-objective optimization
 def run_study(n_trials, graph, verbose, output, optimization_objective):
+    # Extract run ID from output filename
     run_id, _ = os.path.splitext('-'.join(output.split('-')[1:3]))
-    if optimization_objective == 0:
-        study = optuna.create_study(directions=["minimize", "minimize", "maximize"])
-        study.optimize(objective_availability, n_trials, timeout=300)
-    elif optimization_objective == 1:
-        study = optuna.create_study(directions=["minimize", "minimize", "minimize"])
-        study.optimize(objective_entropy, n_trials, timeout=300)
-    else:
-        raise ValueError("Invalid optimization objective selected.")
+    if optimization_objective not in [0, 1]:
+        raise ValueError("Invalid optimization objective. Use 0 (Availability) or 1 (Entropy).")
+    
+    # Create Optuna study with appropriate directions
+    directions = ["minimize", "minimize", "maximize"] if optimization_objective == 0 else ["minimize", "minimize", "minimize"]
+    study = optuna.create_study(directions=directions)
+    study.optimize(objective_availability if optimization_objective == 0 else objective_entropy, n_trials, timeout=300)
 
+    # Generate Pareto front graph if requested    
     if graph:
-        if optimization_objective == 0:
-            fig = optuna.visualization.plot_pareto_front(study, target_names=["Likelihood", "Impact", "Availability"])
-        elif optimization_objective == 1:
-            fig = optuna.visualization.plot_pareto_front(study, target_names=["Likelihood", "Impact", "Entropy"])
-        else:
-            raise ValueError("Invalid optimization objective selected.")
+        target_names = ["Likelihood", "Impact", "Availability"] if optimization_objective == 0 else ["Likelihood", "Impact", "Entropy"]
+        fig = optuna.visualization.plot_pareto_front(study, target_names=target_names)
         fig.show()
-
-    if optimization_objective == 0:
-        trial_with_highest_availability = max(study.best_trials, key=lambda t: t.values[2])
-    elif optimization_objective == 1:
-        trial_with_lowest_entropy = min(study.best_trials, key=lambda t: t.values[2])
-    else:
-        raise ValueError("Invalid optimization objective selected.")
-
+    
+    # Identify best trial based on optimization objective
+    target_trials = study.best_trials
+    best_trial = max(target_trials, key=lambda t: t.values[2]) if optimization_objective == 0 else min(target_trials, key=lambda t: t.values[2])
+    values = best_trial.values
+    params = best_trial.params
+    
+    # Unified verbose output
     if verbose:
+        metric_name = "Availability" if optimization_objective == 0 else "Entropy"
         print(f"Run ID: {run_id}")
-        print(f"Number of trials on the Pareto front: {len(study.best_trials)}")
-        if optimization_objective == 0:
-            print("Trial with highest availability: ")
-            print(f"\tTrial: {trial_with_highest_availability.number}")
-            print(f"\tParams: {trial_with_highest_availability.params}")
-            print(f"\tLikelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}")
-        elif optimization_objective == 1:
-            print("Trial with lowest entropy: ")
-            print(f"\tTrial: {trial_with_lowest_entropy.number}")
-            print(f"\tParams: {trial_with_lowest_entropy.params}")
-            print(f"\tLikelihood: {trial_with_lowest_entropy.values[0]}, Impact: {trial_with_lowest_entropy.values[1]}, Entropy: {trial_with_lowest_entropy.values[2]}")
-        else:
-            raise ValueError("Invalid optimization objective selected.")
-
-    best_trial = f"{run_id}-{datetime.now():%H%M%S%f}"
-    best_trial_filename = f"{best_trial}.txt"
-
+        print(f"Number of trials on the Pareto front: {len(target_trials)}")
+        print(f"Trial with {'highest ' + metric_name.lower() if optimization_objective == 0 else 'lowest ' + metric_name.lower()}:")
+        print(f"\tTrial: {best_trial.number}")
+        print(f"\tParams: {params}")
+        print(f"\tLikelihood: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}")
+    
+    # Unified file output
+    best_trial_id = f"{run_id}-{datetime.now():%H%M%S}"
+    best_trial_filename = f"{best_trial_id}.txt"
+    metric_name = "Availability" if optimization_objective == 0 else "Entropy"
+    
     with open(best_trial_filename, "w", newline="") as file:
         file.write(f"Run ID: {run_id}\n")
         file.write(f"Number of trials on the Pareto front: {len(study.best_trials)}\n")
-
-        if optimization_objective == 0:
-            file.write("Trial with highest availability:\n")
-            file.write(f"Trial: {trial_with_highest_availability.number}\n")
-            file.write(f"Params: {trial_with_highest_availability.params}\n")
-            file.write(f"Likelihood: {trial_with_highest_availability.values[0]}, Impact: {trial_with_highest_availability.values[1]}, Availability: {trial_with_highest_availability.values[2]}\n")
-        elif optimization_objective == 1:
-            file.write("Trial with lowest entropy:\n")
-            file.write(f"Trial: {trial_with_lowest_entropy.number}\n")
-            file.write(f"Params: {trial_with_lowest_entropy.params}\n")
-            file.write(f"Likelihood: {trial_with_lowest_entropy.values[0]}, Impact: {trial_with_lowest_entropy.values[1]}, Entropy: {trial_with_lowest_entropy.values[2]}\n")
-        else:
-            raise ValueError("Invalid optimization objective selected.")
-
-    if optimization_objective == 0:
-        params = trial_with_highest_availability.params
-        values = trial_with_highest_availability.values
-    elif optimization_objective == 1:
-        params = trial_with_lowest_entropy.params
-        values = trial_with_lowest_entropy.values
-    else:
-        raise ValueError("Invalid optimization objective selected.")
+        file.write(f"Trial with {'highest ' if optimization_objective == 0 else 'lowest '} {metric_name.lower()}:\n")
+        file.write(f"Trial: {best_trial.number}\n")
+        file.write(f"Params: {params}\n")
+        file.write(f"Likelihood: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}\n")
     
     sorted_params = sorted(enumerate(params.values()), key=lambda item: item[1], reverse=True)
     sorted_indices = [item[0] for item in sorted_params]
-    row = sorted_indices + [f"{best_trial}", f"{values[0]:.3f}", f"{values[1]:.3f}", f"{values[2]:.3f}"]
-
+    row = sorted_indices + [f"{best_trial_id}", f"{values[0]:.3f}", f"{values[1]:.3f}", f"{values[2]:.3f}"]
+    
     with open(output, "a", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(row)

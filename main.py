@@ -770,7 +770,7 @@ def main():
                         else:
                             st.session_state['date_input'] = date_input
                         
-                        if st.button("Load Model Attributes"):
+                        if st.button("Load/Reset Model Attributes"):
                             load_model_attributes()
                             st.success("Attributes extracted successfully. You can now adjust the attack feasibility (AF) modifier to incorporate attack characteristics in the analysis.")
 
@@ -862,9 +862,13 @@ def main():
         st.info("Use this tab to view and calibrate the countermeasure portfolio, which includes the probabilities of mitigation for each vulnerability in the system model.")
         st.markdown("""---""")
 
-        if 'aml_attributes' in st.session_state:
+        if 'aml_data' in st.session_state:
             st.subheader("Countermeasure Portfolio")
-            vulnerabilities = st.session_state['aml_attributes']['vulnerabilities']
+
+            if st.button("Refresh Values"):
+                st.rerun()
+
+            vulnerabilities = st.session_state['aml_data'].VulnerabilityinSystem
             df_vuln = pd.DataFrame(vulnerabilities)
 
             if 'Probability of Mitigation' not in df_vuln.columns:
@@ -893,6 +897,7 @@ def main():
                     if idx is not None:
                         st.session_state['aml_data'].VulnerabilityinSystem[idx]['Probability of Mitigation'] = prob
 
+            # Save session state
             saved_session_state = {
                 key: st.session_state[key]
                 for key in st.session_state.keys()
@@ -900,12 +905,13 @@ def main():
             with open("session.json", "wb") as f:
                 dill.dump(saved_session_state, f)
 
+            # Recompute risk
             compute_risk_score()
 
         else:
                 st.warning("Perform Bayesian analysis first to proceed.")
 
-    display_metrics()
+    #display_metrics()
 
 #----------------------------------------------------------------------------------------------
 # Multi-Objective Optimisation
@@ -926,15 +932,17 @@ def main():
             objective = st.radio(
                 "Optimisation Objectives",
                 [
-                    "Minimize Exposure and Impact Probabilities, Maximize Availability",
-                    "Minimize Exposure and Impact Probabilities, as well as Attack Tree Entropy",
+                    "Minimize Exposure & Impact Probabilities, Maximize Availability",
+                    "Minimize Exposure & Impact Probabilities + Attack Tree Entropy",
                 ],
                 index=0,
             )
 
-            if objective == "Minimize Exposure and Impact Probabilities, Maximize Availability":
+            if objective == "Minimize Exposure & Impact Probabilities, Maximize Availability":
                 st.session_state['optimization_objective'] = 0
-            elif objective == "Minimize Exposure and Impact Probabilities, as well as Attack Tree Entropy":
+            elif objective == "Minimize Exposure & Impact Probabilities + Attack Tree Entropy":
+                if 'attack_tree_data' not in st.session_state:
+                    st.warning("Generate or upload an attack tree first to use Entropy as an optimisation objective.")
                 st.session_state['optimization_objective'] = 1
             else:
                 st.session_state['optimization_objective'] = 0  # Default
@@ -977,11 +985,13 @@ def main():
 
                 df = pd.read_csv(st.session_state['output_filename'], header=None)
                 v_headers = [f"V{str(i + 1).zfill(2)}" for i in range(len(df.columns) - 4)]
-                new_header_row = v_headers + ["Best Trial ID", "Likelihood", "Impact", "Availability"]
+                if st.session_state['optimization_objective'] == 1:
+                    new_header_row = v_headers + ["Best Trial ID", "Likelihood", "Impact", "Entropy"]
+                else:
+                    new_header_row = v_headers + ["Best Trial ID", "Likelihood", "Impact", "Availability"]
                 df.columns = new_header_row
                 df.insert(0, "Run ID", range(1, len(df) + 1))
                 st.dataframe(df)
-
                 st.markdown("""
                 **Table explanation:**
                 - Run ID: Unique identifier for each optimisation run.
@@ -1003,6 +1013,8 @@ def main():
                 if selected_trial_id:
                     filename = f"{selected_trial_id}.txt"
                     if os.path.exists(filename):
+                        # Parse trial parameters (only once)
+                        params = None
                         with open(filename, "r") as file:
                             lines = file.readlines()
                             for line in lines:
@@ -1012,13 +1024,56 @@ def main():
                                     df_trials = pd.DataFrame([params], index=[selected_trial_id])
                                     st.bar_chart(df_trials.T)
                                     break
+                        
+                        if params is not None and st.button("Update Countermeasure Portfolio With Selected Trial Parameters"):
+                            # Fix param key mapping: Mitigation_V01 → V01 vulnerability ID
+                            updated_probs = {}
+                            for param_key, prob_value in params.items():
+                                # Extract vulnerability number from Optuna param name (Mitigation_V01 → V01)
+                                if param_key.startswith("Mitigation_V"):
+                                    vuln_num = param_key.replace("Mitigation_V", "V")
+                                    vuln_num = vuln_num.zfill(2)  # Ensure V01, V02 format
+                                    updated_probs[vuln_num] = float(prob_value)
+                            
+                            #print ("[#] Updating Probabilities from Trial ID {}: {}".format(selected_trial_id, updated_probs))
+
+                            # Update model
+                            for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
+                                vuln_id = internal_element.attrib.get('ID')
+                                match = re.match(r'\[(V\d+)\]', vuln_id)
+                                if match:
+                                    clean_vuln_id = match.group(1)  # "V02"
+                                    if clean_vuln_id in updated_probs:
+                                        prob = updated_probs[clean_vuln_id]
+                                        #print ("[#] Setting Vulnerability ID: {} to Probability of Mitigation: {:.2f}".format(clean_vuln_id, prob))
+                                        idx = next((i for i, v in enumerate(st.session_state['aml_data'].VulnerabilityinSystem) 
+                                                if extract_vuln_code(v['ID']) == clean_vuln_id), None)
+                                        if idx is not None:
+                                            #print("[#] Updating Vulnerability ID: {}, Probability of Mitigation: {:.2f}".format(clean_vuln_id, prob))
+                                            st.session_state['aml_data'].VulnerabilityinSystem[idx]['Probability of Mitigation'] = prob
+                            
+                            #print (st.session_state['aml_data'].VulnerabilityinSystem)
+                            
+                            saved_session_state = {
+                                key: st.session_state[key]
+                                for key in st.session_state.keys()
+                            }
+                            with open("session.json", "wb") as f:
+                                dill.dump(saved_session_state, f)
+
+                        # Recompute risk
+                        compute_risk_score() 
+                        st.success("Countermeasure portfolio updated successfully!")
                     else:
                         st.warning(f"File {filename} does not exist.")
+
                 else:
                     st.info("Select a trial ID to view its parameter values.")
 
         else:
                 st.warning("Perform Bayesian analysis first to proceed.")
+
+    display_metrics()
 
 #----------------------------------------------------------------------------------------------
 # Main Entry Point
