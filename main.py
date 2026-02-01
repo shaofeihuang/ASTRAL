@@ -52,13 +52,12 @@ model_token_limits = {
     "Anthropic API:claude-3-5-haiku-latest": {"default": 64000, "max": 200000},
 
     # Mistral models
-    "Mistral API:mistral-large-latest": {"default": 128000, "max": 128000},
+    "Mistral API:mistral-large-latest": {"default": 256000, "max": 256000},
     "Mistral API:mistral-medium-latest": {"default": 128000, "max": 128000},
     "Mistral API:mistral-small-latest": {"default": 128000, "max": 128000},
-    "Mistral API:magistral-small-latest": {"default": 40000, "max": 40000},
-    "Mistral API:magistral-medium-latest": {"default": 40000, "max": 40000},
-    "Mistral API:ministral-8b-latest": {"default": 128000, "max": 128000},
-    "Mistral API:pixtral-12b-latest": {"default": 128000, "max": 128000},
+    "Mistral API:magistral-small-latest": {"default": 128000, "max": 128000},
+    "Mistral API:magistral-medium-latest": {"default": 128000, "max": 128000},
+    "Mistral API:ministral-8b-latest": {"default": 256000, "max": 256000},
 }
 
 
