@@ -72,7 +72,7 @@ def on_model_provider_change():
     elif new_provider == "Anthropic API":
         st.session_state['selected_model'] = "claude-sonnet-4-5-20250929"
     elif new_provider == "Mistral API":
-        st.session_state['selected_model'] = "mistral-large-latest"
+        st.session_state['selected_model'] = "mistral-medium-latest"
 
     # Compose correct key for lookup
     model_key = f"{new_provider}:{st.session_state['selected_model']}"
@@ -304,8 +304,8 @@ def main():
             
             selected_model = st.selectbox(
                 "Select the model you would like to use:",
-                ["mistral-large-latest", "mistral-medium-latest", "mistral-small-latest", "magistral-medium-latest",
-                 "magistral-small-latest", "ministral-8b-latest", "pixtral-12b-latest"],
+                ["mistral-medium-latest", "mistral-large-latest", "mistral-small-latest", "magistral-medium-latest",
+                 "magistral-small-latest", "ministral-8b-latest"],
                 key="selected_model",
                 on_change=on_model_selection_change,
                 help="Select the model you would like to use."

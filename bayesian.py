@@ -599,11 +599,11 @@ def bbn_inference(source_node):
         cpd_values = None
 
         if node_context.matching_hazard_nodes:
-            cpd_values = generate_cpd_values_impact(node, node_context, "Hazard")
+            cpd_values = generate_cpd_values_exposure(node_context, "Hazard")
         elif node_context.matching_vulnerability_nodes:
-            cpd_values = generate_cpd_values_impact(node, node_context, "Vulnerability")
+            cpd_values = generate_cpd_values_exposure(node_context, "Vulnerability")
         elif node_context.matching_asset_nodes:
-            cpd_values = generate_cpd_values_impact(node, node_context, "Asset")
+            cpd_values = generate_cpd_values_exposure(node_context, "Asset")
 
         if cpd_values is None or np.any(np.isnan(cpd_values)):
             raise ValueError(f"Missing or invalid CPD values for node {node}")
@@ -653,10 +653,10 @@ def bbn_inference(source_node):
 
     for nodes in aml_data.total_elements:
         if nodes == last_node:
-            prob_failure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
-            prob_impact = inference_impact.query(variables=[nodes], evidence={source_node:1})
-            cpd_prob = prob_failure.values
-            cpd_impact = prob_impact.values
-            return cpd_prob[0], cpd_impact[0], cpd_prob[0] * (1 - cpd_impact[0]) * 100
+            prob_exposure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
+            prob_failure = inference_impact.query(variables=[nodes], evidence={source_node:1})
+            cpd_prob = prob_exposure.values
+            cpd_impact = prob_failure.values
+            return cpd_prob[0], cpd_impact[0], cpd_prob[0] * cpd_impact[0] * 100
         else:
             pass
