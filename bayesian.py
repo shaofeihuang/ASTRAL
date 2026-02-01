@@ -657,6 +657,11 @@ def bbn_inference(source_node):
             prob_failure = inference_impact.query(variables=[nodes], evidence={source_node:1})
             cpd_prob = prob_exposure.values
             cpd_impact = prob_failure.values
-            return cpd_prob[0], cpd_impact[0], cpd_prob[0] * cpd_impact[0] * 100
+            availability = (1 - cpd_prob[0]) * (1 - cpd_impact[0]) * 100
+            st.session_state['cpd_prob'] = cpd_prob[0]
+            st.session_state['cpd_impact'] = cpd_impact[0]
+            st.session_state['risk_score'] = cpd_prob[0] * cpd_impact[0] * 100
+            st.session_state['availability'] = availability
+            return cpd_prob[0], cpd_impact[0], availability
         else:
             pass

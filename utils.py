@@ -793,14 +793,16 @@ def compute_risk_score():
     cpd_prob, cpd_impact = compute_bayesian_probabilities(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
 
     risk_score = cpd_prob * cpd_impact * 100
-
+    availability = (1 - cpd_prob) * (1 - cpd_impact) * 100
     st.session_state['cpd_prob'] = cpd_prob
     st.session_state['cpd_impact'] = cpd_impact
     st.session_state['risk_score'] = risk_score
+    st.session_state['availability'] = availability
     print('--------------------------')
     print(datetime.now())
     print('--------------------------')
-    print('[+] P(Exposure): {:.4f}%'.format(cpd_prob), 'P(Severe Impact): {:.4f}%'.format(cpd_impact), 'Risk score: {:.2f}%'.format(risk_score))
+    print('[+] P(Exposure): {:.4f}'.format(cpd_prob), 'P(Severe Impact): {:.4f}'.format(cpd_impact))
+    print('[+] Risk score: {:.2f}%'.format(risk_score), 'System Availability: {:.2f}%'.format(availability))
     if 'attack_paths' in st.session_state:
         st.session_state['entropy'] = calculate_entropy(extract_id_mitigation())
         print('[+] Entropy of Attack Tree: {:.4f}'.format(st.session_state['entropy']))
@@ -813,6 +815,7 @@ def display_metrics():
     st.sidebar.metric("Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
     st.sidebar.metric("Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
     st.sidebar.metric("Risk Score", value=f"{st.session_state.get('risk_score', 0):.2f}%")
+    st.sidebar.metric("System Availability", value=f"{st.session_state.get('availability', 0):.2f}%")
     st.sidebar.metric("Entropy of Attack Tree", value=f"{st.session_state.get('entropy', 0):.4f}")
 
 
