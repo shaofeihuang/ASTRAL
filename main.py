@@ -911,13 +911,11 @@ def main():
         else:
                 st.warning("Perform Bayesian analysis first to proceed.")
 
-    #display_metrics()
-
 #----------------------------------------------------------------------------------------------
 # Multi-Objective Optimisation
 #----------------------------------------------------------------------------------------------
     with tab7:
-        st.info("Use this tab to perform multi-objective optimisation to identify optimal mitigation priority values for each vulnerability in the system model. The optimisation aims to minimize Likelihood and Impact, and maximize Availability metrics simultaneously using Bayesian probabilities computed from the system model analysis.")
+        st.info("Use this tab to perform multi-objective optimisation to identify optimal mitigation priority values for each vulnerability in the system model. The optimisation aims to minimize or maximize selected metrics simultaneously using Bayesian probabilities computed from the system model analysis.")
         st.markdown("""---""")
 
         if 'aml_attributes' in st.session_state:
