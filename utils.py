@@ -746,14 +746,14 @@ def calculate_entropy(id_mitigation_dict):
     H = entropy(V, m, degree_of, t)
 
     # Print counts and entropy
-    #print ("--------------------------------------------------------")
+    #print("--------------------------------------------------------")
     #print("Attack Tree Metrics:")
     #print(f"n (nodes): {n}")
     #print(f"g (terminal nodes): {t}")
     #print(f"V (sum of degrees): {V}")
     #print(f"m (edges): {m}")
     #print(f"H (entropy): {H:.4f}")
-    #print ("--------------------------------------------------------")
+    #print("--------------------------------------------------------")
 
     return H
 
@@ -788,7 +788,7 @@ def compute_risk_score():
         start_node = st.session_state['attack_paths'].split(" --> ")[0]
         #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
 
-    #print ("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
+    #print("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
     cpd_prob, cpd_impact = compute_bayesian_probabilities(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
 
@@ -829,11 +829,9 @@ def objective_availability(trial):
 
     n_vulns = len(st.session_state['aml_data'].VulnerabilityinSystem)
     
-    # 65% smaller: dict comprehension
     mitigation_prob_dict = {str(i): trial.suggest_float(f'Mitigation_V{i:02d}', 0, 1) 
                            for i in range(1, n_vulns + 1)}
 
-    # 50% smaller vuln matching
     for element in st.session_state['aml_data'].VulnerabilityinSystem:
         if (match := re.match(r'\[(?:V0*)(\d+)\]', element['ID'])):
             index = match.group(1).lstrip('0') or '0'
@@ -886,7 +884,7 @@ def run_study(n_trials, graph, verbose, output, optimization_objective):
 
     # Generate Pareto front graph if requested    
     if graph:
-        target_names = ["Likelihood", "Impact", "Availability"] if optimization_objective == 0 else ["Likelihood", "Impact", "Entropy"]
+        target_names = ["Exposure", "Impact", "Availability"] if optimization_objective == 0 else ["Exposure", "Impact", "Entropy"]
         fig = optuna.visualization.plot_pareto_front(study, target_names=target_names)
         fig.show()
     
@@ -904,7 +902,7 @@ def run_study(n_trials, graph, verbose, output, optimization_objective):
         print(f"Trial with {'highest ' + metric_name.lower() if optimization_objective == 0 else 'lowest ' + metric_name.lower()}:")
         print(f"\tTrial: {best_trial.number}")
         print(f"\tParams: {params}")
-        print(f"\tLikelihood: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}")
+        print(f"\tExposure: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}")
     
     # Unified file output
     best_trial_id = f"{run_id}-{datetime.now():%H%M%S}"
@@ -917,7 +915,7 @@ def run_study(n_trials, graph, verbose, output, optimization_objective):
         file.write(f"Trial with {'highest ' if optimization_objective == 0 else 'lowest '} {metric_name.lower()}:\n")
         file.write(f"Trial: {best_trial.number}\n")
         file.write(f"Params: {params}\n")
-        file.write(f"Likelihood: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}\n")
+        file.write(f"Exposure: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}\n")
     
     sorted_params = sorted(enumerate(params.values()), key=lambda item: item[1], reverse=True)
     sorted_indices = [item[0] for item in sorted_params]

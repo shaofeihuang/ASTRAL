@@ -978,14 +978,14 @@ def main():
             if st.session_state.get('optimisation_done', False):
                 st.markdown("""---""")
                 st.subheader("Optimisation Results")
-                st.info("The table below summarises the mitigation priority values assigned to each vulnerability for the most Pareto-optimal trial in each optimisation run, along with the corresponding Likelihood, Impact, and Availability metrics.")
+                st.info("The table below summarises the mitigation priority values assigned to each vulnerability for the most Pareto-optimal trial in each optimisation run, along with the corresponding metrics.")
 
                 df = pd.read_csv(st.session_state['output_filename'], header=None)
                 v_headers = [f"V{str(i + 1).zfill(2)}" for i in range(len(df.columns) - 4)]
                 if st.session_state['optimization_objective'] == 1:
-                    new_header_row = v_headers + ["Best Trial ID", "Likelihood", "Impact", "Entropy"]
+                    new_header_row = v_headers + ["Best Trial ID", "Exposure", "Impact", "Entropy"]
                 else:
-                    new_header_row = v_headers + ["Best Trial ID", "Likelihood", "Impact", "Availability"]
+                    new_header_row = v_headers + ["Best Trial ID", "Exposure", "Impact", "Availability"]
                 df.columns = new_header_row
                 df.insert(0, "Run ID", range(1, len(df) + 1))
                 st.dataframe(df)
@@ -1032,7 +1032,7 @@ def main():
                                     vuln_num = vuln_num.zfill(2)  # Ensure V01, V02 format
                                     updated_probs[vuln_num] = float(prob_value)
                             
-                            #print ("[#] Updating Probabilities from Trial ID {}: {}".format(selected_trial_id, updated_probs))
+                            #print("[#] Updating Probabilities from Trial ID {}: {}".format(selected_trial_id, updated_probs))
 
                             # Update model
                             for internal_element in st.session_state['env'].element_tree_root.findall(".//caex:InternalElement", ns):
@@ -1042,14 +1042,14 @@ def main():
                                     clean_vuln_id = match.group(1)  # "V02"
                                     if clean_vuln_id in updated_probs:
                                         prob = updated_probs[clean_vuln_id]
-                                        #print ("[#] Setting Vulnerability ID: {} to Probability of Mitigation: {:.2f}".format(clean_vuln_id, prob))
+                                        #print("[#] Setting Vulnerability ID: {} to Probability of Mitigation: {:.2f}".format(clean_vuln_id, prob))
                                         idx = next((i for i, v in enumerate(st.session_state['aml_data'].VulnerabilityinSystem) 
                                                 if extract_vuln_code(v['ID']) == clean_vuln_id), None)
                                         if idx is not None:
                                             #print("[#] Updating Vulnerability ID: {}, Probability of Mitigation: {:.2f}".format(clean_vuln_id, prob))
                                             st.session_state['aml_data'].VulnerabilityinSystem[idx]['Probability of Mitigation'] = prob
                             
-                            #print (st.session_state['aml_data'].VulnerabilityinSystem)
+                            #print(st.session_state['aml_data'].VulnerabilityinSystem)
                             
                             saved_session_state = {
                                 key: st.session_state[key]
