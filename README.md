@@ -45,9 +45,10 @@ Probabilistic modeling capabilities:
 ### Multi-LLM Support
 
 Flexible integration with multiple LLM providers:
+- Mistral AI
+- Google Gemini
 - OpenAI (GPT-4, GPT-3.5)
 - Anthropic (Claude)
-- Mistral AI
 - Easy switching between providers based on availability and cost
 
 ---
