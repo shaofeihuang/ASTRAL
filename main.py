@@ -21,6 +21,8 @@ from azure.keyvault.secrets import SecretClient
 from anthropic import Anthropic
 from mistralai import Mistral
 from openai import OpenAI
+from google import genai
+from google.genai import types
 
 # Local application imports
 from prompts import *
@@ -32,6 +34,21 @@ from bayesian import *
 # Model Token Limits Dictionary
 #----------------------------------------------------------------------------------------------
 model_token_limits = {
+
+    # Gemini models
+    "Gemini API:gemini-3-pro-preview": {"default": 1048576, "max": 1048576},
+    "Gemini API:gemini-3-flash-preview": {"default": 1048576, "max": 1048576},
+    "Gemini API:gemini-2.5-pro": {"default": 1048576, "max": 1048576},
+    "Gemini API:gemini-2.5-flash": {"default": 1048576, "max": 1048576},
+
+    # Mistral models
+    "Mistral API:mistral-large-latest": {"default": 256000, "max": 256000},
+    "Mistral API:mistral-medium-latest": {"default": 128000, "max": 128000},
+    "Mistral API:mistral-small-latest": {"default": 128000, "max": 128000},
+    "Mistral API:magistral-small-latest": {"default": 128000, "max": 128000},
+    "Mistral API:magistral-medium-latest": {"default": 128000, "max": 128000},
+    "Mistral API:ministral-8b-latest": {"default": 256000, "max": 256000},
+
     # OpenAI models
     "OpenAI API:gpt-5": {"default": 128000, "max": 400000},
     "OpenAI API:gpt-5-mini": {"default": 64000, "max": 400000},
@@ -50,14 +67,6 @@ model_token_limits = {
     "Anthropic API:claude-opus-4-20250514": {"default": 64000, "max": 200000},
     "Anthropic API:claude-3-7-sonnet-latest": {"default": 64000, "max": 200000},
     "Anthropic API:claude-3-5-haiku-latest": {"default": 64000, "max": 200000},
-
-    # Mistral models
-    "Mistral API:mistral-large-latest": {"default": 256000, "max": 256000},
-    "Mistral API:mistral-medium-latest": {"default": 128000, "max": 128000},
-    "Mistral API:mistral-small-latest": {"default": 128000, "max": 128000},
-    "Mistral API:magistral-small-latest": {"default": 128000, "max": 128000},
-    "Mistral API:magistral-medium-latest": {"default": 128000, "max": 128000},
-    "Mistral API:ministral-8b-latest": {"default": 256000, "max": 256000},
 }
 
 
@@ -67,12 +76,14 @@ model_token_limits = {
 def on_model_provider_change():
     new_provider = st.session_state['model_provider']
     # Set default model per provider first
-    if new_provider == "OpenAI API":
+    if new_provider == "Mistral API":
+        st.session_state['selected_model'] = "mistral-medium-latest"
+    elif new_provider == "Gemini API":
+        st.session_state['selected_model'] = "gemini-2.5-flash"
+    elif new_provider == "OpenAI API":
         st.session_state['selected_model'] = "gpt-5"
     elif new_provider == "Anthropic API":
         st.session_state['selected_model'] = "claude-sonnet-4-5-20250929"
-    elif new_provider == "Mistral API":
-        st.session_state['selected_model'] = "mistral-medium-latest"
 
     # Compose correct key for lookup
     model_key = f"{new_provider}:{st.session_state['selected_model']}"
@@ -120,10 +131,38 @@ def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str,
     response = client.chat.complete(**params)
     content = response.choices[0].message.content
 
+    return json.loads(content) if response_as_json else content
+
+
+def call_gemini(api_key: str, prompt_text: str, image_bytes: bytes, 
+                model_name: str, max_tokens: int, response_as_json: bool = False) -> str:
+    client = genai.Client(api_key=api_key)
+    
+    text_part = types.Part(text=prompt_text)
+    mime_type = (
+        get_mime_type_from_filename(st.session_state.get('arch_filename', ''))
+        if 'arch_filename' in st.session_state 
+        else 'image/jpeg'
+    )
+    image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+    
+    content = types.Content(role="user", parts=[text_part, image_part])
+    
     if response_as_json:
-        return json.loads(content)
+        response = client.models.generate_content(
+            model=model_name,
+            contents=[content],
+            config={"max_output_tokens": max_tokens, "response_mime_type": "application/json"}
+        )
     else:
-        return content
+        response = client.models.generate_content(
+            model=model_name,
+            contents=[content],
+            config={"max_output_tokens": max_tokens}
+        )
+    
+    content = response.text
+    return json.loads(content) if response_as_json else content
 
 
 def call_openai(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
@@ -157,10 +196,8 @@ def call_openai(api_key, prompt_text: str, image_bytes: bytes, model_name: str, 
     
     if not content:
         raise ValueError(f"Empty response from model {model_name}. This may indicate the model is not available or has rate limits.")
-    
-    response_content = json.loads(content)
 
-    return response_content
+    return json.loads(content) if response_as_json else content
 
 
 def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
@@ -254,9 +291,9 @@ def main():
         st.image("logo.jpeg")
         model_provider = st.selectbox(
         "Select your preferred model provider:",
-        ["OpenAI API", "Anthropic API", "Mistral API"],
+        ["Mistral API", "Gemini API", "OpenAI API", "Anthropic API"],
         key="model_provider",
-        index=2,
+        index=0,
         on_change=on_model_provider_change,
         help="Select the model provider you would like to use. This will determine the models available for selection.",
         )
@@ -264,6 +301,38 @@ def main():
         #----------------------------------------------------------------------------------------------
         # Select Model based on Provider
         #----------------------------------------------------------------------------------------------
+
+        if model_provider == "Mistral API":
+
+            try:
+                st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
+            except ResourceNotFoundError:
+                st.session_state['api_key'] = st.text_input("Mistral API Key", type="password")
+            
+            selected_model = st.selectbox(
+                "Select the model you would like to use:",
+                ["mistral-medium-latest", "mistral-large-latest", "mistral-small-latest", "magistral-medium-latest",
+                 "magistral-small-latest", "ministral-8b-latest"],
+                key="selected_model",
+                on_change=on_model_selection_change,
+                help="Select the model you would like to use."
+            )
+            
+        if model_provider == "Gemini API":
+
+            try:
+                st.session_state['api_key'] = st.session_state['client'].get_secret("GEMINI-API-KEY").value
+            except ResourceNotFoundError:
+                st.session_state['api_key'] = st.text_input("Gemini API Key", type="password")
+            
+            selected_model = st.selectbox(
+                "Select the model you would like to use:",
+                ["gemini-3-pro-preview", "gemini-3-flash-preview", "gemini-2.5-pro", "gemini-2.5-flash"],
+                key="selected_model",
+                on_change=on_model_selection_change,
+                help="Select the model you would like to use."
+            )
+
         if model_provider == "OpenAI API":
 
             try:
@@ -290,22 +359,6 @@ def main():
                 "Select the model you would like to use:",
                 ["claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-opus-4-1-20250805", "claude-opus-4-20250514",
                  "claude-3-7-sonnet-latest", "claude-3-5-haiku-latest"],
-                key="selected_model",
-                on_change=on_model_selection_change,
-                help="Select the model you would like to use."
-            )
-
-        if model_provider == "Mistral API":
-
-            try:
-                st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
-            except ResourceNotFoundError:
-                st.session_state['api_key'] = st.text_input("Mistral API Key", type="password")
-            
-            selected_model = st.selectbox(
-                "Select the model you would like to use:",
-                ["mistral-medium-latest", "mistral-large-latest", "mistral-small-latest", "magistral-medium-latest",
-                 "magistral-small-latest", "ministral-8b-latest"],
                 key="selected_model",
                 on_change=on_model_selection_change,
                 help="Select the model you would like to use."
@@ -355,6 +408,7 @@ def main():
         )
 
         if uploaded_file is not None:
+            st.session_state['arch_filename'] = uploaded_file.name
             image_bytes = uploaded_file.read()
             st.image(image_bytes, caption="Uploaded Image", width="stretch")
             arch_expl_prompt = create_arch_narration_prompt(system_context)
@@ -372,6 +426,22 @@ def main():
                                 response_as_json=False
                                 )
                             st.session_state['arch_narration'] = model_output
+                        elif model_provider == "Gemini API":
+                            model_output = call_gemini(
+                                st.session_state['api_key'],
+                                arch_expl_prompt,
+                                image_bytes,
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
+                            st.session_state['arch_narration'] = model_output
+                        elif model_provider == "OpenAI API":
+                            # add OpenAI call here if needed
+                            pass
+                        elif model_provider == "Anthropic API":
+                            # add Anthropic call here if needed
+                            pass
                     except Exception as e:
                         st.error(f"Failed to generate architectural narration: {str(e)}")
         else:
@@ -413,6 +483,23 @@ def main():
                                 )
                             st.session_state['arch_narration'] = model_output
                             st.rerun()
+                        elif model_provider == "Gemini API":
+                            model_output = call_gemini(
+                                st.session_state['api_key'],
+                                arch_expl_prompt,
+                                image_bytes,
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
+                            st.session_state['arch_narration'] = model_output
+                            st.rerun()
+                        elif model_provider == "OpenAI API":
+                            # add OpenAI call here if needed
+                            pass
+                        elif model_provider == "Anthropic API":
+                            # add Anthropic call here if needed
+                            pass
                     except Exception as e:
                         st.error(f"Failed to generate architectural narration: {str(e)}")
 
@@ -445,6 +532,23 @@ def main():
                                 )
                             st.session_state['threat_model'] = model_output.get("threat_model", [])
                             st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
+                        elif model_provider == "Gemini API":
+                            model_output = call_gemini(
+                                st.session_state['api_key'],
+                                threat_model_prompt,
+                                image_bytes,
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=True
+                                )
+                            st.session_state['threat_model'] = model_output.get("threat_model", [])
+                            st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
+                        elif model_provider == "OpenAI API":
+                            # add OpenAI call here if needed
+                            pass
+                        elif model_provider == "Anthropic API":
+                            # add Anthropic call here if needed
+                            pass
                     except Exception as e:
                         st.error(f"Failed to generate threat model: {str(e)}")
         else:
@@ -483,7 +587,7 @@ def main():
                     attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_narration'), st.session_state.get('threat_model'))
                     with st.spinner("Generating attack tree and paths..."):
                         try:
-                            attack_tree_data = get_attack_tree(st.session_state['api_key'], selected_model, attack_tree_prompt, system_context)
+                            attack_tree_data = get_attack_tree(st.session_state['api_key'], model_provider, selected_model, attack_tree_prompt, system_context)
                             st.session_state['attack_tree_data'] = attack_tree_data
                             attack_tree = convert_tree_to_mermaid(attack_tree_data)
                             st.session_state['attack_tree'] = attack_tree
@@ -553,7 +657,7 @@ def main():
         # Function to generate AutomationML in stepwise manner with retries
         #------------------------------------------------------------------------------------------
         def generate_aml_stepwise(arch_narration, threat_model, attack_paths):
-            max_retries = 3
+            max_retries = 5
 
             #------------------------------------------------------------------------------------------
             # Generate Internal Elements based on Architectural Narration and Threat Model
@@ -567,6 +671,15 @@ def main():
                         prompt_step1 = create_aml_prompt_step_1(arch_narration, threat_model, attack_paths)
                         if model_provider == "Mistral API":
                             response_step1 = call_mistral(
+                                st.session_state['api_key'],
+                                prompt_step1,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
+                        elif model_provider == "Gemini API":
+                            response_step1 = call_gemini(
                                 st.session_state['api_key'],
                                 prompt_step1,
                                 image_bytes if 'image_bytes' in locals() else b'',
@@ -600,6 +713,15 @@ def main():
                         prompt_step2 = create_aml_prompt_step_2(attack_paths)
                         if model_provider == "Mistral API":
                             response_step2 = call_mistral(
+                                st.session_state['api_key'],
+                                prompt_step2,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
+                        elif model_provider == "Gemini API":
+                            response_step2 = call_gemini(
                                 st.session_state['api_key'],
                                 prompt_step2,
                                 image_bytes if 'image_bytes' in locals() else b'',
@@ -649,6 +771,15 @@ def main():
                                 st.session_state['token_limit'],
                                 response_as_json=False
                                 )
+                        elif model_provider == "Gemini API":
+                            response_step3 = call_gemini(
+                                st.session_state['api_key'],
+                                prompt_step3,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
                         internal_links_xml = response_step3
 
                         end_time = time.time()
@@ -674,6 +805,15 @@ def main():
                         prompt_step4 = create_aml_prompt_step_4(internal_elements_xml, internal_links_xml)
                         if model_provider == "Mistral API":
                             response_step4 = call_mistral(
+                                st.session_state['api_key'],
+                                prompt_step4,
+                                image_bytes if 'image_bytes' in locals() else b'',
+                                selected_model,
+                                st.session_state['token_limit'],
+                                response_as_json=False
+                                )
+                        elif model_provider == "Gemini API":
+                            response_step4 = call_gemini(
                                 st.session_state['api_key'],
                                 prompt_step4,
                                 image_bytes if 'image_bytes' in locals() else b'',

@@ -4,6 +4,7 @@ import dill
 import json
 import os
 import re
+import mimetypes
 from datetime import datetime
 from collections import defaultdict, deque
 from dataclasses import asdict
@@ -21,12 +22,22 @@ from prompts import *
 from anthropic import Anthropic
 from mistralai import Mistral
 from openai import OpenAI
-
+from google import genai
+from google.genai import types
 
 # Namespace mapping for XML parsing
 ns = {'caex': 'http://www.dke.de/CAEX'}
 
 # Utility Functions
+
+# Get MIME type from filename
+def get_mime_type_from_filename(filename: str) -> str:
+    """Guess MIME type from file extension, fallback to generic image."""
+    mime_type, _ = mimetypes.guess_type(filename)
+    if mime_type and mime_type.startswith('image/'):
+        return mime_type
+    return 'image/jpeg'  # Safe default for images
+
 
 # Clean AML content by removing code block markers
 def clean_aml_content(aml_file):
@@ -599,19 +610,43 @@ def mermaid(code: str, height: int = 500) -> None:
     )
     
 
-# Generate attack tree using Mistral API
-def get_attack_tree(api_key, selected_model, prompt, system_context):
-    client = Mistral(api_key=api_key)
+# Generate attack tree using selected model provider
+def get_attack_tree(api_key, model_provider, selected_model, prompt, system_context):
     system_prompt = create_attack_tree_prompt(system_context)
-    response = client.chat.complete(
-        model=selected_model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
-        ]
-    )
+    response = None
     try:
-        cleaned_response = clean_json_response(response.choices[0].message.content)
+            if model_provider == "Mistral API":
+                client = Mistral(api_key=api_key)
+                response = client.chat.complete(
+                    model=selected_model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                content = response.choices[0].message.content
+            elif model_provider == "Gemini API":
+                client = genai.Client(api_key=api_key)
+                system_content = types.Content(role="user", parts=[types.Part(text=system_prompt)])
+                user_content = types.Content(role="user", parts=[types.Part(text=prompt)])
+                
+                response = client.models.generate_content(
+                    model=selected_model,
+                    contents=[system_content, user_content],  # Multiple contents
+                    config={"max_output_tokens": st.session_state['token_limit']}
+                )
+                content = response.text
+            elif model_provider == "OpenAI API":
+                # add OpenAI call here if needed
+                pass
+            elif model_provider == "Anthropic API":
+                # add Anthropic call here if needed
+                pass
+    except Exception as e:
+        st.error(f"Failed to generate attack tree: {str(e)}")
+
+    try:
+        cleaned_response = clean_json_response(content)
         tree_data = json.loads(cleaned_response)
         return tree_data
     except json.JSONDecodeError:
