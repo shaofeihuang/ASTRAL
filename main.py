@@ -705,6 +705,7 @@ def main():
             # Generate Valid Pairs based on Attack Paths
             #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 2) ..."):
+                time.sleep(2)  # brief pause before step 2
                 for attempt in range(max_retries):
                     try:
                         print("[#] Generating AML - Step 2")
@@ -747,6 +748,7 @@ def main():
             # Generate Internal Links based on Valid Pairs
             #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 3) ..."):
+                time.sleep(2.1)  # brief pause before step 3
                 for attempt in range(max_retries):
                     try:
                         print("[#] Generating AML - Step 3")
@@ -798,6 +800,7 @@ def main():
             # Final Assembly of AutomationML Model
             #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 4) ..."):
+                time.sleep(2.2)  # brief pause before step 4
                 for attempt in range(max_retries):
                     try:
                         print("[#] Generating AML - Step 4 (Final)")
