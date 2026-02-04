@@ -17,6 +17,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from sympy import root
 
 # Local application imports
 from bayesian import *
@@ -717,13 +718,16 @@ def calculate_entropy(id_mitigation_dict):
     current_id = 1
     visited = set()
 
-    root = 'root'
-    if root in nodes:
-        mit = nodes[root]["mitigation"]  # Now (1-raw_mit)
-        degree_of[root] = 1 * mit
-        sequential_id[root] = current_id
-        current_id += 1
-        visited.add(root)
+    if 'root_goal' in nodes:
+        root = 'root_goal'
+    elif 'root' in nodes:
+        root = 'root'
+
+    mit = nodes[root]["mitigation"]  # Now (1-raw_mit)
+    degree_of[root] = 1 * mit
+    sequential_id[root] = current_id
+    current_id += 1
+    visited.add(root)
 
     # BFS: propagate weighted depths
     if root in graph:

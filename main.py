@@ -925,7 +925,7 @@ def main():
             if 'aml_data' in st.session_state:
                 st.write("Number of vulnerabilitiies detected in model: {}".format(len(st.session_state['aml_data'].VulnerabilityinSystem)) )
             verbose = st.checkbox("Verbose Console Output", value=True)
-            graph = st.checkbox("Show Optimisation Graph", value=False)
+            graph = st.checkbox("Show Optimisation Graph", value=True)
             objective = st.radio(
                 "Optimisation Objectives",
                 [
