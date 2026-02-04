@@ -59,7 +59,7 @@ Flexible integration with multiple LLM providers:
 
 - Python 3.8 or higher
 - pip package manager
-- API keys for at least one LLM provider (OpenAI, Anthropic, or Mistral)
+- API keys for at least one LLM provider (Gemini, Mistral, OpenAI, or Anthropic)
 
 ### Setup Instructions
 
