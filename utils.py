@@ -610,7 +610,7 @@ def mermaid(code: str, height: int = 500) -> None:
     
 
 # Generate attack tree using selected model provider
-def generate_attack_tree(api_key, prompt):
+def gen_attack_tree(api_key, prompt):
     system_prompt = create_attack_tree_prompt(st.session_state['system_context'])
     response = None
     try:
