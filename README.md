@@ -98,8 +98,9 @@ Flexible integration with multiple LLM providers:
 
 Key dependencies include:
 
-- **Streamlit** (1.50.0): Web application framework
-- **LLM Providers**: OpenAI, Anthropic, MistralAI
+- **Streamlit** (1.28.0): Web application framework
+- **LLM Providers**: OpenAI, Anthropic, Mistral, Gemini
+- **LangChain** (0.1.0): LLM orchestration framework
 - **Bayesian Analysis**: pgmpy, pyro-ppl, torch
 - **Security**: azure-keyvault-secrets, azure-identity
 
