@@ -18,14 +18,14 @@ from dotenv import load_dotenv
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
-
+from langchain_mistralai import ChatMistralAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Local application imports
 from prompts import *
 from utils import *
 from bayesian import *
-from langchain_mistralai import ChatMistralAI
-from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 #----------------------------------------------------------------------------------------------
 # Model Token Limits Dictionary
