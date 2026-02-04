@@ -18,17 +18,14 @@ from dotenv import load_dotenv
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
-from anthropic import Anthropic
-from mistralai import Mistral
-from openai import OpenAI
-from google import genai
-from google.genai import types
+
 
 # Local application imports
 from prompts import *
 from utils import *
 from bayesian import *
-
+from langchain_mistralai import ChatMistralAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 #----------------------------------------------------------------------------------------------
 # Model Token Limits Dictionary
@@ -116,162 +113,6 @@ def on_model_selection_change():
         del st.session_state['current_model_key']
 
 
-def call_mistral(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
-    client = Mistral(api_key)
-    params = {
-        "model": model_name,
-        "messages": [
-            {"role": "user", "content": prompt_text, "image": image_bytes}
-        ],
-        "max_tokens": max_tokens,
-    }
-    if response_as_json:
-        params["response_format"] = {"type": "json_object"}
-
-    response = client.chat.complete(**params)
-    content = response.choices[0].message.content
-
-    return json.loads(content) if response_as_json else content
-
-
-def call_gemini(api_key: str, prompt_text: str, image_bytes: bytes, 
-                model_name: str, max_tokens: int, response_as_json: bool = False) -> str:
-    client = genai.Client(api_key=api_key)
-    
-    text_part = types.Part(text=prompt_text)
-    mime_type = (
-        get_mime_type_from_filename(st.session_state.get('arch_filename', ''))
-        if 'arch_filename' in st.session_state 
-        else 'image/jpeg'
-    )
-    image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-    
-    content = types.Content(role="user", parts=[text_part, image_part])
-    
-    if response_as_json:
-        response = client.models.generate_content(
-            model=model_name,
-            contents=[content],
-            config={"max_output_tokens": max_tokens, "response_mime_type": "application/json"}
-        )
-    else:
-        response = client.models.generate_content(
-            model=model_name,
-            contents=[content],
-            config={"max_output_tokens": max_tokens}
-        )
-    
-    content = response.text
-    return json.loads(content) if response_as_json else content
-
-
-def call_openai(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
-    client = OpenAI(api_key)
-
-    # For reasoning models (o1, o3, o3-mini, o4-mini) and GPT-5 series models, use a structured system prompt
-    if model_name in ["gpt-5", "gpt-5-mini", "gpt-5-nano", "o3", "o3-mini", "o4-mini"]:
-        max_tokens = 20000 if model_name.startswith("gpt-5") else 8192
-        response = client.chat.completions.create(
-            model=model_name,
-            response_format={"type": "json_object"},
-            messages=[
-                {"role": "system", "content": prompt_text, "image": image_bytes}
-            ],
-            max_completion_tokens=max_tokens
-        )
-    else:
-        system_prompt = "You are a helpful assistant designed to output JSON."
-        # Create completion with max_tokens for other models
-        response = client.chat.completions.create(
-            model=model_name,
-            response_format={"type": "json_object"},
-            messages=[
-                {"role": "system", "content": prompt_text, "image": image_bytes}
-            ],
-            max_tokens=8192
-        )
-
-    # Convert the JSON string in the 'content' field to a Python dictionary
-    content = response.choices[0].message.content
-    
-    if not content:
-        raise ValueError(f"Empty response from model {model_name}. This may indicate the model is not available or has rate limits.")
-
-    return json.loads(content) if response_as_json else content
-
-
-def call_anthropic(api_key, prompt_text: str, image_bytes: bytes, model_name: str, max_tokens: int, response_as_json: bool = False):
-    client = Anthropic(api_key)
-    
-    is_claude_3_7 = "claude-3-7" in model_name.lower()
-    is_thinking_mode = "thinking" in model_name.lower()
-    
-    actual_model = "claude-3-7-sonnet-latest" if is_thinking_mode else model_name
-    
-    try:
-        if is_claude_3_7:
-            json_prompt = prompt_text + "\n\nIMPORTANT: Your response MUST be a valid JSON object with the exact structure shown in the example above. Do not include any explanatory text, markdown formatting, or code blocks. Return only the raw JSON object."
-            if is_thinking_mode:
-                response = client.messages.create(
-                    model=actual_model,
-                    max_tokens=24000,
-                    thinking={
-                        "type": "enabled",
-                        "budget_tokens": 16000
-                    },
-                    system="You are a JSON-generating assistant. You must ONLY output valid, parseable JSON with no additional text or formatting.",
-                    messages=[
-                        {"role": "user", "content": json_prompt, "image": image_bytes}
-                    ],
-                    timeout=600  # 10-minute timeout
-                )
-            else:
-                response = client.messages.create(
-                    model=actual_model,
-                    max_tokens=4096,
-                    system="You are a JSON-generating assistant. You must ONLY output valid, parseable JSON with no additional text or formatting.",
-                    messages=[
-                        {"role": "user", "content": json_prompt, "image": image_bytes}
-                    ],
-                    timeout=300  # 5-minute timeout
-                )
-        else:
-            # Standard handling for other Claude models
-            response = client.messages.create(
-                model=actual_model,
-                max_tokens=4096,
-                system="You are a helpful assistant designed to output JSON. Your response must be a valid, parseable JSON object with no additional text, markdown formatting, or explanation. Do not include ```json code blocks or any other formatting - just return the raw JSON object.",
-                messages=[
-                    {"role": "user", "content": prompt_text, "image": image_bytes}
-                ],
-                timeout=300  # 5-minute timeout
-            )
-        
-        if is_thinking_mode:
-            full_content = ''.join(block.text for block in response.content if block.type == "text")
-            thinking_content = ''.join(block.thinking for block in response.content if block.type == "thinking")
-            if thinking_content:
-                st.session_state['last_thinking_content'] = thinking_content
-        else:
-            full_content = ''.join(block.text for block in response.content)
-        
-        try:
-            if is_claude_3_7:
-                full_content = full_content.replace(",\n  ]", "\n  ]").replace(",\n]", "\n]")
-                full_content = re.sub(r'//.*?\n', '\n', full_content)
-            
-            response_content = json.loads(full_content)
-            return response_content
-        except json.JSONDecodeError as e:
-            return e
-            
-    except Exception as e:
-        # Handle timeout and other errors
-        error_message = str(e)
-        st.error(f"Error with Anthropic API: {error_message}")
-        return e
-
-
 #----------------------------------------------------------------------------------------------
 # Main Application
 #----------------------------------------------------------------------------------------------
@@ -284,8 +125,10 @@ def main():
         st.session_state['client'] = SecretClient(vault_url=key_vault_uri, credential=credential)
         st.session_state['azure_key_vault_logged_in'] = key_vault_name
 
+    #----------------- IMPORTANT!! ----------------
     # Uncomment to use .env file for local testing
     # load_dotenv()
+    #----------------------------------------------
 
     with st.sidebar:
         st.image("logo.jpeg")
@@ -303,7 +146,6 @@ def main():
         #----------------------------------------------------------------------------------------------
 
         if model_provider == "Mistral API":
-
             try:
                 st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
             except ResourceNotFoundError:
@@ -319,7 +161,6 @@ def main():
             )
             
         if model_provider == "Gemini API":
-
             try:
                 st.session_state['api_key'] = st.session_state['client'].get_secret("GEMINI-API-KEY").value
             except ResourceNotFoundError:
@@ -334,7 +175,6 @@ def main():
             )
 
         if model_provider == "OpenAI API":
-
             try:
                 st.session_state['api_key'] = st.session_state['client'].get_secret("OPENAI-API-KEY").value
             except ResourceNotFoundError:
@@ -349,7 +189,6 @@ def main():
             )
 
         if model_provider == "Anthropic API":
-
             try:
                 st.session_state['api_key'] = st.session_state['client'].get_secret("ANTHROPIC-API-KEY").value
             except ResourceNotFoundError:
@@ -374,7 +213,7 @@ def main():
         #----------------------------------------------------------------------------------------------
         # Select CPS System Context
         #----------------------------------------------------------------------------------------------
-        system_context = st.selectbox(
+        st.session_state['system_context'] = st.selectbox(
             "CPS System Context",
             ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System", "Smart Grid System", "Smart Healthcare System", "Water Treatment System"],
             index=0,
@@ -411,37 +250,34 @@ def main():
             st.session_state['arch_filename'] = uploaded_file.name
             image_bytes = uploaded_file.read()
             st.image(image_bytes, caption="Uploaded Image", width="stretch")
-            arch_expl_prompt = create_arch_narration_prompt(system_context)
+            arch_expl_prompt = create_arch_narration_prompt(st.session_state['system_context'])
 
             if st.button("Generate Architectural Narration") and uploaded_file is not None:
                 with st.spinner("Generating architectural narration..."):
                     try:
-                        if model_provider == "Mistral API":
-                            model_output = call_mistral(
-                                st.session_state['api_key'],
-                                arch_expl_prompt,
-                                image_bytes,
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
-                                )
-                            st.session_state['arch_narration'] = model_output
-                        elif model_provider == "Gemini API":
-                            model_output = call_gemini(
-                                st.session_state['api_key'],
-                                arch_expl_prompt,
-                                image_bytes,
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
-                                )
-                            st.session_state['arch_narration'] = model_output
-                        elif model_provider == "OpenAI API":
+                        if st.session_state['model_provider'] == "Mistral API":
+                            client = ChatMistralAI(
+                                api_key=st.session_state['api_key'],
+                                model=st.session_state['selected_model']
+                            )
+                        elif st.session_state['model_provider'] == "Gemini API":
+                            client = ChatGoogleGenerativeAI(
+                                api_key=st.session_state['api_key'],
+                                model=st.session_state['selected_model']
+                            )
+                        elif st.session_state['model_provider'] == "OpenAI API":
                             # add OpenAI call here if needed
                             pass
-                        elif model_provider == "Anthropic API":
+                        elif st.session_state['model_provider'] == "Anthropic API":
                             # add Anthropic call here if needed
                             pass
+
+                        messages=[
+                            {"role": "user", "content": arch_expl_prompt, "image": image_bytes}
+                        ]
+                        response = client.invoke(messages)
+                        st.session_state['arch_narration'] = response.content
+
                     except Exception as e:
                         st.error(f"Failed to generate architectural narration: {str(e)}")
         else:
@@ -472,34 +308,28 @@ def main():
             if st.button("Re-Generate Architectural Narration"):
                 with st.spinner("Generating architectural narration..."):
                     try:
-                        if model_provider == "Mistral API":
-                            model_output = call_mistral(
-                                st.session_state['api_key'],
-                                arch_expl_prompt + "\n" + additional_detail.strip(),
-                                image_bytes,
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
-                                )
-                            st.session_state['arch_narration'] = model_output
-                            st.rerun()
-                        elif model_provider == "Gemini API":
-                            model_output = call_gemini(
-                                st.session_state['api_key'],
-                                arch_expl_prompt,
-                                image_bytes,
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
-                                )
-                            st.session_state['arch_narration'] = model_output
-                            st.rerun()
-                        elif model_provider == "OpenAI API":
+                        if st.session_state['model_provider'] == "Mistral API":
+                            client = ChatMistralAI(
+                                api_key=st.session_state['api_key'],
+                                model=st.session_state['selected_model'],
+                                max_tokens=st.session_state['token_limit']
+                            )
+                        elif st.session_state['model_provider'] == "Gemini API":
+                            client = ChatGoogleGenerativeAI(
+                                api_key=st.session_state['api_key'],
+                                model=st.session_state['selected_model'],
+                                max_tokens=st.session_state['token_limit']
+                            )
+                        elif st.session_state['model_provider'] == "OpenAI API":
                             # add OpenAI call here if needed
                             pass
-                        elif model_provider == "Anthropic API":
+                        elif st.session_state['model_provider'] == "Anthropic API":
                             # add Anthropic call here if needed
                             pass
+
+                        st.session_state['arch_narration'] = model_output
+                        st.rerun()
+                        
                     except Exception as e:
                         st.error(f"Failed to generate architectural narration: {str(e)}")
 
@@ -512,7 +342,7 @@ def main():
         #----------------------------------------------------------------------------------------------
         # Create Threat Model Prompt
         #----------------------------------------------------------------------------------------------
-        threat_model_prompt = create_threat_model_prompt(system_context)
+        threat_model_prompt = create_threat_model_prompt(st.session_state['system_context'])
 
         #----------------------------------------------------------------------------------------------
         # Generate Threat Model
@@ -521,34 +351,33 @@ def main():
             if st.button("Generate STRIDE-LM Threat Model"):
                 with st.spinner("Generating STRIDE-LM threat model..."):
                     try:
-                        if model_provider == "Mistral API":
-                            model_output = call_mistral(
-                                st.session_state['api_key'],
-                                threat_model_prompt,
-                                image_bytes,
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=True
-                                )
-                            st.session_state['threat_model'] = model_output.get("threat_model", [])
-                            st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
-                        elif model_provider == "Gemini API":
-                            model_output = call_gemini(
-                                st.session_state['api_key'],
-                                threat_model_prompt,
-                                image_bytes,
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=True
-                                )
-                            st.session_state['threat_model'] = model_output.get("threat_model", [])
-                            st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
-                        elif model_provider == "OpenAI API":
+                        if st.session_state['model_provider'] == "Mistral API":
+                            client = ChatMistralAI(
+                                api_key=st.session_state['api_key'],
+                                model=st.session_state['selected_model'],
+                                max_tokens=st.session_state['token_limit']
+                            )
+                        elif st.session_state['model_provider'] == "Gemini API":
+                            client = ChatGoogleGenerativeAI(
+                                api_key=st.session_state['api_key'],
+                                model=st.session_state['selected_model'],
+                                max_tokens=st.session_state['token_limit']
+                            )
+                        elif st.session_state['model_provider'] == "OpenAI API":
                             # add OpenAI call here if needed
                             pass
-                        elif model_provider == "Anthropic API":
+                        elif st.session_state['model_provider'] == "Anthropic API":
                             # add Anthropic call here if needed
                             pass
+
+                        messages=[
+                            {"role": "user", "content": threat_model_prompt, "image": image_bytes}
+                        ]
+                        response = client.invoke(messages, response_format={"type": "json_object"})
+                        model_output = json.loads(response.content)
+                        st.session_state['threat_model'] = model_output.get("threat_model", [])
+                        st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
+
                     except Exception as e:
                         st.error(f"Failed to generate threat model: {str(e)}")
         else:
@@ -587,12 +416,9 @@ def main():
                     attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_narration'), st.session_state.get('threat_model'))
                     with st.spinner("Generating attack tree and paths..."):
                         try:
-                            attack_tree_data = get_attack_tree(st.session_state['api_key'], model_provider, selected_model, attack_tree_prompt, system_context)
-                            st.session_state['attack_tree_data'] = attack_tree_data
-                            attack_tree = convert_tree_to_mermaid(attack_tree_data)
-                            st.session_state['attack_tree'] = attack_tree
-                            attack_paths = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
-                            st.session_state['attack_paths'] = attack_paths
+                            st.session_state['attack_tree_data'] = generate_attack_tree(st.session_state['api_key'], attack_tree_prompt)
+                            st.session_state['attack_tree'] = convert_tree_to_mermaid(st.session_state['attack_tree_data'])
+                            st.session_state['attack_paths'] = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
                         except Exception as e:
                             st.error(f"Error generating attack tree: {e}")
             else:
@@ -608,10 +434,8 @@ def main():
                 at_dict = json.loads(json_str)  # parse JSON string to dict
                 st.session_state['attack_tree_data'] = at_dict
                 st.success("Attack tree data uploaded successfully.")
-                attack_tree = convert_tree_to_mermaid(st.session_state['attack_tree_data'])
-                st.session_state['attack_tree'] = attack_tree
-                attack_paths = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
-                st.session_state['attack_paths'] = attack_paths
+                st.session_state['attack_tree'] = convert_tree_to_mermaid(st.session_state['attack_tree_data'])
+                st.session_state['attack_paths'] = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
         
         #----------------------------------------------------------------------------------------------
         # Display Attack Tree and Paths
@@ -669,30 +493,39 @@ def main():
                         start_time = time.time()
 
                         prompt_step1 = create_aml_prompt_step_1(arch_narration, threat_model, attack_paths)
-                        if model_provider == "Mistral API":
-                            response_step1 = call_mistral(
-                                st.session_state['api_key'],
-                                prompt_step1,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+
+                        try:
+                            if st.session_state['model_provider'] == "Mistral API":
+                                client = ChatMistralAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
-                        elif model_provider == "Gemini API":
-                            response_step1 = call_gemini(
-                                st.session_state['api_key'],
-                                prompt_step1,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+                            elif st.session_state['model_provider'] == "Gemini API":
+                                client = ChatGoogleGenerativeAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
-                        internal_elements_xml = response_step1
+                            elif st.session_state['model_provider'] == "OpenAI API":
+                                # add OpenAI call here if needed
+                                pass
+                            elif st.session_state['model_provider'] == "Anthropic API":
+                                # add Anthropic call here if needed
+                                pass
+
+                            internal_elements_xml = client.invoke(prompt_step1)
+
+                        except Exception as e:
+                            st.error(f"Failed to generate internal elements XML: {str(e)}")
 
                         end_time = time.time()
                         elapsed_secs = end_time - start_time
                         st.success(f"Step 1 completed ({elapsed_secs:.2f} secs)")
                         break  # success, exit retry loop
+                    
                     except Exception as e:
                         if attempt == max_retries - 1:
                             st.error(f"Error generating model (Step 1) after {max_retries} attempts: {e}")
@@ -705,37 +538,45 @@ def main():
             # Generate Valid Pairs based on Attack Paths
             #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 2) ..."):
-                time.sleep(2)  # brief pause before step 2
                 for attempt in range(max_retries):
                     try:
                         print("[#] Generating AML - Step 2")
                         start_time = time.time()
 
                         prompt_step2 = create_aml_prompt_step_2(attack_paths)
-                        if model_provider == "Mistral API":
-                            response_step2 = call_mistral(
-                                st.session_state['api_key'],
-                                prompt_step2,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+
+                        try:
+                            if st.session_state['model_provider'] == "Mistral API":
+                                client = ChatMistralAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
-                        elif model_provider == "Gemini API":
-                            response_step2 = call_gemini(
-                                st.session_state['api_key'],
-                                prompt_step2,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+                            elif st.session_state['model_provider'] == "Gemini API":
+                                client = ChatGoogleGenerativeAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
-                        valid_pairs_json = response_step2
+                            elif st.session_state['model_provider'] == "OpenAI API":
+                                # add OpenAI call here if needed
+                                pass
+                            elif st.session_state['model_provider'] == "Anthropic API":
+                                # add Anthropic call here if needed
+                                pass
+
+                            valid_pairs_json = client.invoke(prompt_step2)
+
+                        except Exception as e:
+                            st.error(f"Failed to generate valid pairs JSON: {str(e)}")
 
                         end_time = time.time()
                         elapsed_secs = end_time - start_time
                         st.success(f"Step 2 completed ({elapsed_secs:.2f} secs)")
                         break  # success, exit retry loop
+
                     except Exception as e:
                         if attempt == max_retries - 1:
                             st.error(f"Error generating model (Step 2) after {max_retries} attempts: {e}")
@@ -748,7 +589,6 @@ def main():
             # Generate Internal Links based on Valid Pairs
             #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 3) ..."):
-                time.sleep(2.1)  # brief pause before step 3
                 for attempt in range(max_retries):
                     try:
                         print("[#] Generating AML - Step 3")
@@ -764,30 +604,39 @@ def main():
                         map_str = "\n".join(map_lines)
 
                         prompt_step3 = create_aml_prompt_step_3(valid_pairs_json, map_str)
-                        if model_provider == "Mistral API":
-                            response_step3 = call_mistral(
-                                st.session_state['api_key'],
-                                prompt_step3,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+
+                        try:
+                            if st.session_state['model_provider'] == "Mistral API":
+                                client = ChatMistralAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
-                        elif model_provider == "Gemini API":
-                            response_step3 = call_gemini(
-                                st.session_state['api_key'],
-                                prompt_step3,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+                            elif st.session_state['model_provider'] == "Gemini API":
+                                client = ChatGoogleGenerativeAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
-                        internal_links_xml = response_step3
+                            elif st.session_state['model_provider'] == "OpenAI API":
+                                # add OpenAI call here if needed
+                                pass
+                            elif st.session_state['model_provider'] == "Anthropic API":
+                                # add Anthropic call here if needed
+                                pass
+
+                            internal_links_xml = client.invoke(prompt_step3)
+
+                        except Exception as e:
+                            st.error(f"Failed to generate internal links XML: {str(e)}")
 
                         end_time = time.time()
                         elapsed_secs = end_time - start_time
                         st.success(f"Step 3 completed ({elapsed_secs:.2f} secs)")
                         break  # success, stop retrying
+
                     except Exception as e:
                         if attempt == max_retries - 1:
                             st.error(f"Error generating model (Step 3) after {max_retries} attempts: {e}")
@@ -800,34 +649,44 @@ def main():
             # Final Assembly of AutomationML Model
             #------------------------------------------------------------------------------------------
             with st.spinner("Generating AutomationML Model (Step 4) ..."):
-                time.sleep(2.2)  # brief pause before step 4
                 for attempt in range(max_retries):
                     try:
                         print("[#] Generating AML - Step 4 (Final)")
                         start_time = time.time()
                         prompt_step4 = create_aml_prompt_step_4(internal_elements_xml, internal_links_xml)
-                        if model_provider == "Mistral API":
-                            response_step4 = call_mistral(
-                                st.session_state['api_key'],
-                                prompt_step4,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+
+                        try:
+                            if st.session_state['model_provider'] == "Mistral API":
+                                client = ChatMistralAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
-                        elif model_provider == "Gemini API":
-                            response_step4 = call_gemini(
-                                st.session_state['api_key'],
-                                prompt_step4,
-                                image_bytes if 'image_bytes' in locals() else b'',
-                                selected_model,
-                                st.session_state['token_limit'],
-                                response_as_json=False
+                            elif st.session_state['model_provider'] == "Gemini API":
+                                client = ChatGoogleGenerativeAI(
+                                    api_key=st.session_state['api_key'],
+                                    model=st.session_state['selected_model'],
+                                    max_tokens=st.session_state['token_limit'],
+                                    max_retries=0
                                 )
+                            elif st.session_state['model_provider'] == "OpenAI API":
+                                # add OpenAI call here if needed
+                                pass
+                            elif st.session_state['model_provider'] == "Anthropic API":
+                                # add Anthropic call here if needed
+                                pass
+
+                            final_aml_xml = client.invoke(prompt_step4)
+
+                        except Exception as e:
+                            st.error(f"Failed to generate final AML XML: {str(e)}")
+                            
                         end_time = time.time()
                         elapsed_secs = end_time - start_time
                         st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
                         break  # success, exit retry loop
+
                     except Exception as e:
                         if attempt == max_retries - 1:
                             st.error(f"Error generating model (Step 4) after {max_retries} attempts: {e}")
@@ -835,8 +694,6 @@ def main():
                             delay = 2 ** attempt + random.uniform(0, 1)  # exponential backoff with jitter
                             st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
                             time.sleep(delay)
-
-                final_aml_xml = response_step4
 
             return final_aml_xml
 
