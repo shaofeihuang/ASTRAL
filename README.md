@@ -59,7 +59,7 @@ Flexible integration with multiple LLM providers:
 
 - Python 3.8 or higher
 - pip package manager
-- API keys for at least one LLM provider (OpenAI, Anthropic, or Mistral)
+- API keys for at least one LLM provider (Gemini, Mistral, OpenAI, or Anthropic)
 
 ### Setup Instructions
 
@@ -80,6 +80,7 @@ Flexible integration with multiple LLM providers:
    ```bash
    # .env file
    MISTRAL_API_KEY=your_mistral_api_key_here
+   GEMINI_API_KEY=your_gemini_api_key_here
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
    OPENAI_API_KEY=your_openai_api_key_here
    ```
@@ -98,8 +99,9 @@ Flexible integration with multiple LLM providers:
 
 Key dependencies include:
 
-- **Streamlit** (1.50.0): Web application framework
-- **LLM Providers**: OpenAI, Anthropic, MistralAI
+- **Streamlit** (1.28.0): Web application framework
+- **LLM Providers**: OpenAI, Anthropic, Mistral, Gemini
+- **LangChain** (0.1.0): LLM orchestration framework
 - **Bayesian Analysis**: pgmpy, pyro-ppl, torch
 - **Security**: azure-keyvault-secrets, azure-identity
 
