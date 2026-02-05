@@ -17,11 +17,10 @@ import streamlit as st
 import streamlit.components.v1 as components
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from sympy import root
 
 # Local application imports
 from bayesian import *
-from prompts import *
+from prompts import create_attack_tree_prompt
 
 
 # Namespace mapping for XML parsing

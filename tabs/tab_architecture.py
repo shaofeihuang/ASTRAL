@@ -4,10 +4,7 @@ from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Local application imports
-from prompts import *
-from utils import *
-from bayesian import *
-from llm_functions import *
+from prompts import create_arch_narration_prompt
 
 def tab_architectural_narration():
     st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using Multimodal LLMs)")

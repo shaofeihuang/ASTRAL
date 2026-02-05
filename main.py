@@ -3,14 +3,11 @@ import logging
 
 # Third-party imports
 import streamlit as st
-from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
 # Local application imports
-from prompts import *
 from utils import *
-from bayesian import *
 from llm_functions import *
 from tabs.tab_architecture import tab_architectural_narration
 from tabs.tab_threat_model import tab_threat_model
@@ -20,11 +17,12 @@ from tabs.tab_bayesian_analysis import tab_bayesian_analysis
 from tabs.tab_countermeasures import tab_countermeasures
 from tabs.tab_optimization import tab_optimization
 
-#----------------------------------------------------------------------------------------------
-# Main Application
-#----------------------------------------------------------------------------------------------
+
 def main():
+    #---------------------- IMPORTANT!! ---------------------------
     # Comment out if not using Azure Key Vault
+    #---------------------- IMPORTANT!! ---------------------------
+
     if 'azure_key_vault_logged_in' not in st.session_state:
         key_vault_name = "tra-demo"
         key_vault_uri = f"https://{key_vault_name}.vault.azure.net/"
@@ -32,21 +30,16 @@ def main():
         st.session_state['client'] = SecretClient(vault_url=key_vault_uri, credential=credential)
         st.session_state['azure_key_vault_logged_in'] = key_vault_name
 
-    #----------------- IMPORTANT!! ----------------
+    #---------------------- IMPORTANT!! ---------------------------
     # Uncomment to use .env file for local testing
     # load_dotenv()
-    #----------------------------------------------
+    #--------------------------------------------------------------
 
+    # Streamlit page configuration
     with st.sidebar:
         st.image("logo.jpeg")
-        #----------------------------------------------------------------------------------------------
-        # Select LLM Model
-        #----------------------------------------------------------------------------------------------
         select_llm_model()
 
-        #----------------------------------------------------------------------------------------------
-        # Select CPS System Context
-        #----------------------------------------------------------------------------------------------
         st.session_state['system_context'] = st.selectbox(
             "CPS System Context",
             ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System", "Smart Grid System", "Smart Healthcare System", "Water Treatment System"],
@@ -55,59 +48,35 @@ def main():
             accept_new_options=True,
         )
 
-    #----------------------------------------------------------------------------------------------
-    # Create Tabs for Different Functionalities
-    #----------------------------------------------------------------------------------------------
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Bayesian Analysis", "Countermeasures", "Optimisation"])
-
-#----------------------------------------------------------------------------------------------
-# Generate Architectural Narration
-#----------------------------------------------------------------------------------------------
 
     with tab1:
         tab_architectural_narration()
 
-#----------------------------------------------------------------------------------------------
-# Generate Threat Model
-#----------------------------------------------------------------------------------------------
     with tab2:
         tab_threat_model(image_bytes=st.session_state.get('image_bytes', None))
 
-#----------------------------------------------------------------------------------------------
-# Generate Attack Trees and Attack Paths
-#----------------------------------------------------------------------------------------------
     with tab3:
         tab_attack_tree()
 
-#----------------------------------------------------------------------------------------------
-# Generate System Model in AutomationML
-#----------------------------------------------------------------------------------------------
     with tab4:
         tab_system_model()
 
-#----------------------------------------------------------------------------------------------
-# Analyse System Model and Compute Bayesian Probabilities
-#----------------------------------------------------------------------------------------------
     with tab5:
         tab_bayesian_analysis()
 
-#----------------------------------------------------------------------------------------------
-# Calibrate Countermeasure Portfolio
-#----------------------------------------------------------------------------------------------
     with tab6:
         tab_countermeasures()
 
-#----------------------------------------------------------------------------------------------
-# Multi-Objective Optimisation
-#----------------------------------------------------------------------------------------------
     with tab7:
         tab_optimization()
 
     display_metrics()
 
-#----------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------
 # Main Entry Point
-#----------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------
+
 if __name__ == "__main__":
     logging.getLogger('azure.core.pipeline.policies.http_logging_policy').setLevel(logging.WARNING)
     logging.getLogger('azure.identity').setLevel(logging.WARNING)

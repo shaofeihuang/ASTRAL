@@ -1,20 +1,17 @@
 # Standard library imports
 import ast
+import dill
 import glob
 import os
 import re
 from concurrent.futures import ProcessPoolExecutor
 
 # Third-party imports
-import dill
-import pandas as pd
 import streamlit as st
+import pandas as pd
 
 # Local application imports
-from prompts import *
 from utils import *
-from bayesian import *
-from llm_functions import *
 
 def tab_optimization():
     st.info("Use this tab to perform multi-objective optimisation to identify optimal mitigation priority values for each vulnerability in the system model. The optimisation aims to minimize or maximize selected metrics simultaneously using Bayesian probabilities computed from the system model analysis.")
