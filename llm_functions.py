@@ -1,26 +1,8 @@
 
-# Standard library imports
-import ast
-import glob
-import json
-import logging
-import os
-import random
-import re
-import time
-from concurrent.futures import ProcessPoolExecutor
-from datetime import date
-
 # Third-party imports
-import dill
-import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from azure.core.exceptions import ResourceNotFoundError
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-from langchain_mistralai import ChatMistralAI
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Local application imports
 from prompts import *
@@ -106,10 +88,15 @@ def on_model_selection_change():
         if provider_key in model_token_limits:
             st.session_state['token_limit'] = model_token_limits[provider_key]["default"]
 
-def select_llm_model(model_provider):
-    #----------------------------------------------------------------------------------------------
-    # Select Model based on Provider
-    #----------------------------------------------------------------------------------------------
+def select_llm_model():
+    model_provider = st.selectbox(
+    "Select your preferred model provider:",
+    ["Mistral API", "Gemini API", "OpenAI API", "Anthropic API"],
+    key="model_provider",
+    index=0,
+    on_change=on_model_provider_change,
+    help="Select the model provider you would like to use. This will determine the models available for selection.",
+    )
 
     if model_provider == "Mistral API":
         try:
