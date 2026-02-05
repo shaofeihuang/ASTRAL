@@ -2,7 +2,6 @@
 import streamlit as st
 from azure.core.exceptions import ResourceNotFoundError
 
-
 #----------------------------------------------------------------------------------------------
 # Model Token Limits Dictionary
 #----------------------------------------------------------------------------------------------

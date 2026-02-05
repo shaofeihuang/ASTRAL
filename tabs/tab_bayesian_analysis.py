@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 # Local application imports
-#from utils import *
+from utils import *
 
 
 def tab_bayesian_analysis():

@@ -7,8 +7,26 @@ from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Local application imports
-from prompts import *
-from utils import *
+from prompts import create_threat_model_prompt
+
+
+# Convert threat model JSON to Markdown
+def tm_json_to_markdown(threat_model, arch_suggestions):
+    markdown_output = "## Threat Model\n\n"
+
+    # Start the markdown table with headers
+    markdown_output += "| Threat Type | Scenario | Potential Impact |\n"
+    markdown_output += "|-------------|----------|------------------|\n"
+
+    # Fill the table rows with the threat model data
+    for threat in threat_model:
+        markdown_output += f"| {threat['Threat Type']} | {threat['Scenario']} | {threat['Potential Impact']} |\n"
+
+    markdown_output += "\n\n## Architecture Suggestions\n\n"
+    for suggestion in arch_suggestions:
+        markdown_output += f"- {suggestion}\n"
+
+    return markdown_output
 
 
 def tab_threat_model(image_bytes):
