@@ -199,7 +199,7 @@ ASTRAL/
     ├── tab_countermeasures.py      # Countermeasure portfolio configuration
     ├── tab_optimization.py         # Multi-objective optimization
     ├── tab_system_model.py         # System model generation (AutomationML)
-    ├── tab_threat_model.py         # Threat modeling
+    └── tab_threat_model.py         # Threat modeling
 ```
 
 ## License
