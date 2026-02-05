@@ -9,7 +9,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 # Local application imports
 from prompts import create_threat_model_prompt
 
-
 # Convert threat model JSON to Markdown
 def tm_json_to_markdown(threat_model, arch_suggestions):
     markdown_output = "## Threat Model\n\n"

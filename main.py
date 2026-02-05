@@ -17,7 +17,6 @@ from tabs.tab_bayesian_analysis import tab_bayesian_analysis
 from tabs.tab_countermeasures import tab_countermeasures
 from tabs.tab_optimization import tab_optimization
 
-
 def main():
     #---------------------- IMPORTANT!! ---------------------------
     # Comment out if not using Azure Key Vault

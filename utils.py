@@ -17,11 +17,8 @@ import streamlit as st
 # Local application imports
 from bayesian import *
 
-
 # Namespace mapping for XML parsing
 ns = {'caex': 'http://www.dke.de/CAEX'}
-
-# Utility Functions
 
 # Get MIME type from filename
 def get_mime_type_from_filename(filename: str) -> str:

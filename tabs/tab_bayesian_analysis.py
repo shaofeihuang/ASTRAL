@@ -8,7 +8,6 @@ import streamlit as st
 # Local application imports
 from utils import *
 
-
 def tab_bayesian_analysis():
     st.info("Use this tab to analyse the generated AutomationML system model. Based on the model attributes, Bayesian probabilities of successful attacks will be computed to support risk assessment and decision-making. Enter the system installation date and load the model attributes to proceed with the analysis.")
     st.markdown("""---""")

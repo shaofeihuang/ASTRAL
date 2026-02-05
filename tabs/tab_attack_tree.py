@@ -11,7 +11,6 @@ import streamlit.components.v1 as components
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-
 # Create JSON schema for attack tree
 def create_attack_tree_schema():
     return {
