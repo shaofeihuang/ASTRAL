@@ -148,68 +148,6 @@ def process_AML_file(root, t):
 
     internal_elements = root.findall(".//caex:InternalElement", ns)
 
-    for internal_element in internal_elements:
-        internal_element_id = internal_element.get('ID')
-        internal_element_name = internal_element.get('Name')
-        internal_element_impact_rating = internal_element.get('Impact Rating')
-        ref_base_system_unit_path = internal_element.get('RefBaseSystemUnitPath')
-
-        failure_rate_value = get_attribute_value(internal_element, 'FailureRatePerHour')
-        probability_of_failure = (
-            calculate_probability_of_failure(failure_rate_value, t) 
-            if failure_rate_value is not None 
-            else 0
-        )
-
-        probability_of_exposure_value = get_attribute_value(internal_element, 'Probability of Exposure')
-        probability_of_exposure = probability_of_exposure_value if probability_of_exposure_value is not None else 0
-
-        probability_of_impact_value = get_attribute_value(internal_element, 'Probability of Impact')
-        probability_of_impact_vulnerability = probability_of_impact_value if probability_of_impact_value is not None else 0
-
-        probability_of_mitigation_value = get_attribute_value(internal_element, 'Probability of Mitigation')
-        probability_of_mitigation = probability_of_mitigation_value if probability_of_mitigation_value is not None else 0
-
-        human_error_percentage_value = get_attribute_value(internal_element, 'HumanErrorEstimationPercentage')
-        probability_of_human_error = (
-            calculate_probability_of_human_error(human_error_percentage_value, t) 
-            if human_error_percentage_value is not None 
-            else 0
-        )
-
-        if internal_element_impact_rating is None:
-            internal_element_data = {
-                'ID': internal_element_id,
-                'Name': internal_element_name,
-                'Probability of Failure': probability_of_failure,
-                'Probability of Exposure': probability_of_exposure,
-                'Probability of Impact' : probability_of_impact_vulnerability,
-                'Probability of Mitigation' : probability_of_mitigation,
-                'Probability of Human Error': probability_of_human_error,
-                'RefBaseSystemUnitPath': ref_base_system_unit_path
-            }
-        else:
-            internal_element_data = {
-                'ID': internal_element_id,
-                'Name': internal_element_name,
-                'Impact Rating': internal_element_impact_rating,
-                'Probability of Failure': probability_of_failure,
-                'Probability of Exposure': probability_of_exposure,
-                'Probability of Impact' : probability_of_impact_vulnerability,
-                'Probability of Mitigation' : probability_of_mitigation,
-                'Probability of Human Error': probability_of_human_error,
-                'RefBaseSystemUnitPath': ref_base_system_unit_path
-            }
-
-        if ref_base_system_unit_path.startswith ('AssetOfICS/'):
-            AssetinSystem.append(internal_element_data)
-        elif ref_base_system_unit_path == 'HazardforSystem/Hazard':
-            HazardinSystem.append(internal_element_data)
-        elif ref_base_system_unit_path == 'VulnerabilityforSystem/Vulnerability':
-            VulnerabilityinSystem.append(internal_element_data)
-
-        probability_data.append(internal_element_data)
-
     for internal_element in root.findall(".//caex:InternalElement", ns):
         external_interfaces = internal_element.findall(".//caex:ExternalInterface", ns)
         if len(external_interfaces) < 5:
@@ -288,7 +226,8 @@ def process_AML_file(root, t):
             'Element': element,
             'Number of children': child['Number of children'],
             'Number of parents': parent['Number of parents'],
-            'Total Dependents': total_dependents
+            'Total Dependents': total_dependents,
+            'Connection Ratio': child['Number of children'] / len(total_elements) if len(total_elements) > 0 else 0
         }
 
         for key in result_dict:
@@ -301,6 +240,64 @@ def process_AML_file(root, t):
 
         if num_parents > max_num_parents:
             max_num_parents = num_parents
+
+    for internal_element in internal_elements:
+        internal_element_id = internal_element.get('ID')
+        internal_element_name = internal_element.get('Name')
+        internal_element_impact_rating = internal_element.get('Impact Rating')
+        ref_base_system_unit_path = internal_element.get('RefBaseSystemUnitPath')
+
+        probability_of_failure = (1 - math.exp(-(float(get_attribute_value(internal_element, 'FailureRatePerHour')) * t))) if get_attribute_value(internal_element, 'FailureRatePerHour') is not None else 0
+
+        if re.match(r'.*\[A[0-9]{2}\].*', internal_element_id):
+            probability_of_exposure = probability_of_failure
+        elif re.match(r'.*\[H[0-9]{2}\].*', internal_element_id) or re.match(r'.*\[G[0-9]{2}\].*', internal_element_id):
+            probability_of_exposure = 1 # default value for hazards and goal elements
+        else:
+            probability_of_exposure = get_attribute_value(internal_element, 'Probability of Exposure')
+
+        if re.match(r'.*\[V[0-9]{2}\].*', internal_element_id):
+            probability_of_impact = get_attribute_value(internal_element, 'Probability of Impact') or 0
+        else:
+            probability_of_impact = next((result['Connection Ratio'] for result in result_list 
+                                if result['Element'] == internal_element_id), 0)
+
+        probability_of_mitigation = get_attribute_value(internal_element, 'Probability of Mitigation') if get_attribute_value(internal_element, 'Probability of Mitigation') is not None else 0
+
+        probability_of_human_error = (1 - math.exp(-((float(get_attribute_value(internal_element, 'HumanErrorEstimationPercentage')) / (100 * 8760)) * t))) if get_attribute_value(internal_element, 'HumanErrorEstimationPercentage') is not None else 0
+
+        if internal_element_impact_rating is None:
+            internal_element_data = {
+                'ID': internal_element_id,
+                'Name': internal_element_name,
+                'Probability of Failure': probability_of_failure,
+                'Probability of Exposure': probability_of_exposure,
+                'Probability of Impact' : probability_of_impact,
+                'Probability of Mitigation' : probability_of_mitigation,
+                'Probability of Human Error': probability_of_human_error,
+                'RefBaseSystemUnitPath': ref_base_system_unit_path
+            }
+        else:
+            internal_element_data = {
+                'ID': internal_element_id,
+                'Name': internal_element_name,
+                'Impact Rating': internal_element_impact_rating,
+                'Probability of Failure': probability_of_failure,
+                'Probability of Exposure': probability_of_exposure,
+                'Probability of Impact' : probability_of_impact,
+                'Probability of Mitigation' : probability_of_mitigation,
+                'Probability of Human Error': probability_of_human_error,
+                'RefBaseSystemUnitPath': ref_base_system_unit_path
+            }
+
+        if ref_base_system_unit_path.startswith ('AssetOfICS/'):
+            AssetinSystem.append(internal_element_data)
+        elif ref_base_system_unit_path == 'HazardforSystem/Hazard':
+            HazardinSystem.append(internal_element_data)
+        elif ref_base_system_unit_path == 'VulnerabilityforSystem/Vulnerability':
+            VulnerabilityinSystem.append(internal_element_data)
+
+        probability_data.append(internal_element_data)
 
     return probability_data, AssetinSystem, HazardinSystem, VulnerabilityinSystem, max_num_parents, total_elements, connections, connections_mapped, result_list
 
@@ -338,7 +335,6 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
         probability_of_exposure_for_node = node_context.matching_vulnerability_nodes[0]['Probability of Exposure']
         probability_of_mitigation_for_node = node_context.matching_vulnerability_nodes[0]['Probability of Mitigation']
         pofe = float(probability_of_exposure_for_node * (1 - probability_of_mitigation_for_node))
-        #print("[DEBUG] ID:", node_context.matching_vulnerability_nodes[0]['ID'], "Exposure:", probability_of_exposure_for_node, "Mitigation:", probability_of_mitigation_for_node, "POFE:", pofe)
         if num_parents == 0:
             cpd_values[0, 0] = pofe * af_modifier
             cpd_values[1, 0] = 1 - pofe * af_modifier
@@ -350,12 +346,18 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
 
     elif NodeType == "Asset":
         ref_base_for_node = node_context.matching_asset_nodes[0]['RefBaseSystemUnitPath']
-        if ref_base_for_node.startswith ('AssetOfICS/'):
+
+        if ref_base_for_node == 'AssetOfICS/User':
+            probability_of_human_error_for_node = node_context.matching_asset_nodes[0]['Probability of Human Error']
+            pofhe = float(probability_of_human_error_for_node)
+            cpd_values[0, 0] = pofhe
+            cpd_values[1, 0] = 1 - pofhe
+
+        elif ref_base_for_node.startswith ('AssetOfICS/'):
             probability_of_failure_for_node = node_context.matching_asset_nodes[0]['Probability of Failure']
 
             # Calculate probability of failure based on connected vulnerabilities
             connections_from_to = defaultdict(list)
-
             for connection in aml_data.connections_mapped:
                 from_element = connection['from']
                 if node_context.matching_asset_nodes[0]['ID'] == from_element:
@@ -368,19 +370,18 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
 
                 sum_mitigation = 0.0  # Initialize sum for each asset
 
-                for i in range(num_vulns):
-                    matched = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == vulns[i]]
-                    if matched:
-                        probability_of_mitigation = matched[0].get('Probability of Mitigation', 0.0)
-                        if probability_of_mitigation > 0:
-                            sum_mitigation += probability_of_mitigation
-                    else:
-                        print(f"No matching vulnerability found for ID {vulns[i]}")
-
                 if num_vulns > 0:
+                    for i in range(num_vulns):
+                        matched = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == vulns[i]]
+                        if matched:
+                            probability_of_mitigation = matched[0].get('Probability of Mitigation', 0.0)
+                            if probability_of_mitigation > 0:
+                                sum_mitigation += probability_of_mitigation
+                        else:
+                            print(f"No matching vulnerability found for ID {vulns[i]}")
+
                     scaling_factor = 1.0 / num_vulns
                     probability_of_failure_for_node = min(1.0, scaling_factor * sum_mitigation)
-                    #print("Asset:", asset, "Probability of failure:", probability_of_failure_for_node)
 
             if probability_of_failure_for_node:
                 poff = float(probability_of_failure_for_node)
@@ -393,14 +394,9 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
                 cpd_values[1, :-1] = 0
                 cpd_values[0, -1] = 0
                 cpd_values[1, -1] = 1
-        elif ref_base_for_node == 'AssetOfICS/User':
-            probability_of_human_error_for_node = node_context.matching_asset_nodes[0]['Probability of Human Error']
-            pofhe = float(probability_of_human_error_for_node)
-            cpd_values[0, 0] = pofhe
-            cpd_values[1, 0] = 1 - pofhe
+
         else:
-            probability_of_failure_for_node = node_context.matching_asset_nodes[0]['Probability of Failure']
-            poff = float(probability_of_failure_for_node)
+            poff = node_context.matching_asset_nodes[0]['Probability of Failure']
             cpd_values[0, 0] = poff
             cpd_values[1, 0] = 1 - poff
 
@@ -518,7 +514,7 @@ def create_bbn_exposure():
     return bbn_exposure, last_node
 
 
-def create_bbn_impact(bbn_exposure):
+def create_bbn_impact():
     cpds = {}
     aml_data = st.session_state['aml_data']
 
@@ -529,7 +525,7 @@ def create_bbn_impact(bbn_exposure):
         cpd_values = None
 
         node_context = NodeContext(
-        num_parents = len(bbn_exposure.get_parents(node)),
+        num_parents = len(bbn_impact.get_parents(node)),
         matching_hazard_nodes = [element for element in aml_data.HazardinSystem if element['ID'] == node],
         matching_vulnerability_nodes = [element for element in aml_data.VulnerabilityinSystem if element['ID'] == node],
         matching_asset_nodes = [element for element in aml_data.AssetinSystem if element['ID'] == node]
@@ -562,17 +558,12 @@ def check_bbn_models(bbn_exposure, bbn_impact):
     print("[*] Checking BBN (Impact) structure consistency:", bbn_impact.check_model())
 
 
-def compute_bayesian_probabilities(inference_exposure, inference_impact, total_elements, source_node, target_node):
-    for nodes in total_elements:
-        if nodes == target_node:
-            prob_failure = inference_exposure.query(variables=[nodes], evidence={source_node:1})
-            prob_impact = inference_impact.query(variables=[nodes], evidence={source_node:1})
-            cpd_prob = prob_failure.values
-            cpd_impact = prob_impact.values
-#            print("[+] P(Exposure): {:.4f}".format(cpd_prob[0]), "P(Severe Impact): {:.4f}".format(cpd_impact[0]))
-            return cpd_prob[0], cpd_impact[0]
-        else:
-            pass
+def compute_bayesian_probabilities(inference_exposure, inference_impact, source_node, target_node):
+    prob_failure = inference_exposure.query(variables=[target_node], evidence={source_node:1})
+    prob_impact = inference_impact.query(variables=[target_node], evidence={source_node:1})
+    cpd_prob = prob_failure.values
+    cpd_impact = prob_impact.values
+    return cpd_prob[0], cpd_impact[0]
 
 
 def bbn_inference(source_node):

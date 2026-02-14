@@ -15,7 +15,7 @@ import optuna
 import streamlit as st
 
 # Local application imports
-from bayesian import *
+from bayesian3 import *
 
 # Namespace mapping for XML parsing
 ns = {'caex': 'http://www.dke.de/CAEX'}
@@ -466,10 +466,8 @@ def load_model_attributes():
 
 # Compute risk score using Bayesian networks
 def compute_risk_score():
-    #check_probability_data(aml_data)
-    bbn_exposure, last_node = create_bbn_exposure()
-    bbn_impact = create_bbn_impact(bbn_exposure)
-    #check_bbn_models(bbn_exposure, bbn_impact)
+    bbn_exposure, target_node = create_bbn_exposure()
+    bbn_impact = create_bbn_impact()
 
     inference_exposure = VariableElimination(bbn_exposure)
     inference_impact = VariableElimination(bbn_impact)
@@ -482,18 +480,18 @@ def compute_risk_score():
 
     #print("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
 
-    cpd_prob, cpd_impact = compute_bayesian_probabilities(inference_exposure, inference_impact, st.session_state['aml_data'].total_elements, start_node, last_node)
+    cpd_exposure, cpd_impact = compute_bayesian_probabilities(inference_exposure, inference_impact, start_node, target_node)
 
-    risk_score = cpd_prob * cpd_impact * 100
-    availability = (1 - cpd_prob) * (1 - cpd_impact) * 100
-    st.session_state['cpd_prob'] = cpd_prob
+    risk_score = cpd_exposure * cpd_impact * 100
+    availability = (1 - cpd_exposure) * (1 - cpd_impact) * 100
+    st.session_state['cpd_exposure'] = cpd_exposure
     st.session_state['cpd_impact'] = cpd_impact
     st.session_state['risk_score'] = risk_score
     st.session_state['availability'] = availability
     print('--------------------------')
     print(datetime.now())
     print('--------------------------')
-    print('[+] P(Exposure): {:.4f}'.format(cpd_prob), 'P(Severe Impact): {:.4f}'.format(cpd_impact))
+    print('[+] P(Exposure): {:.4f}'.format(cpd_exposure), 'P(Severe Impact): {:.4f}'.format(cpd_impact))
     print('[+] Risk score: {:.2f}%'.format(risk_score), 'System Availability: {:.2f}%'.format(availability))
     if 'attack_paths' in st.session_state:
         st.session_state['entropy'] = calculate_entropy(extract_id_mitigation())
@@ -504,7 +502,7 @@ def compute_risk_score():
 
 # Display risk metrics in sidebar
 def display_metrics():
-    st.sidebar.metric("Probability of Exposure", value=f"{st.session_state.get('cpd_prob', 0):.4f}")
+    st.sidebar.metric("Probability of Exposure", value=f"{st.session_state.get('cpd_exposure', 0):.4f}")
     st.sidebar.metric("Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
     st.sidebar.metric("Risk Score", value=f"{st.session_state.get('risk_score', 0):.2f}%")
     st.sidebar.metric("System Availability", value=f"{st.session_state.get('availability', 0):.2f}%")
