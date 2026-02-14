@@ -3,6 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
 import math
+from platform import node
 import re
 import xml.etree.ElementTree as ET
 
@@ -290,7 +291,7 @@ def process_AML_file(root, t):
                 'RefBaseSystemUnitPath': ref_base_system_unit_path
             }
         
-        print(f"[DEBUG] Processed InternalElement ID: {internal_element_id}, Name: {internal_element_name}, RefBaseSystemUnitPath: {ref_base_system_unit_path}, Probability of Failure: {probability_of_failure}, Probability of Exposure: {probability_of_exposure}, Probability of Impact: {probability_of_impact}, Probability of Mitigation: {probability_of_mitigation}, Probability of Human Error: {probability_of_human_error}")
+        #print(f"[DEBUG] Processed InternalElement ID: {internal_element_id}, Name: {internal_element_name}, RefBaseSystemUnitPath: {ref_base_system_unit_path}, Probability of Failure: {probability_of_failure}, Probability of Exposure: {probability_of_exposure}, Probability of Impact: {probability_of_impact}, Probability of Mitigation: {probability_of_mitigation}, Probability of Human Error: {probability_of_human_error}")
 
         if ref_base_system_unit_path.startswith ('AssetOfICS/'):
             AssetinSystem.append(internal_element_data)
@@ -323,6 +324,7 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
     aml_data = st.session_state['aml_data']
     af_modifier = st.session_state['af_modifier_input']
 
+    node = node_context.matching_hazard_nodes[0]['ID'] if node_context.matching_hazard_nodes else (node_context.matching_vulnerability_nodes[0]['ID'] if node_context.matching_vulnerability_nodes else (node_context.matching_asset_nodes[0]['ID'] if node_context.matching_asset_nodes else None))
     if NodeType == "Hazard":
         if num_parents == 0:
             cpd_values[:, 0] = 0.5
@@ -352,8 +354,14 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
         if ref_base_for_node == 'AssetOfICS/User':
             probability_of_human_error_for_node = node_context.matching_asset_nodes[0]['Probability of Human Error']
             pofhe = float(probability_of_human_error_for_node)
-            cpd_values[0, 0] = pofhe
-            cpd_values[1, 0] = 1 - pofhe
+            if num_parents == 0:
+                cpd_values[0, 0] = pofhe
+                cpd_values[1, 0] = 1 - pofhe
+            elif num_parents >= 1:
+                cpd_values[0, :-1] = pofhe
+                cpd_values[1, :-1] = 1 - pofhe
+                cpd_values[0, -1] = 0
+                cpd_values[1, -1] = 1
 
         elif ref_base_for_node.startswith ('AssetOfICS/'):
             probability_of_failure_for_node = node_context.matching_asset_nodes[0]['Probability of Failure']
@@ -396,11 +404,6 @@ def generate_cpd_values_exposure(node_context: NodeContext, NodeType: str):
                 cpd_values[1, :-1] = 0
                 cpd_values[0, -1] = 0
                 cpd_values[1, -1] = 1
-
-        else:
-            poff = node_context.matching_asset_nodes[0]['Probability of Failure']
-            cpd_values[0, 0] = poff
-            cpd_values[1, 0] = 1 - poff
 
     cpd_values /= np.sum(cpd_values, axis=0)  # Normalize the CPD values
     return cpd_values.reshape((2, -1))
@@ -500,8 +503,6 @@ def create_bbn_exposure():
         if cpd_values is None or np.any(np.isnan(cpd_values)):
             raise ValueError(f"Missing or invalid CPD values for node {node}")
 
-        #print(f"[DEBUG] CPD values before normalization for node {node}: {cpd_values}")
-
         cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
                         evidence=bbn_exposure.get_parents(node), evidence_card=[2] * node_context.num_parents)
 
@@ -542,8 +543,6 @@ def create_bbn_impact():
         if cpd_values is None or np.any(np.isnan(cpd_values)):
             raise ValueError(f"Missing or invalid CPD values for node {node}")
         
-        #print(f"[DEBUG] CPD values before normalization for node {node}: {cpd_values}")
-
         cpd = TabularCPD(variable=node, variable_card=2, values=cpd_values,
                         evidence=bbn_impact.get_parents(node), evidence_card=[2] * node_context.num_parents)
         
