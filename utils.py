@@ -15,7 +15,7 @@ import optuna
 import streamlit as st
 
 # Local application imports
-from bayesian3 import *
+from bayesian import *
 
 # Namespace mapping for XML parsing
 ns = {'caex': 'http://www.dke.de/CAEX'}
