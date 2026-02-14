@@ -289,6 +289,8 @@ def process_AML_file(root, t):
                 'Probability of Human Error': probability_of_human_error,
                 'RefBaseSystemUnitPath': ref_base_system_unit_path
             }
+        
+        print(f"[DEBUG] Processed InternalElement ID: {internal_element_id}, Name: {internal_element_name}, RefBaseSystemUnitPath: {ref_base_system_unit_path}, Probability of Failure: {probability_of_failure}, Probability of Exposure: {probability_of_exposure}, Probability of Impact: {probability_of_impact}, Probability of Mitigation: {probability_of_mitigation}, Probability of Human Error: {probability_of_human_error}")
 
         if ref_base_system_unit_path.startswith ('AssetOfICS/'):
             AssetinSystem.append(internal_element_data)
@@ -509,7 +511,6 @@ def create_bbn_exposure():
 
     last_nodes = [e['Element'] for e in aml_data.result_list if e['Number of children'] == 0]
     last_node = last_nodes[0] if last_nodes else None
-#    print("\n[*] Last node in BBN:", last_node)
 
     return bbn_exposure, last_node
 
