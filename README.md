@@ -212,5 +212,4 @@ This project is provided as-is for research and educational purposes. Please ref
 
 For questions, issues, or suggestions:
 - Open an issue on GitHub
-- Check existing documentation in the `examples/` directory
 - Review the code comments for implementation details
