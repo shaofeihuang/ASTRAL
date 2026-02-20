@@ -7,8 +7,8 @@ You are a Senior Solution Architect tasked with narrating a system architectural
 System context: {system_context}
 
 Controlled sampling configuration:
-- temperature = 0.25  # promotes deterministic and schema-consistent generation
-- top_p = 0.9         # maintains coherent variability without random drift
+- temperature = 0.25
+- top_p = 0.9
 
 Think deeply to thoroughly analyze the diagram and provide a structured narration strictly based on visible content, covering:
 
@@ -49,8 +49,8 @@ Your task is to think deeply to thoroughly analyze the provided system architect
 System context: {system_context}
 
 Controlled sampling configuration:
-- temperature = 0.25  # promotes deterministic and schema-consistent generation
-- top_p = 0.9         # maintains coherent variability without random drift
+- temperature = 0.25
+- top_p = 0.9
 
 IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. If the diagram includes an "Attacker" entity—whether internal, external, explicit, or implicit—treat it as the origin for possible attack paths and enumerate realistic threats accordingly.
@@ -84,8 +84,8 @@ Your task is to think deeply to thoroughly analyze the threat model and create a
 System context: {system_context}
 
 Controlled sampling configuration:
-- temperature = 0.25  # promotes deterministic and schema-consistent generation
-- top_p = 0.9         # maintains coherent variability without random drift
+- temperature = 0.25
+- top_p = 0.9
 
 IMPORTANT - Follow these strictly enforced semantic guardrails:
 
@@ -152,8 +152,8 @@ TASK: Generate ONLY <InternalElement> XML blocks for ALL nodes appearing in the 
 Use EXACT node labels from the inputs. Do NOT invent nodes.
 
 Controlled sampling configuration:
-- temperature = 0.25  # promotes deterministic and schema-consistent generation
-- top_p = 0.9         # maintains coherent variability without random drift
+- temperature = 0.25
+- top_p = 0.9
 
 ## NODE CLASSIFICATION & TEMPLATES
 
@@ -255,8 +255,8 @@ TASK: Parse the attack paths and output ONLY a JSON array of valid [source_node_
 Preserve direction exactly as shown in paths. Cover ALL attack paths completely.
 
 Controlled sampling configuration:
-- temperature = 0.25  # promotes deterministic and schema-consistent generation
-- top_p = 0.9         # maintains coherent variability without random drift
+- temperature = 0.25
+- top_p = 0.9
 
 ## IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. Extract ONLY nodes with prefixes: [A##], [V##], [H##], [U##], [G##]
@@ -302,8 +302,8 @@ def create_aml_prompt_step_3(valid_pairs_json, map_str):
 TASK: Generate ONLY <InternalLink> XML elements for these EXACT pairs using the interface mapping.
 
 Controlled sampling configuration:
-- temperature = 0.25  # promotes deterministic and schema-consistent generation
-- top_p = 0.9         # maintains coherent variability without random drift
+- temperature = 0.25
+- top_p = 0.9
 
 VALID PAIRS:
 {valid_pairs_json}
@@ -352,8 +352,8 @@ def create_aml_prompt_step_4(internal_elements_xml, internal_links_xml):
 TASK: Assemble COMPLETE AutomationML XML using ONLY these validated components.
 
 Controlled sampling configuration:
-- temperature = 0.25  # promotes deterministic and schema-consistent generation
-- top_p = 0.9         # maintains coherent variability without random drift
+- temperature = 0.25
+- top_p = 0.9
 
 ## REQUIRED LIBRARIES (include EXACTLY these):
 
