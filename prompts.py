@@ -53,7 +53,7 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
 3. Focus your analysis on cyber-physical systems. Address system-level impacts such as disruption of physical processes, loss of control, cascading failures, or safety hazards rather than purely IT-centric threats.
 4. Consider multiple potential attacker objectives (e.g., power disruption, asset damage, persistent foothold in isolated OT environments, bypassing safety controls).
 5. Leverage and extract from the accompanying documentation to reflect the assets, vulnerabilities (both CVE-linked and non-CVE-linked), hazards, and objectives in each scenario.
-6. Identify and list real CVEs specific to the vulnerabilities visible in the accompanying documentation. For each CVE, provide the CVE identifier and a brief description. Indicate if the CVE has been observed in known attack campaigns (e.g., BlackEnergy, FrostyGoop), with references.
+6. Identify and list only CVEs that are visible in the accompanying documentation. For each CVE, provide the CVE identifier, the affected product, and a brief description. Indicate if the CVE has been observed in known attack campaigns (e.g., BlackEnergy, FrostyGoop), with references.
 7. Apply FMECA-style reasoning where applicable to identify failure modes, their effects, and potential cascading consequences.
 8. Format your response strictly as JSON with these top-level keys:
    - `"threat_model"`: an array of threat scenario objects.

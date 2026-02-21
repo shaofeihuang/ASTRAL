@@ -73,6 +73,7 @@ def tab_architectural_narration():
         additional_detail = st.text_area(
             "Enter Additional Architectural Details (Optional)",
             value="",
+            key ="arch_additional_detail",
             placeholder="Enter extra architectural specifics here.",
             height=150,
         )

@@ -91,3 +91,47 @@ def tab_threat_model(image_bytes):
             file_name="threat_model.md",
             mime="text/markdown",
         )
+        additional_detail = st.text_area(
+            "Enter Additional Architectural Details (Optional)",
+            value="",
+            key="threat_model_additional_detail",
+            placeholder="Enter extra architectural specifics here.",
+            height=150,
+        )
+
+        #------------------------------------------------------------------------------------------
+        # Re-Generate Architectural Narration with Additional Prompting
+        #------------------------------------------------------------------------------------------
+        if st.button("Re-Generate Threat Model"):
+            with st.spinner("Generating threat model..."):
+                try:
+                    if st.session_state['model_provider'] == "Mistral API":
+                        client = ChatMistralAI(
+                            api_key=st.session_state['api_key'],
+                            model=st.session_state['selected_model'],
+                            max_tokens=st.session_state['token_limit']
+                        )
+                    elif st.session_state['model_provider'] == "Gemini API":
+                        client = ChatGoogleGenerativeAI(
+                            api_key=st.session_state['api_key'],
+                            model=st.session_state['selected_model'],
+                            max_tokens=st.session_state['token_limit']
+                        )
+                    elif st.session_state['model_provider'] == "OpenAI API":
+                        # add OpenAI call here if needed
+                        pass
+                    elif st.session_state['model_provider'] == "Anthropic API":
+                        # add Anthropic call here if needed
+                        pass
+
+                    messages=[
+                        {"role": "user", "content": threat_model_prompt + f"Additional architectural details: {additional_detail}", "image": st.session_state['image_bytes']}
+                    ]
+                    response = client.invoke(messages, response_format={"type": "json_object"})
+                    model_output = json.loads(response.content)
+                    st.session_state['threat_model'] = model_output.get("threat_model", [])
+                    st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Failed to generate threat model: {str(e)}")
