@@ -110,7 +110,7 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
             "children": [
                 {
                     "id": "auth",
-                    "label": "Gain Unauthorized Access",
+                    "label": "Gain Unauthorised Access",
                     "children": [
                         {
                             "id": "auth1",
