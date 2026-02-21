@@ -13,12 +13,13 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from prompts import *
 from utils import *
 
+max_retries = 5
+timeout = 300  # seconds
+
 #------------------------------------------------------------------------------------------
 # Function to generate system model in AutomationML format
 #------------------------------------------------------------------------------------------
 def generate_model_aml(arch_narration, threat_model, attack_paths):
-    max_retries = 5
-
     #------------------------------------------------------------------------------------------
     # Initialize model client based on selected provider
     #------------------------------------------------------------------------------------------
@@ -28,14 +29,16 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 api_key=st.session_state['api_key'],
                 model=st.session_state['selected_model'],
                 max_tokens=st.session_state['token_limit'],
-                max_retries=0
+                max_retries=0,
+                timeout=timeout
             )
         elif st.session_state['model_provider'] == "Gemini API":
             client = ChatGoogleGenerativeAI(
                 api_key=st.session_state['api_key'],
                 model=st.session_state['selected_model'],
                 max_tokens=st.session_state['token_limit'],
-                max_retries=0
+                max_retries=0,
+                timeout=timeout
             )
         elif st.session_state['model_provider'] == "OpenAI API":
             # add OpenAI call here if needed
