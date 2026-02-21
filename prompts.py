@@ -2,12 +2,11 @@
 
 def create_arch_narration_prompt(system_context):
     prompt = f'''
-You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narration supports threat modeling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
+You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narration supports threat modelling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
 
 System context: {system_context}
 
 Think deeply to thoroughly analyse the diagram and provide a structured narration strictly based on visible content, covering:
-
 1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
 2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
 3. Trust Boundaries and Purdue Zones
@@ -15,10 +14,9 @@ Think deeply to thoroughly analyse the diagram and provide a structured narratio
 5. Technologies, Platforms, and Standards
 6. Assets and Functions with cyber-physical significance (PLCs, controllers, field devices, routers, meters, etc.)
 7. Attack Entry Points (explicit or implied entities that could initiate attacks)
-8. Any other architectural details supporting threat modeling and attack tree development
+8. Any other architectural details supporting threat modelling and attack tree development
 
 Structure your response using these exact section headers only:
-
 - Attacker or Attack-Capable Entities  
 - Key Components  
 - Trust Boundaries and Purdue Zones  
@@ -27,7 +25,7 @@ Structure your response using these exact section headers only:
 - Assets and Functions  
 - Attack Entry Points  
 
-IMPORTANT:
+IMPORTANT - Follow these strictly enforced semantic guardrails:
 - Base your narration solely on the provided diagram; do not infer or assume details beyond what is visible.
 - Do not start or end with commentary or extra text.
 - Do not infer or guess beyond what is visibly present.
@@ -39,13 +37,17 @@ IMPORTANT:
 
 def create_threat_model_prompt(system_context):
     prompt = f'''
-You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modeling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
+You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modelling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
 
 Your task is to think deeply to thoroughly analyse the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
 
 System context: {system_context}
 
-Instructions:
+Controlled sampling configuration:
+- temperature = 0.25
+- top_p = 0.9
+
+IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. If the diagram includes an "Attacker" entity—whether internal, external, explicit, or implicit—treat it as the origin for possible attack paths and enumerate realistic threats accordingly.
 2. For each STRIDE-LM category, identify 3 to 4 credible threat scenarios if applicable. Each scenario must describe a concrete, context-specific attack, avoiding generic descriptions.
 3. Focus your analysis on cyber-physical systems. Address system-level impacts such as disruption of physical processes, loss of control, cascading failures, or safety hazards rather than purely IT-centric threats.
@@ -55,7 +57,7 @@ Instructions:
 7. Apply FMECA-style reasoning where applicable to identify failure modes, their effects, and potential cascading consequences.
 8. Format your response strictly as JSON with these top-level keys:
    - `"threat_model"`: an array of threat scenario objects.
-   - `"arch_suggestions"`: a list of missing architectural information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modeling.
+   - `"arch_suggestions"`: a list of missing architectural information (e.g., authentication flows, protocol details, safety system integration, segmentation) needed for more precise modelling.
 9. Each threat scenario object must contain the following keys:
    - `"Threat Type"`, based on STRIDE-LM categories (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege, Lateral Movement).
    - `"Scenario"`: a detailed narration integrating information about assets, vulnerabilities (including CVE and non-CVE), hazards, and attacker objectives. Include references to any CVEs mentioned, and highlight if they were employed in known attack campaigns.
@@ -72,37 +74,33 @@ You are a senior cyber security expert with over 20 years of experience in cyber
 
 Your task is to think deeply to thoroughly analyse the threat model and create an attack tree structure in JSON format.
 
-Rules:
+System context: {system_context}
 
+Controlled sampling configuration:
+- temperature = 0.25
+- top_p = 0.9
+
+IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analysed.
-
 2. Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal.
-
 3. The tree should include all relevant attack paths and sub-paths based on the threat model.
-
 4. Analyse if assets, hazards, or vulnerabilities may be linked to assets, hazards, or vulnerabilities in separate attack paths, and if so, represent these relationships appropriately in the tree structure.
-
 5. Each node label must begin with a prefix indicating its type:
 - `[A##]` for Asset nodes
 - `[V##]` for Vulnerability nodes
 - `[H##]` for Hazard nodes
 - `[G##]` for Goal node(s)
-
 6. Maintain parent-child relationships strictly according to the rules as follows:
 - Asset nodes may have children that are Vulnerabilities, Hazards, or other Assets.
 - Goal node may have children that are Asset, Vulnerability or Hazard nodes.
 - Vulnerability nodes may have children that are Vulnerabilities or Assets, but never Hazards.
 - Hazard nodes may have children that are Hazards or Assets, but never Vulnerabilities.
-
 7. The one and only attacker node is at the bottom of the tree structure, connected to all the attack paths leading to the attack goal.
 - The attacker node should be labeled with the prefix `[U01] Attacker`.
 - This attacker node must have children links (edges) to all leaf nodes (the last nodes) in every attack path in the tree.
 - This represents the attacker as the origin of all end-stage threats in the attack tree.
-
 8. Use simple IDs (e.g., root, vul1, haz1, asset1).
-
 9. Make labels clear, descriptive, and correctly prefixed.
-
 10. Ensure the JSON is properly formatted. The JSON structure should follow this format:
 {
     "nodes": [
@@ -140,10 +138,14 @@ def create_aml_prompt_step_1(arch_narration, threat_model, attack_paths):
     Step 1: Generate InternalElement XML blocks from architecture, threats, and attack paths.
     Outputs properly structured AML InternalElements with correct attributes and interfaces.
     """
-    prompt = f"""You are an expert AutomationML (IEC 62714) generator for cyber-physical systems threat modeling.
+    prompt = f"""You are an expert AutomationML (IEC 62714) generator for cyber-physical systems threat modelling.
 
 TASK: Generate ONLY <InternalElement> XML blocks for ALL nodes appearing in the attack paths.
 Use EXACT node labels from the inputs. Do NOT invent nodes.
+
+Controlled sampling configuration:
+- temperature = 0.25
+- top_p = 0.9
 
 ## NODE CLASSIFICATION & TEMPLATES
 
@@ -217,7 +219,7 @@ Threat Model:
 Attack Paths (extract ALL unique nodes):
 {attack_paths}
 
-## RULES
+## IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. Use EXACT node names from attack paths (preserve [A##], [V##] prefixes)
 2. Classify each node type correctly from context
 3. EVERY InternalElement MUST have exactly 1 ExternalInterface
@@ -244,7 +246,11 @@ def create_aml_prompt_step_2(attack_paths):
 TASK: Parse the attack paths and output ONLY a JSON array of valid [source_node_id, target_node_id] pairs.
 Preserve direction exactly as shown in paths. Cover ALL attack paths completely.
 
-RULES:
+Controlled sampling configuration:
+- temperature = 0.25
+- top_p = 0.9
+
+## IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. Extract ONLY nodes with prefixes: [A##], [V##], [H##], [U##], [G##]
 2. Direction: source -> target (follows attack flow from attacker to goal)
 3. Remove duplicates - output each unique pair only once
@@ -287,13 +293,18 @@ def create_aml_prompt_step_3(valid_pairs_json, map_str):
 
 TASK: Generate ONLY <InternalLink> XML elements for these EXACT pairs using the interface mapping.
 
+Controlled sampling configuration:
+- temperature = 0.25
+- top_p = 0.9
+
 VALID PAIRS:
 {valid_pairs_json}
 
 INTERFACE MAPPING:
 {map_str}
 
-RULES:
+## IMPORTANT - Follow these strictly enforced semantic guardrails:
+
 1. For each [source,target] pair:
    - RefPartnerSideA = Interface ID of SOURCE node from mapping
    - RefPartnerSideB = Interface ID of TARGET node from mapping  
@@ -331,6 +342,10 @@ def create_aml_prompt_step_4(internal_elements_xml, internal_links_xml):
     prompt = f"""You are an AutomationML expert focused on generating a correct and IEC 62714-conformant AutomationML XML document.
 
 TASK: Assemble COMPLETE AutomationML XML using ONLY these validated components.
+
+Controlled sampling configuration:
+- temperature = 0.25
+- top_p = 0.9
 
 ## REQUIRED LIBRARIES (include EXACTLY these):
 
