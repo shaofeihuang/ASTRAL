@@ -6,7 +6,7 @@ You are a Senior Solution Architect tasked with narrating a system architectural
 
 System context: {system_context}
 
-Think deeply to thoroughly analyze the diagram and provide a structured narration strictly based on visible content, covering:
+Think deeply to thoroughly analyse the diagram and provide a structured narration strictly based on visible content, covering:
 
 1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
 2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
@@ -41,7 +41,7 @@ def create_threat_model_prompt(system_context):
     prompt = f'''
 You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modeling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
 
-Your task is to think deeply to thoroughly analyze the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
+Your task is to think deeply to thoroughly analyse the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
 
 System context: {system_context}
 
@@ -62,8 +62,6 @@ Instructions:
    - `"Potential Impact"`
 10. Do NOT include general security recommendations or any commentary.
 11. Provide no text outside the JSON structure.
-
-This format ensures each threat scenario provides a clear, integrated explanation of the threat elements in a single narration field, suitable for detailed CPS threat analysis.
 '''
     return prompt
 
@@ -72,11 +70,11 @@ def create_attack_tree_prompt(system_context):
     prompt = """
 You are a senior cyber security expert with over 20 years of experience in cyber-physical system (CPS) threat management and incident response.
 
-Your task is to think deeply to thoroughly analyze the threat model and create an attack tree structure in JSON format.
+Your task is to think deeply to thoroughly analyse the threat model and create an attack tree structure in JSON format.
 
 Rules:
 
-1. The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analyzed.
+1. The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analysed.
 
 2. Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal.
 
