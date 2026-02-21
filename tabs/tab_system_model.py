@@ -64,6 +64,7 @@ def generate_aml_stepwise(arch_narration, threat_model, attack_paths):
             except Exception as e:
                 if attempt == max_retries - 1:
                     st.error(f"Error generating model (Step 1) after {max_retries} attempts: {e}")
+                    st.stop()  # stop execution if final attempt fails
                 else:
                     delay = 2 ** attempt + random.uniform(0, 1)
                     st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
@@ -115,6 +116,7 @@ def generate_aml_stepwise(arch_narration, threat_model, attack_paths):
             except Exception as e:
                 if attempt == max_retries - 1:
                     st.error(f"Error generating model (Step 2) after {max_retries} attempts: {e}")
+                    st.stop()  # stop execution if final attempt fails
                 else:
                     delay = 2 ** attempt + random.uniform(0, 1)
                     st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
@@ -175,6 +177,7 @@ def generate_aml_stepwise(arch_narration, threat_model, attack_paths):
                 except Exception as e:
                     if attempt == max_retries - 1:
                         st.error(f"Error generating model (Step 3) after {max_retries} attempts: {e}")
+                        st.stop()  # stop execution if final attempt fails
                     else:
                         delay = 2 ** attempt + random.uniform(0, 1)  # exponential backoff + jitter
                         st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
@@ -225,6 +228,7 @@ def generate_aml_stepwise(arch_narration, threat_model, attack_paths):
                 except Exception as e:
                     if attempt == max_retries - 1:
                         st.error(f"Error generating model (Step 4) after {max_retries} attempts: {e}")
+                        st.stop()  # stop execution if final attempt fails
                     else:
                         delay = 2 ** attempt + random.uniform(0, 1)  # exponential backoff with jitter
                         st.warning(f"Attempt {attempt + 1} failed, retrying in {delay:.1f} seconds...")
