@@ -120,6 +120,7 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
                                     "id": "attacker",
                                     "label": "[U01] Attacker"
                                 }
+                            ]
                         }
                     ]
                 }
