@@ -28,7 +28,7 @@ def tm_json_to_markdown(threat_model, arch_suggestions):
     return markdown_output
 
 
-def tab_threat_model(image_bytes):
+def tab_threat_model():
     st.info("Use this tab to generate a threat model tailored to the CPS system using the STRIDE-LM methodology, which expands upon the Microsoft STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Architecture suggestions for improving the threat model will also be provided.")
     st.markdown("""---""")
     #----------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ def tab_threat_model(image_bytes):
                         pass
 
                     messages=[
-                        {"role": "user", "content": threat_model_prompt, "image": image_bytes}
+                        {"role": "user", "content": threat_model_prompt, "image": st.session_state.get('image_bytes', None)}
                     ]
                     response = client.invoke(messages, response_format={"type": "json_object"})
                     model_output = json.loads(response.content)

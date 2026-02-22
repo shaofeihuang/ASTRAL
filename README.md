@@ -194,7 +194,7 @@ ASTRAL/
 │
 └── tabs/                           # Function definitions for each tab
     ├── tab_architecture.py         # Architecture ingestion and narration
-    ├── tab_attack_tree.py          # Attack tree generation
+    ├── tab_attack_model.py         # Attack model generation
     ├── tab_bayesian_analysis.py    # Bayesian analysis over attack graphs
     ├── tab_countermeasures.py      # Countermeasure portfolio configuration
     ├── tab_optimisation.py         # Multi-objective optimisation

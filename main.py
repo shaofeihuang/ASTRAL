@@ -9,9 +9,9 @@ from azure.keyvault.secrets import SecretClient
 # Local application imports
 from utils import *
 from llm_functions import *
-from tabs.tab_architecture import tab_architectural_narration
+from tabs.tab_architecture import tab_architecture
 from tabs.tab_threat_model import tab_threat_model
-from tabs.tab_attack_tree import tab_attack_tree
+from tabs.tab_attack_model import tab_attack_model
 from tabs.tab_system_model import tab_system_model
 from tabs.tab_bayesian_analysis import tab_bayesian_analysis
 from tabs.tab_countermeasures import tab_countermeasures
@@ -46,22 +46,22 @@ def main():
 
         st.session_state['system_context'] = st.selectbox(
             "CPS System Context",
-            ["Cyber-Physical System", "Heating System", "Tesla IVI System", "Solar PV Inverter Panel", "Railway CBTC System", "Smart Grid System", "Smart Healthcare System", "Water Treatment System"],
+            ["Cyber-Physical System", "Heating System", "Automotive System", "Solar PV Inverter Panel", "Railway CBTC System", "Smart Grid System", "Medical CPS", "Water Treatment System"],
             index=0,
             placeholder="Select or enter a custom description",
             accept_new_options=True,
         )
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Bayesian Analysis", "Countermeasures", "Optimisation", "Settings"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Architecture", "Threat Model", "Attack Model", "System Model", "Bayesian Analysis", "Countermeasures", "Optimisation", "Settings"])
 
     with tab1:
-        tab_architectural_narration()
+        tab_architecture()
 
     with tab2:
-        tab_threat_model(image_bytes=st.session_state.get('image_bytes', None))
+        tab_threat_model()
 
     with tab3:
-        tab_attack_tree()
+        tab_attack_model()
 
     with tab4:
         tab_system_model()

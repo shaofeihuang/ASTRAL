@@ -253,7 +253,7 @@ def generate_attack_tree(api_key, prompt):
         return extract_mermaid_code(response.content) # Fallback: try to extract Mermaid code if JSON parsing fails
     
 
-def tab_attack_tree():
+def tab_attack_model():
     st.info("Use this tab to generate an attack tree and corresponding attack paths based on the architectural narration and threat model. You can also upload a previously saved attack tree data file in JSON format to visualise and extract attack paths.")
     st.markdown("""---""")
 

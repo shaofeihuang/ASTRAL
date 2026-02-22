@@ -6,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 # Local application imports
 from prompts import create_arch_narration_prompt
 
-def tab_architectural_narration():
+def tab_architecture():
     st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using Multimodal LLMs)")
     st.info("ASTRAL is an AI-powered tool designed to assist security professionals in generating architectural narrations, threat models, attack trees, and system models for cyber-physical systems (CPS). By leveraging multimodal large language models (LLMs), ASTRAL streamlines the process of identifying potential security threats, vulnerabilities, and risks within complex CPS architectures, and supports Bayesian and multi-objective decision support for CPS incident response.")
     st.markdown("""---""")
