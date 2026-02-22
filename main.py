@@ -34,7 +34,11 @@ def main():
     # Uncomment to use .env file for local testing
     # load_dotenv()
     #--------------------------------------------------------------
-
+    
+    # Initialize LLM model settings
+    st.session_state['llm_temperature'] = 0.25
+    st.session_state['llm_top_p'] = 0.9
+    
     # Streamlit page configuration
     with st.sidebar:
         st.image("logo.jpeg")
