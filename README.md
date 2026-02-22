@@ -11,16 +11,16 @@ This interactive web application demonstrates the ASTRAL (Architecture-Centric S
 The application provides an interactive platform for security assessment of cyber-physical systems using LLM-powered analysis. Users can upload system architecture diagrams (images), clarify LLM responses (text) and receive comprehensive security assessments including:
 
 - **Architectural Narration**: Automated extraction and understanding of system components and data flows
-- **Threat Modeling**: STRIDE-LM methodology-based threat identification and analysis (Spoofing, Tampering, Repudiation, Impersonation, Denial-of-Service, Elevation of Privileges, Lateral Movement)
-- **Attack Tree Generation**: Hierarchical visualization of potential attack vectors using Mermaid diagrams
-- **Bayesian Network Analysis**: Probabilistic modeling of security risks and countermeasures
+- **Threat Modelling**: STRIDE-LM methodology-based threat identification and analysis (Spoofing, Tampering, Repudiation, Impersonation, Denial-of-Service, Elevation of Privileges, Lateral Movement)
+- **Attack Tree Generation**: Hierarchical visualisation of potential attack vectors using Mermaid diagrams
+- **Bayesian Network Analysis**: Probabilistic modelling of security risks and countermeasures
 - **AutomationML Export**: Generation of AutomationML (.aml) files for system representation and analysis
 
 ---
 
 ## Features
 
-### STRIDE-LM Threat Modeling
+### STRIDE-LM Threat Modelling
 
 The application implements an enhanced STRIDE methodology tailored for cyber-physical systems:
 - Automated identification of assets, trust boundaries, and data flows
@@ -37,7 +37,7 @@ Hierarchical attack trees visualize:
 
 ### Bayesian Network Analysis and Countermeasure Simulation
 
-Probabilistic modeling capabilities:
+Probabilistic modelling capabilities:
 - Causal relationships between threats and vulnerabilities
 - Countermeasure effectiveness simulation
 - Risk propagation analysis
@@ -123,7 +123,7 @@ See `requirements.txt` for the complete list of dependencies.
 
 ### Step 3: Generate Architectural Explanation
 1. Click the "Generate Architectural Explanation" button
-2. The LLM will analyze the diagram and provide a detailed textual explanation of the system components, data flows, and interactions
+2. The LLM will analse the diagram and provide a detailed textual explanation of the system components, data flows, and interactions
 3. Review the explanation, optionally add further prompts to the LLM, and download in markdown format if needed
 
 ### Step 4: Create Threat Model
@@ -143,7 +143,7 @@ See `requirements.txt` for the complete list of dependencies.
 1. Move to the "Attack Tree" tab
 2. Click "Generate Attack Tree and Paths"
 3. The system generates attack paths, attack tree code that is compatible with Mermaid, and an attack tree diagram preview
-4. Download the attack tree code for visualization in Mermaid Live, and download the raw attack tree data in JSON format if needed.
+4. Download the attack tree code for visualisation in Mermaid Live, and download the raw attack tree data in JSON format if needed.
 
 ### Step 6: Generate System Model
 1. Navigate to the "System Model" tab
@@ -179,7 +179,7 @@ ASTRAL/
 ├── logo.jpeg                       # Project logo
 ├── Tool Walkthrough Video.mp4      # End-to-end tool walkthrough video
 ├── main.py                         # Main Streamlit application entry point
-├── bayesian.py                     # Bayesian network analysis and probabilistic modeling
+├── bayesian.py                     # Bayesian network analysis and probabilistic modelling
 ├── llm_functions.py                # LLM-powered analysis and helper functions
 ├── prompts.py                      # Prompt templates for threat, architecture, and attack-tree analysis
 ├── utils.py                        # Shared utility helpers (parsing, caching, formatting, etc.)
@@ -197,9 +197,10 @@ ASTRAL/
     ├── tab_attack_tree.py          # Attack tree generation
     ├── tab_bayesian_analysis.py    # Bayesian analysis over attack graphs
     ├── tab_countermeasures.py      # Countermeasure portfolio configuration
-    ├── tab_optimization.py         # Multi-objective optimization
+    ├── tab_optimisation.py         # Multi-objective optimisation
+    ├── tab_settings.py             # Settings
     ├── tab_system_model.py         # System model generation (AutomationML)
-    └── tab_threat_model.py         # Threat modeling
+    └── tab_threat_model.py         # Threat modelling
 ```
 
 ## License

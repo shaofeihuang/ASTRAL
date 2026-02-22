@@ -13,8 +13,8 @@ import pandas as pd
 # Local application imports
 from utils import *
 
-def tab_optimization():
-    st.info("Use this tab to perform multi-objective optimisation to identify optimal mitigation priority values for each vulnerability in the system model. The optimisation aims to minimize or maximize selected metrics simultaneously using Bayesian probabilities computed from the system model analysis.")
+def tab_optimisation():
+    st.info("Use this tab to perform multi-objective optimisation to identify optimal mitigation priority values for each vulnerability in the system model. The optimisation aims to minimise or maximise selected metrics simultaneously using Bayesian probabilities computed from the system model analysis.")
     st.markdown("""---""")
 
     if 'aml_attributes' in st.session_state:
@@ -29,20 +29,20 @@ def tab_optimization():
         objective = st.radio(
             "Optimisation Objectives",
             [
-                "Minimize Exposure & Impact Probabilities, Maximize Availability",
-                "Minimize Exposure & Impact Probabilities + Attack Tree Entropy",
+                "Minimise Exposure & Impact Probabilities, Maximise Availability",
+                "Minimise Exposure & Impact Probabilities + Attack Tree Entropy",
             ],
             index=0,
         )
 
-        if objective == "Minimize Exposure & Impact Probabilities, Maximize Availability":
-            st.session_state['optimization_objective'] = 0
-        elif objective == "Minimize Exposure & Impact Probabilities + Attack Tree Entropy":
+        if objective == "Minimise Exposure & Impact Probabilities, Maximise Availability":
+            st.session_state['optimisation_objective'] = 0
+        elif objective == "Minimise Exposure & Impact Probabilities + Attack Tree Entropy":
             if 'attack_tree_data' not in st.session_state:
                 st.warning("Generate or upload an attack tree first to use Entropy as an optimisation objective.")
-            st.session_state['optimization_objective'] = 1
+            st.session_state['optimisation_objective'] = 1
         else:
-            st.session_state['optimization_objective'] = 0  # Default
+            st.session_state['optimisation_objective'] = 0  # Default
 
         if st.button("Start Optimisation"):
             files_to_remove = glob.glob("results-*.csv")
@@ -63,7 +63,7 @@ def tab_optimization():
             with st.spinner("Optimisation in progress... This may take several minutes."):
                 with ProcessPoolExecutor() as executor:
                     futures = [
-                        executor.submit(run_study, n_trials, graph, verbose, st.session_state['output_filename'], st.session_state['optimization_objective'])
+                        executor.submit(run_study, n_trials, graph, verbose, st.session_state['output_filename'], st.session_state['optimisation_objective'])
                         for run in range(n_runs)
                     ]
                     for future in futures:
@@ -82,7 +82,7 @@ def tab_optimization():
 
             df = pd.read_csv(st.session_state['output_filename'], header=None)
             v_headers = [f"V{str(i + 1).zfill(2)}" for i in range(len(df.columns) - 4)]
-            if st.session_state['optimization_objective'] == 1:
+            if st.session_state['optimisation_objective'] == 1:
                 new_header_row = v_headers + ["Best Trial ID", "Exposure", "Impact", "Entropy"]
             else:
                 new_header_row = v_headers + ["Best Trial ID", "Exposure", "Impact", "Availability"]

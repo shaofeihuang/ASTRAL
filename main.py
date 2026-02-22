@@ -15,7 +15,7 @@ from tabs.tab_attack_tree import tab_attack_tree
 from tabs.tab_system_model import tab_system_model
 from tabs.tab_bayesian_analysis import tab_bayesian_analysis
 from tabs.tab_countermeasures import tab_countermeasures
-from tabs.tab_optimization import tab_optimization
+from tabs.tab_optimisation import tab_optimisation
 from tabs.tab_settings import tab_settings
 
 def main():
@@ -73,7 +73,7 @@ def main():
         tab_countermeasures()
 
     with tab7:
-        tab_optimization()
+        tab_optimisation()
 
     with tab8:
         tab_settings()

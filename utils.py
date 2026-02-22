@@ -509,7 +509,7 @@ def display_metrics():
     st.sidebar.metric("Attack Entropy", value=f"{st.session_state.get('entropy', 0):.4f}")
 
 
-# Objective functions for Optuna optimization
+# Objective functions for Optuna optimisation
 def objective_availability(trial):
     mitigation_prob_dict = {}
 
@@ -563,36 +563,36 @@ def objective_entropy(trial):
     return exposure, impact, calculate_entropy(extract_id_mitigation())
 
 
-# Run Optuna study for multi-objective optimization
-def run_study(n_trials, graph, verbose, output, optimization_objective):
+# Run Optuna study for multi-objective optimisation
+def run_study(n_trials, graph, verbose, output, optimisation_objective):
     # Extract run ID from output filename
     run_id, _ = os.path.splitext('-'.join(output.split('-')[1:3]))
-    if optimization_objective not in [0, 1]:
-        raise ValueError("Invalid optimization objective. Use 0 (Availability) or 1 (Entropy).")
+    if optimisation_objective not in [0, 1]:
+        raise ValueError("Invalid optimisation objective. Use 0 (Availability) or 1 (Entropy).")
     
     # Create Optuna study with appropriate directions
-    directions = ["minimize", "minimize", "maximize"] if optimization_objective == 0 else ["minimize", "minimize", "minimize"]
+    directions = ["minimize", "minimize", "maximize"] if optimisation_objective == 0 else ["minimize", "minimize", "minimize"]
     study = optuna.create_study(directions=directions)
-    study.optimize(objective_availability if optimization_objective == 0 else objective_entropy, n_trials, timeout=300)
+    study.optimize(objective_availability if optimisation_objective == 0 else objective_entropy, n_trials, timeout=300)
 
     # Generate Pareto front graph if requested    
     if graph:
-        target_names = ["Exposure", "Impact", "Availability"] if optimization_objective == 0 else ["Exposure", "Impact", "Entropy"]
+        target_names = ["Exposure", "Impact", "Availability"] if optimisation_objective == 0 else ["Exposure", "Impact", "Entropy"]
         fig = optuna.visualization.plot_pareto_front(study, target_names=target_names)
         fig.show()
     
-    # Identify best trial based on optimization objective
+    # Identify best trial based on optimisation objective
     target_trials = study.best_trials
-    best_trial = max(target_trials, key=lambda t: t.values[2]) if optimization_objective == 0 else min(target_trials, key=lambda t: t.values[2])
+    best_trial = max(target_trials, key=lambda t: t.values[2]) if optimisation_objective == 0 else min(target_trials, key=lambda t: t.values[2])
     values = best_trial.values
     params = best_trial.params
     
     # Unified verbose output
     if verbose:
-        metric_name = "Availability" if optimization_objective == 0 else "Entropy"
+        metric_name = "Availability" if optimisation_objective == 0 else "Entropy"
         print(f"Run ID: {run_id}")
         print(f"Number of trials on the Pareto front: {len(target_trials)}")
-        print(f"Trial with {'highest ' + metric_name.lower() if optimization_objective == 0 else 'lowest ' + metric_name.lower()}:")
+        print(f"Trial with {'highest ' + metric_name.lower() if optimisation_objective == 0 else 'lowest ' + metric_name.lower()}:")
         print(f"\tTrial: {best_trial.number}")
         print(f"\tParams: {params}")
         print(f"\tExposure: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}")
@@ -600,12 +600,12 @@ def run_study(n_trials, graph, verbose, output, optimization_objective):
     # Unified file output
     best_trial_id = f"{run_id}-{datetime.now():%H%M%S}"
     best_trial_filename = f"{best_trial_id}.txt"
-    metric_name = "Availability" if optimization_objective == 0 else "Entropy"
+    metric_name = "Availability" if optimisation_objective == 0 else "Entropy"
     
     with open(best_trial_filename, "w", newline="") as file:
         file.write(f"Run ID: {run_id}\n")
         file.write(f"Number of trials on the Pareto front: {len(study.best_trials)}\n")
-        file.write(f"Trial with {'highest ' if optimization_objective == 0 else 'lowest '} {metric_name.lower()}:\n")
+        file.write(f"Trial with {'highest ' if optimisation_objective == 0 else 'lowest '} {metric_name.lower()}:\n")
         file.write(f"Trial: {best_trial.number}\n")
         file.write(f"Params: {params}\n")
         file.write(f"Exposure: {values[0]}, Impact: {values[1]}, {metric_name}: {values[2]}\n")
