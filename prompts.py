@@ -1,10 +1,17 @@
+# Third-party imports
+import streamlit as st
+
 # Utility Functions for Prompt Creation
 
-def create_arch_narration_prompt(system_context):
+def create_arch_narration_prompt():
     prompt = f'''
 You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narration supports threat modelling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
 
-System context: {system_context}
+System context: {st.session_state['system_context']}
+
+Controlled sampling configuration:
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
 
 Think deeply to thoroughly analyse the diagram and provide a structured narration strictly based on visible content, covering:
 1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
@@ -35,17 +42,17 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
     return prompt
 
 
-def create_threat_model_prompt(system_context):
+def create_threat_model_prompt():
     prompt = f'''
 You are a senior cyber security expert with over 20 years of experience in cyber-physical systems (CPS) risk and threat modelling, including deep expertise in STRIDE-LM and safety/security co-analysis. You have applied STRIDE-LM extensively in ICS, SCADA, and related CPS domains.
 
 Your task is to think deeply to thoroughly analyse the provided system architectural diagram (e.g., Data Flow Diagram) along with any accompanying documentation to produce a comprehensive list of specific threat scenarios relevant to the application.
 
-System context: {system_context}
+System context: {st.session_state['system_context']}
 
 Controlled sampling configuration:
-- temperature = 0.25
-- top_p = 0.9
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
 
 IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. If the diagram includes an "Attacker" entity—whether internal, external, explicit, or implicit—treat it as the origin for possible attack paths and enumerate realistic threats accordingly.
@@ -68,17 +75,17 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
     return prompt
 
 
-def create_attack_tree_prompt(system_context):
+def create_attack_tree_prompt():
     prompt = """
 You are a senior cyber security expert with over 20 years of experience in cyber-physical system (CPS) threat management and incident response.
 
 Your task is to think deeply to thoroughly analyse the threat model and create an attack tree structure in JSON format.
 
-System context: {system_context}
+System context: {st.session_state['system_context']}
 
 Controlled sampling configuration:
-- temperature = 0.25
-- top_p = 0.9
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
 
 IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analysed.
@@ -145,8 +152,8 @@ TASK: Generate ONLY <InternalElement> XML blocks for ALL nodes appearing in the 
 Use EXACT node labels from the inputs. Do NOT invent nodes.
 
 Controlled sampling configuration:
-- temperature = 0.25
-- top_p = 0.9
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
 
 ## NODE CLASSIFICATION & TEMPLATES
 
@@ -248,8 +255,8 @@ TASK: Parse the attack paths and output ONLY a JSON array of valid [source_node_
 Preserve direction exactly as shown in paths. Cover ALL attack paths completely.
 
 Controlled sampling configuration:
-- temperature = 0.25
-- top_p = 0.9
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
 
 ## IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. Extract ONLY nodes with prefixes: [A##], [V##], [H##], [U##], [G##]
@@ -295,8 +302,8 @@ def create_aml_prompt_step_3(valid_pairs_json, map_str):
 TASK: Generate ONLY <InternalLink> XML elements for these EXACT pairs using the interface mapping.
 
 Controlled sampling configuration:
-- temperature = 0.25
-- top_p = 0.9
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
 
 VALID PAIRS:
 {valid_pairs_json}
@@ -345,8 +352,8 @@ def create_aml_prompt_step_4(internal_elements_xml, internal_links_xml):
 TASK: Assemble COMPLETE AutomationML XML using ONLY these validated components.
 
 Controlled sampling configuration:
-- temperature = 0.25
-- top_p = 0.9
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
 
 ## REQUIRED LIBRARIES (include EXACTLY these):
 

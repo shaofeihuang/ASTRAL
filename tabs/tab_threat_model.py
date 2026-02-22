@@ -34,7 +34,7 @@ def tab_threat_model(image_bytes):
     #----------------------------------------------------------------------------------------------
     # Create Threat Model Prompt
     #----------------------------------------------------------------------------------------------
-    threat_model_prompt = create_threat_model_prompt(st.session_state['system_context'])
+    threat_model_prompt = create_threat_model_prompt()
 
     #----------------------------------------------------------------------------------------------
     # Generate Threat Model

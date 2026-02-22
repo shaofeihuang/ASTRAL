@@ -506,7 +506,7 @@ def display_metrics():
     st.sidebar.metric("Probability of Severe Impact", value=f"{st.session_state.get('cpd_impact', 0):.4f}")
     st.sidebar.metric("Risk Score", value=f"{st.session_state.get('risk_score', 0):.2f}%")
     st.sidebar.metric("System Availability", value=f"{st.session_state.get('availability', 0):.2f}%")
-    st.sidebar.metric("Entropy of Attack Tree", value=f"{st.session_state.get('entropy', 0):.4f}")
+    st.sidebar.metric("Attack Entropy", value=f"{st.session_state.get('entropy', 0):.4f}")
 
 
 # Objective functions for Optuna optimization

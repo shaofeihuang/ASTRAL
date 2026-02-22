@@ -16,6 +16,7 @@ from tabs.tab_system_model import tab_system_model
 from tabs.tab_bayesian_analysis import tab_bayesian_analysis
 from tabs.tab_countermeasures import tab_countermeasures
 from tabs.tab_optimization import tab_optimization
+from tabs.tab_settings import tab_settings
 
 def main():
     #---------------------- IMPORTANT!! ---------------------------
@@ -23,7 +24,7 @@ def main():
     #---------------------- IMPORTANT!! ---------------------------
 
     if 'azure_key_vault_logged_in' not in st.session_state:
-        key_vault_name = "tra-demo"
+        key_vault_name = st.session_state.get("key_vault_name", "tra-demo")
         key_vault_uri = f"https://{key_vault_name}.vault.azure.net/"
         credential = DefaultAzureCredential()
         st.session_state['client'] = SecretClient(vault_url=key_vault_uri, credential=credential)
@@ -47,7 +48,7 @@ def main():
             accept_new_options=True,
         )
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Bayesian Analysis", "Countermeasures", "Optimisation"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Architecture", "Threat Model", "Attack Tree", "System Model", "Bayesian Analysis", "Countermeasures", "Optimisation", "Settings"])
 
     with tab1:
         tab_architectural_narration()
@@ -70,7 +71,11 @@ def main():
     with tab7:
         tab_optimization()
 
-    display_metrics()
+    with tab8:
+        tab_settings()
+
+    if st.session_state.get('display_metrics', True):
+        display_metrics()
 
 #--------------------------------------------------------------------------------
 # Main Entry Point

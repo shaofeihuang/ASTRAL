@@ -25,7 +25,7 @@ def tab_architectural_narration():
         st.session_state['arch_filename'] = uploaded_file.name
         st.session_state['image_bytes'] = uploaded_file.read()
         st.image(st.session_state['image_bytes'], caption="Uploaded Image", width="stretch")
-        arch_expl_prompt = create_arch_narration_prompt(st.session_state['system_context'])
+        arch_expl_prompt = create_arch_narration_prompt()
 
         if st.button("Generate Architectural Narration") and uploaded_file is not None:
             with st.spinner("Generating architectural narration..."):
