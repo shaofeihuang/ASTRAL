@@ -10,10 +10,11 @@ def tab_settings():
     st.info("Use this tab to configure the settings for the ASTRAL tool, including LLM parameters and other preferences.")
 
     st.markdown("""---""")
-    st.session_state['display_metrics'] = st.checkbox("Display Metrics", value=True, help="Toggle the display of metrics in the results.")
-    st.session_state['debug_mode'] = st.checkbox("Debug Mode", value=True, help="Enable debug mode for more detailed error messages.")
+    with st.expander("General Settings", expanded=True):
+        st.session_state['display_metrics'] = st.checkbox("Display Metrics", value=True, help="Toggle the display of metrics in the results.")
+        st.session_state['debug_mode'] = st.checkbox("Debug Mode", value=True, help="Enable debug mode for more detailed error messages.")
 
-    with st.expander("LLM Provider Settings", expanded=False):
+    with st.expander("LLM Provider Settings", expanded=True):
         if st.checkbox("Azure Key Vault Integration", value=st.session_state.get('azure_key_vault_logged_in', False), help="Enable integration with Azure Key Vault for secure management of secrets and credentials."):
             if 'azure_key_vault_logged_in' in st.session_state:
                 st.success(f"Already connected to Azure Key Vault: {st.session_state['azure_key_vault_logged_in']}")

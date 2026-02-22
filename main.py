@@ -24,7 +24,7 @@ def main():
     #---------------------- IMPORTANT!! ---------------------------
 
     if 'azure_key_vault_logged_in' not in st.session_state:
-        key_vault_name = st.session_state.get("key_vault_name", "tra-demo")
+        key_vault_name = st.session_state.get("key_vault_name", "astral-demo")
         key_vault_uri = f"https://{key_vault_name}.vault.azure.net/"
         credential = DefaultAzureCredential()
         st.session_state['client'] = SecretClient(vault_url=key_vault_uri, credential=credential)
