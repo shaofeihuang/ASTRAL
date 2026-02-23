@@ -36,8 +36,10 @@ def main():
     #--------------------------------------------------------------
     
     # Initialize LLM model settings
-    st.session_state['llm_temperature'] = 0.7
-    st.session_state['llm_top_p'] = 0.9
+#    st.session_state['llm_temperature'] = 0.1
+    st.session_state['llm_temperature'] = 0.9
+#    st.session_state['llm_top_p'] = 0.9
+    st.session_state['llm_top_p'] = 0.1
     
     # Streamlit page configuration
     with st.sidebar:
