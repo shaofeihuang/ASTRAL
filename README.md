@@ -140,7 +140,7 @@ See `requirements.txt` for the complete list of dependencies.
 4. Review and download the threat model in JSON format if needed.
 
 ### Step 5: Generate Attack Tree and Paths
-1. Move to the "Attack Tree" tab
+1. Move to the "Attack Model" tab
 2. Click "Generate Attack Tree and Paths"
 3. The system generates attack paths, attack tree code that is compatible with Mermaid, and an attack tree diagram preview
 4. Download the attack tree code for visualisation in Mermaid Live, and download the raw attack tree data in JSON format if needed.
