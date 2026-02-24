@@ -13,16 +13,7 @@ Controlled sampling configuration:
 - temperature = {st.session_state['llm_temperature']}
 - top_p = {st.session_state['llm_top_p']}
 
-Think deeply to thoroughly analyse the diagram and provide a structured narration strictly based on visible content, covering:
-1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
-2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
-3. Trust Boundaries and Purdue Zones
-4. Data Flows and Interactions (including protocols, data types, communication links)
-5. Technologies, Platforms, and Standards
-6. Assets and Functions with cyber-physical significance (PLCs, controllers, field devices, routers, meters, etc.)
-7. Attack Entry Points (explicit or implied entities that could initiate attacks)
-8. Any other architectural details supporting threat modelling and attack tree development
-
+Think deeply to thoroughly analyse the diagram and provide a structured narration strictly based on visible content.
 '''
     return prompt
 

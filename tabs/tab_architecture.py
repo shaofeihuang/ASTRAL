@@ -4,7 +4,7 @@ from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Local application imports
-from prompts import create_arch_narration_prompt
+from prompts import create_arch_narration_prompt, create_arch_narration_prompt_text
 
 def tab_architecture():
     st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using Multimodal LLMs)")
@@ -18,14 +18,19 @@ def tab_architecture():
         st.stop()
 
     uploaded_file = st.file_uploader(
-        "Upload Architecture / Data Flow Diagram (DFD) Image", type=["png", "jpg", "jpeg", "bmp", "gif"]
+        "Upload Architecture / Data Flow Diagram (DFD) Image / Text", type=["png", "jpg", "jpeg", "bmp", "gif", "txt"]
     )
 
     if uploaded_file is not None:
         st.session_state['arch_filename'] = uploaded_file.name
-        st.session_state['image_bytes'] = uploaded_file.read()
-        st.image(st.session_state['image_bytes'], caption="Uploaded Image", width="stretch")
-        arch_expl_prompt = create_arch_narration_prompt()
+        if uploaded_file.name.endswith('.txt'):
+            st.session_state['arch_text'] = uploaded_file.read().decode('utf-8')
+            st.text_area("Uploaded Architecture Text", value=st.session_state['arch_text'], height=300)
+            arch_expl_prompt = create_arch_narration_prompt_text()
+        else:
+            st.session_state['image_bytes'] = uploaded_file.read()
+            st.image(st.session_state['image_bytes'], caption="Uploaded Image", width="stretch")
+            arch_expl_prompt = create_arch_narration_prompt()
 
         if st.button("Generate Architectural Narration") and uploaded_file is not None:
             with st.spinner("Generating architectural narration..."):
@@ -47,9 +52,14 @@ def tab_architecture():
                         # add Anthropic call here if needed
                         pass
 
-                    messages=[
-                        {"role": "user", "content": arch_expl_prompt, "image": st.session_state['image_bytes']}
-                    ]
+                    if 'arch_text' in st.session_state:
+                        messages=[
+                            {"role": "user", "content": arch_expl_prompt + f"Architecture description: {st.session_state['arch_text']}"}
+                        ]
+                    else:
+                        messages=[
+                            {"role": "user", "content": arch_expl_prompt, "image": st.session_state['image_bytes']}
+                        ]
                     response = client.invoke(messages)
                     st.session_state['arch_narration'] = response.content
 
