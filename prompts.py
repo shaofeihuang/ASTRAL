@@ -3,6 +3,44 @@ import streamlit as st
 
 # Utility Functions for Prompt Creation
 
+def create_arch_narration_prompt_text():
+    prompt = f'''
+You are a Senior Solution Architect tasked with narrating a system architectural text description to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narration supports threat modelling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.
+
+System context: {st.session_state['system_context']}
+
+Controlled sampling configuration:
+- temperature = {st.session_state['llm_temperature']}
+- top_p = {st.session_state['llm_top_p']}
+
+Think deeply to thoroughly analyse the artefact text description and provide a structured narration strictly based on the content, covering:
+1. Attacker or Attack-Capable Entities (explicit or implied, e.g., adversaries, operators)
+2. Key Components (systems, devices, applications, network infrastructure, sensors, actuators, OT assets)
+3. Trust Boundaries and Purdue Zones
+4. Data Flows and Interactions (including protocols, data types, communication links)
+5. Technologies, Platforms, and Standards
+6. Assets and Functions with cyber-physical significance (PLCs, controllers, field devices, routers, meters, etc.)
+7. Attack Entry Points (explicit or implied entities that could initiate attacks)
+8. Any other architectural details supporting threat modelling and attack tree development
+
+Structure your response using these exact section headers only:
+- Attacker or Attack-Capable Entities  
+- Key Components  
+- Trust Boundaries and Purdue Zones  
+- Data Flows & Interactions  
+- Technologies and Protocols  
+- Assets and Functions  
+- Attack Entry Points  
+
+IMPORTANT - Follow these strictly enforced semantic guardrails:
+- Base your narration solely on the provided diagram; do not infer or assume details beyond what is visible.
+- Do not start or end with commentary or extra text.
+- Do not infer or guess beyond what is visibly present.
+- Do not provide recommendations—only factual narration.
+- Use only the specified headers and no additional formatting.
+'''
+    return prompt
+
 def create_arch_narration_prompt():
     prompt = f'''
 You are a Senior Solution Architect tasked with narrating a system architectural diagram (e.g., Data Flow Diagram) to a Senior Security Architect experienced in IEC 62443 and the Purdue model. Your narration supports threat modelling and attack tree development for a cyber-physical system, even if the architecture appears IT-centric.

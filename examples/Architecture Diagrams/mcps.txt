@@ -1,0 +1,42 @@
+This diagram illustrates a Medical Cyber-Physical System (MCPS) network, showing the interconnectedness between a central medical association, hospital facilities, mobile units, and patient-specific medical devices.
+
+Network Core: The Medical Association
+At the center of the architecture is the Medical Association, which acts as a hub for multiple hospital facilities.
+
+These facilities are interconnected via Network transmission equipment (represented by routers) and wireless lightning-bolt icons, indicating a high-level wide-area network.
+
+Hospital Facilities and Diagnostic Equipment
+Each hospital node is connected to various heavy diagnostic and specialized systems:
+
+Hyperbaric oxygen storage equipment
+
+Chest X-ray equipment
+
+Nuclear magnetic resonance (MRI) equipment
+
+Ultrasonic diagnosis instrument
+
+Mobile and Remote Communication
+The system extends beyond the physical walls of the hospital through several communication channels:
+
+Remote communication: Linked to the hospital nodes to facilitate off-site data exchange.
+
+Ambulance and Mobile communication: Ambulances are shown connected to the hospital network via wireless links, ensuring real-time data flow during patient transport.
+
+Patient-Centric Devices and Wearables
+The bottom and left side of the diagram detail the "Cyber-Physical" aspect, focusing on devices directly interacting with the patient:
+
+Implantable Devices: This includes a Brain chip and a Heart pacemaker.
+
+Wearables: A Medical Bracelet is used for continuous monitoring.
+
+Mobility and Rehabilitation: The network includes a Smart Wheelchair, Leg rehabilitation equipment, and a Smart hospital bed, all of which are integrated into the hospital’s data environment.
+
+Summary of System Flow
+The architecture demonstrates a nested hierarchy where:
+
+Personal/Physical devices feed data into local hospital systems.
+
+Local systems coordinate with specialized diagnostic equipment and mobile units.
+
+Hospital nodes synchronize at the top level under the Medical Association umbrella to ensure a unified health record and response system.

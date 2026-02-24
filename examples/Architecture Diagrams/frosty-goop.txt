@@ -1,0 +1,19 @@
+The image shows the connectivity of a utility management and automated heating system. The components are arranged in a top-down hierarchy, starting from the internet and moving down to local meters and substation modules.
+
+System Connectivity and Flow
+The MicroTik Router sits at the top of the hierarchy, connected to the Internet. It has two primary downward connections: one via Ethernet to the ENCO Reader/Workstation and another via Ethernet/USB to the ENCO Controller.
+
+The ENCO Reader/Workstation acts as a central hub, maintaining a bi-directional Ethernet/USB link with the ENCO Controller and a USB connection to the ENCO Terminal.
+
+The ENCO Controller manages several data streams. It connects to the ENCO Box using RF (Radio Frequency) and to the Gas/Electric Meter using the MBus protocol.
+
+The ENCO Box serves as a collection point for multiple meters. It receives data from the Gas/Electric Meter via MBus and from the Water Meter via RF. It then sends data to the Heat Meter via an Ethernet connection.
+
+At the bottom of the diagram, the Automated Heating Substation Module receives signals from the ENCO Terminal via RF. This module then directs data or control signals via Ethernet to both the Water Meter and the Heat Allocator. Finally, the Heat Allocator is linked to the Heat Meter through an Ethernet connection.
+
+Key Protocols Identified
+Ethernet/USB: Used for high-level communication between the router, workstation, and controller.
+
+RF (Radio Frequency): Used for wireless communication between the terminal, substation, and meters.
+
+MBus: A specialized bus protocol used specifically for the Gas and Electric meters to communicate with the controller and box.
