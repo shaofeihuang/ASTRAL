@@ -73,6 +73,7 @@ def tab_architecture():
     #----------------------------------------------------------------------------------------------
     if 'arch_narration' in st.session_state:
         st.markdown("""---""")
+
         st.subheader("Architectural Narration")
         st.download_button(
             label="Download Architectural Narration",
@@ -80,6 +81,7 @@ def tab_architecture():
             file_name="arch_narration.md",
             mime="text/markdown",
         )
+        
         st.write(st.session_state['arch_narration'])
         additional_detail = st.text_area(
             "Enter Additional Architectural Details (Optional)",

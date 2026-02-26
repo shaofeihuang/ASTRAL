@@ -80,6 +80,7 @@ def tab_threat_model():
     #----------------------------------------------------------------------------------------------
     if 'threat_model' in st.session_state:
         st.markdown("""---""")
+        
         markdown_output = tm_json_to_markdown(
             st.session_state['threat_model'],
             st.session_state.get('arch_suggestions', [])

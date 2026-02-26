@@ -291,12 +291,7 @@ def tab_attack_model():
     # Display Attack Tree and Paths
     #----------------------------------------------------------------------------------------------
     if 'attack_tree' in st.session_state:
-        st.write("Attack Paths:")
-        st.code(st.session_state['attack_paths'])
-        st.write("Attack Tree Code:")
-        st.code(st.session_state['attack_tree'])
-        st.write("Attack Tree Diagram Preview:")
-        mermaid(st.session_state['attack_tree'])
+        st.markdown("""---""")
 
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -319,3 +314,10 @@ def tab_attack_model():
                 help="Download the raw attack tree data.",
                 key = "download_attack_tree_data"
             )
+
+        st.write("Attack Paths:")
+        st.code(st.session_state['attack_paths'])
+        st.write("Attack Tree Code:")
+        st.code(st.session_state['attack_tree'])
+        st.write("Attack Tree Diagram Preview:")
+        mermaid(st.session_state['attack_tree'])
