@@ -296,7 +296,7 @@ def tab_attack_model():
         col1, col2, col3 = st.columns(3)
         with col1:
             st.download_button(
-                label="Download Attack Tree Code (Mermaid)",
+                label="Download Attack Tree (Mermaid code)",
                 data=st.session_state['attack_tree'],
                 file_name="attack_tree.md",
                 mime="text/markdown",
@@ -304,16 +304,16 @@ def tab_attack_model():
                 key = "download_attack_tree"
             )
         with col2:
-            st.link_button("Open Mermaid Live", "https://mermaid.live")
-        with col3:
             st.download_button(
-                label="Download Attack Tree Data (JSON)",
+                label="Download Attack Tree (JSON)",
                 data=json.dumps(st.session_state['attack_tree_data'], indent=2),
                 file_name="attack_tree.json",
                 mime="json",
                 help="Download the raw attack tree data.",
                 key = "download_attack_tree_data"
             )
+        with col3:
+            st.link_button("Open Mermaid Live", "https://mermaid.live")
 
         st.write("Attack Paths:")
         st.code(st.session_state['attack_paths'])
