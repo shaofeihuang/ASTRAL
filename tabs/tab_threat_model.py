@@ -79,18 +79,19 @@ def tab_threat_model():
     # Display Threat Model
     #----------------------------------------------------------------------------------------------
     if 'threat_model' in st.session_state:
+        st.markdown("""---""")
         markdown_output = tm_json_to_markdown(
             st.session_state['threat_model'],
             st.session_state.get('arch_suggestions', [])
         )
         st.subheader("Generated STRIDE-LM Threat Model")
-        st.markdown(markdown_output)
         st.download_button(
             label="Download Threat Model",
             data=markdown_output,
             file_name="threat_model.md",
             mime="text/markdown",
         )
+        st.markdown(markdown_output)
         additional_detail = st.text_area(
             "Enter Additional Architectural Details (Optional)",
             value="",
