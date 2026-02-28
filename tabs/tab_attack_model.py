@@ -262,7 +262,7 @@ def tab_attack_model():
 
     with col1:
         if all(key in st.session_state for key in ("arch_narration", "threat_model")):
-            if st.button("Generate Attack Tree and Paths"):
+            if st.button("Generate Attack Model"):
                 attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_narration'), st.session_state.get('threat_model'))
                 with st.spinner("Generating attack tree and paths..."):
                     try:
@@ -293,6 +293,13 @@ def tab_attack_model():
     if 'attack_tree' in st.session_state:
         st.markdown("""---""")
 
+        st.write("Attack Paths:")
+        st.code(st.session_state['attack_paths'])
+        st.write("Attack Tree Code:")
+        st.code(st.session_state['attack_tree'])
+        st.write("Attack Tree Diagram Preview:")
+        mermaid(st.session_state['attack_tree'])
+
         col1, col2, col3 = st.columns(3)
         with col1:
             st.download_button(
@@ -314,10 +321,3 @@ def tab_attack_model():
             )
         with col3:
             st.link_button("Open Mermaid Live", "https://mermaid.live")
-
-        st.write("Attack Paths:")
-        st.code(st.session_state['attack_paths'])
-        st.write("Attack Tree Code:")
-        st.code(st.session_state['attack_tree'])
-        st.write("Attack Tree Diagram Preview:")
-        mermaid(st.session_state['attack_tree'])

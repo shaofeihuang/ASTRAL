@@ -141,13 +141,13 @@ See `requirements.txt` for the complete list of dependencies.
 
 ### Step 5: Generate Attack Tree and Paths
 1. Move to the "Attack Model" tab
-2. Click "Generate Attack Tree and Paths"
+2. Click "Generate Attack Model"
 3. The system generates attack paths, attack tree code that is compatible with Mermaid, and an attack tree diagram preview
 4. Download the attack tree code for visualisation in Mermaid Live, and download the raw attack tree data in JSON format if needed.
 
 ### Step 6: Generate System Model
 1. Navigate to the "System Model" tab
-2. Click "Generate AutomationML File"
+2. Click "Generate System Model"
 3. The system creates an AutomationML representation of the system. This process may take several minutes depending on the complexity of the system architecture and threat model
 4. Check the generated AutomationML file and update the exposure probabilities with real-world data
 5. Download the .aml file if needed

@@ -187,9 +187,9 @@ def tab_system_model():
 
         with col1:
             if all(key in st.session_state for key in ("arch_narration", "threat_model", "attack_paths")):
-                if st.button("Generate AutomationML File"):
+                if st.button("Generate System Model"):
                     try:
-                        st.warning("Generating the AutomationML system model may take several minutes depending on the complexity of the architecture and threat model. Please be patient. You may see intermittent warnings about retries - these are normal and indicate the system is handling transient issues with the model provider.")
+                        st.warning("Generating the system model may take several minutes depending on the complexity of the architecture and threat model. Please be patient. You may see intermittent warnings about retries - these are normal and indicate the system is handling transient issues with the model provider.")
                         aml_content = generate_model_aml(st.session_state['arch_narration'], st.session_state['threat_model'], st.session_state['attack_paths'])
                         aml_content = clean_aml_content(aml_content)
                         st.session_state['aml_file'] = aml_content

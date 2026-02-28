@@ -75,14 +75,14 @@ def tab_architecture():
         st.markdown("""---""")
 
         st.subheader("Architectural Narration")
+        st.write(st.session_state['arch_narration'])
+        #st.code(st.session_state['arch_narration'], language="text")
         st.download_button(
             label="Download Architectural Narration",
             data=st.session_state['arch_narration'],
             file_name="arch_narration.md",
             mime="text/markdown",
         )
-        
-        st.write(st.session_state['arch_narration'])
         additional_detail = st.text_area(
             "Enter Additional Architectural Details (Optional)",
             value="",
