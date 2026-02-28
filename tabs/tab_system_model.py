@@ -196,7 +196,7 @@ def tab_system_model():
                     except Exception as e:
                         st.error(f"Failed to generate AutomationML file: {str(e)}")
             else:
-                st.warning("Generate an architectural narration, threat model, and attack tree first, or upload a previously saved AutomationML file to proceed.")
+                st.warning("Generate an architectural narration, threat model, and attack model first, or upload a previously saved AutomationML file to proceed.")
 
         with col2:
             uploaded_aml = st.file_uploader(

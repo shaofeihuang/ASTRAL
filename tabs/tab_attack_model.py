@@ -254,7 +254,7 @@ def generate_attack_tree(api_key, prompt):
     
 
 def tab_attack_model():
-    st.info("Use this tab to generate an attack tree and corresponding attack paths based on the architectural narration and threat model. You can also upload a previously saved attack tree data file in JSON format to visualise and extract attack paths.")
+    st.info("Use this tab to generate an attack tree and corresponding attack paths based on the architectural narration and threat model. You can also upload a previously saved attack model data file in JSON format to visualise and extract attack paths.")
     st.markdown("""---""")
 
     with st.container():
@@ -264,26 +264,26 @@ def tab_attack_model():
         if all(key in st.session_state for key in ("arch_narration", "threat_model")):
             if st.button("Generate Attack Model"):
                 attack_tree_prompt = at_json_to_markdown(st.session_state.get('arch_narration'), st.session_state.get('threat_model'))
-                with st.spinner("Generating attack tree and paths..."):
+                with st.spinner("Generating attack model..."):
                     try:
                         st.session_state['attack_tree_data'] = generate_attack_tree(st.session_state['api_key'], attack_tree_prompt)
                         st.session_state['attack_tree'] = convert_tree_to_mermaid(st.session_state['attack_tree_data'])
                         st.session_state['attack_paths'] = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
                     except Exception as e:
-                        st.error(f"Error generating attack tree: {e}")
+                        st.error(f"Error generating attack model: {e}")
         else:
-            st.warning("Generate an architectural narration and threat model first, or upload a saved attack tree data file to proceed.")
+            st.warning("Generate an architectural narration and threat model first, or upload a saved attack model data file to proceed.")
 
     with col2:
         uploaded_data = st.file_uploader(
-            "Upload attack tree data file (.json)", type=["json"]
+            "Upload attack model data file (.json)", type=["json"]
         )
         if uploaded_data is not None:
             json_bytes = uploaded_data.read()  # bytes
             json_str = json_bytes.decode("utf-8")  # decode to string
             at_dict = json.loads(json_str)  # parse JSON string to dict
             st.session_state['attack_tree_data'] = at_dict
-            st.success("Attack tree data uploaded successfully.")
+            st.success("Attack model data uploaded successfully.")
             st.session_state['attack_tree'] = convert_tree_to_mermaid(st.session_state['attack_tree_data'])
             st.session_state['attack_paths'] = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
     

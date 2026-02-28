@@ -39,7 +39,7 @@ def tab_optimisation():
             st.session_state['optimisation_objective'] = 0
         elif objective == "Minimise Exposure & Impact Probabilities + Attack Entropy":
             if 'attack_tree_data' not in st.session_state:
-                st.warning("Generate or upload an attack tree first to use Entropy as an optimisation objective.")
+                st.warning("Generate or upload an attack model first to use Entropy as an optimisation objective.")
             st.session_state['optimisation_objective'] = 1
         else:
             st.session_state['optimisation_objective'] = 0  # Default
