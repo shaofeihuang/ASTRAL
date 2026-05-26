@@ -1,0 +1,7 @@
+The SWaT Network Architecture, i.e., the cyber portion of SWaT, comprises dedicated OT hardware in Allen-Bradley Programmable Logic Controllers (PLCs), Schneider Remote Input/Output (RIO) units and a combination of IT software and hardware in the Human Machine Interfaces (HMIs), Supervisory Control and Data Acquisition (SCADA) workstation and Historian.
+ 
+
+The SCADA supervises the SWaT process through periodical monitoring and has the ability to take manual control of the SWaT testbed by overriding the pre-existing PLC programming. The SCADA also works in conjunction with the Historian which serves the important role of recording and storing process data for subsequent analysis. The IT and OT components co-exist on a network that employs a layered communications network using the Purdue Model for Industrial Control Systems (ICS). The PLCs use the EtherNet/IP (ENIP) as the main communication protocol.
+ 
+
+Notable aspects of the testbed include segmented communications networks, both wired and wireless communications, distributed dynamic control, interconnection among the testbeds, and complete access to the control logic within the PLCs and HMIs. The SWaT testbed employs the use of Wireless Access Points (WAP) to achieve wireless communications. This accessibility allows researchers to develop and upload their code in the controllers for research and experimentation. It also provides a platform for demonstrating their technologies in a safe, controlled, and realistic environment.
