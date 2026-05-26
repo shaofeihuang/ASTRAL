@@ -478,7 +478,7 @@ def compute_risk_score():
         start_node = st.session_state['attack_paths'].split(" --> ")[0]
         #last_node = st.session_state['attack_paths'].split(" --> ")[-1]
 
-    #print("[*] Start Node:", start_node, "\n[*] Last Node: ",last_node)
+    print("[*] Start Node:", start_node)
 
     cpd_exposure, cpd_impact = compute_bayesian_probabilities(inference_exposure, inference_impact, start_node, target_node)
 
