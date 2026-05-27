@@ -8,9 +8,8 @@ from azure.core.exceptions import ResourceNotFoundError
 model_token_limits = {
 
     # Gemini models
-    "Gemini API:gemini-3-pro-preview": {"default": 1048576, "max": 1048576},
-    "Gemini API:gemini-3-flash-preview": {"default": 1048576, "max": 1048576},
-    "Gemini API:gemini-2.5-pro": {"default": 1048576, "max": 1048576},
+    "Gemini API:gemini-3.1-pro-preview": {"default": 1048576, "max": 1048576},
+    "Gemini API:gemini-3.5-flash": {"default": 1048576, "max": 1048576},
     "Gemini API:gemini-2.5-flash": {"default": 1048576, "max": 1048576},
 
     # Mistral models
