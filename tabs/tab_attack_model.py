@@ -10,8 +10,6 @@ import json
 
 # Local application imports
 from prompts import create_attack_tree_prompt
-from utils import stringify_content
-
 
 # Create JSON schema for attack tree
 def create_attack_tree_schema():
