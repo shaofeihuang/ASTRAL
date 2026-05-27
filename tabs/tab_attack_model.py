@@ -242,13 +242,13 @@ def generate_attack_tree(api_key, prompt):
                 {"role": "user", "content": prompt}
             ]
             response = client.invoke(messages)
-            content = stringify_content(response.content)
-
+            print ("Raw response content:", response.content)
     except Exception as e:
         st.error(f"Failed to generate attack tree: {str(e)}")
 
     try:
-        cleaned_response = clean_json_response(content)
+        cleaned_response = clean_json_response(response.content)
+        print ("Cleaned JSON response:", cleaned_response)
         tree_data = json.loads(cleaned_response)
         return tree_data
     except json.JSONDecodeError:

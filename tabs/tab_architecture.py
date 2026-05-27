@@ -2,6 +2,7 @@
 import streamlit as st
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from sympy import content
 
 # Local application imports

@@ -38,6 +38,7 @@ model_token_limits = {
     "Anthropic API:claude-opus-4-20250514": {"default": 64000, "max": 200000},
     "Anthropic API:claude-3-7-sonnet-latest": {"default": 64000, "max": 200000},
     "Anthropic API:claude-3-5-haiku-latest": {"default": 64000, "max": 200000},
+
 }
 
 
