@@ -64,9 +64,6 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 1 completed ({elapsed_secs:.2f} secs)")
-                print ("----------------------------------------------------")
-                print (f"[DEBUG] Raw Internal Elements XML:\n{internal_elements_xml}...")  # Print raw response for debugging
-                print ("----------------------------------------------------")
                 #if hasattr(internal_elements_xml, 'content'):
                 #    internal_elements_xml = internal_elements_xml.content
                 #else:
