@@ -43,17 +43,19 @@ def clean_aml_content(aml_file):
 # Clean raw model response by extracting text content if it's a list of dicts, otherwise return as is
 def clean_response(response):
     print("Raw response:", response)
-    if isinstance(response, str):
-        content = response
-        print("Response is a string, using as content.")
-    elif isinstance(response.content, list):
-        for item in response.content:
-            if isinstance(item, dict) and item.get("type") == "text":
-                content = item.get("text", "")
-                break
+    if hasattr(response, 'content'):
+        print("Response has content attribute, processing content.")
+        if isinstance(response.content, str):
+            content = response.content
+            print("Response content is a string, using as content.")
+        elif isinstance(response.content, list):
+            for item in response.content:
+                if isinstance(item, dict) and item.get("type") == "text":
+                    content = item.get("text", "")
+                    break
     else:
         content = response
-        print("Response content is not a list, using raw response as content.")
+        print("Using raw response as content.")
     return content
 
 
