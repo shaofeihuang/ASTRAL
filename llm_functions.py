@@ -112,7 +112,7 @@ def select_llm_model():
         
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-            ["gemini-3-pro-preview", "gemini-3-flash-preview", "gemini-2.5-pro", "gemini-2.5-flash"],
+            ["gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-2.5-flash"],
             key="selected_model",
             on_change=on_model_selection_change,
             help="Select the model you would like to use."
