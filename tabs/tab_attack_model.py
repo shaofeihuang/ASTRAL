@@ -3,13 +3,15 @@ import re
 
 # Third-party imports
 import streamlit as st
+import streamlit.components.v1 as components
+from langchain_mistralai import ChatMistralAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 import json
 
 # Local application imports
 from prompts import create_attack_tree_prompt
-import streamlit.components.v1 as components
-from langchain_mistralai import ChatMistralAI
-from langchain_google_genai import ChatGoogleGenerativeAI
+from utils import stringify_content
+
 
 # Create JSON schema for attack tree
 def create_attack_tree_schema():
@@ -240,7 +242,7 @@ def generate_attack_tree(api_key, prompt):
                 {"role": "user", "content": prompt}
             ]
             response = client.invoke(messages)
-            content = response.content
+            content = stringify_content(response.content)
 
     except Exception as e:
         st.error(f"Failed to generate attack tree: {str(e)}")

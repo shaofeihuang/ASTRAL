@@ -2,9 +2,11 @@
 import streamlit as st
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from sympy import content
 
 # Local application imports
 from prompts import create_arch_narration_prompt, create_arch_narration_prompt_text
+from utils import stringify_content
 
 def tab_architecture():
     st.title("ASTRAL (Architecture-Centric Security Threat Risk Assessment using Multimodal LLMs)")
@@ -61,7 +63,8 @@ def tab_architecture():
                             {"role": "user", "content": arch_expl_prompt, "image": st.session_state['image_bytes']}
                         ]
                     response = client.invoke(messages)
-                    st.session_state['arch_narration'] = response.content
+                    
+                    st.session_state['arch_narration'] = stringify_content(response.content)
 
                 except Exception as e:
                     st.error(f"Failed to generate architectural narration: {str(e)}")

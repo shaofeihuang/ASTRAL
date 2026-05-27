@@ -39,6 +39,25 @@ def clean_aml_content(aml_file):
     aml_content = aml_content.replace('&', '&amp;')
     return aml_content
 
+def stringify_content(content):
+    if isinstance(content, str):
+        narration = content
+    elif isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                if "text" in item:
+                    parts.append(item["text"])
+                elif item.get("type") == "text" and "content" in item:
+                    parts.append(item["content"])
+            else:
+                parts.append(str(item))
+        result = "\n".join(parts)
+    else:
+        result = str(content)
+    return result
 
 # Retrieve latest EPSS score for a CVE from FIRST.org
 def get_epss_score(cve_id):

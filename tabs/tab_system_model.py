@@ -64,6 +64,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 1 completed ({elapsed_secs:.2f} secs)")
+                internal_elements_xml = stringify_content(internal_elements_xml)
                 if hasattr(internal_elements_xml, 'content'):
                     internal_elements_xml = internal_elements_xml.content
                 else:
@@ -94,6 +95,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 2 completed ({elapsed_secs:.2f} secs)")
+                valid_pairs_json = stringify_content(valid_pairs_json)
                 print (f"[DEBUG] Valid Pairs JSON:\n{valid_pairs_json}")  # Print valid pairs for debugging
                 break  # success, exit retry loop
 
@@ -129,6 +131,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 3 completed ({elapsed_secs:.2f} secs)")
+                internal_links_xml = stringify_content(internal_links_xml)
                 if hasattr(internal_links_xml, 'content'):
                     internal_links_xml = internal_links_xml.content
                 else:
@@ -159,6 +162,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
+                final_aml_xml = stringify_content(final_aml_xml)
                 if hasattr(final_aml_xml, 'content'):
                     final_aml_xml = final_aml_xml.content
                 else:
