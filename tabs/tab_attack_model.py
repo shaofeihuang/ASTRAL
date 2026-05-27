@@ -254,7 +254,7 @@ def generate_attack_tree(api_key, prompt):
         st.error(f"Failed to generate attack tree: {str(e)}")
 
     try:
-        cleaned_response = clean_json_response(clean_response(response.content))
+        cleaned_response = clean_json_response(clean_response(response))
         tree_data = json.loads(cleaned_response)
         return tree_data
     except json.JSONDecodeError:
