@@ -40,6 +40,18 @@ def clean_aml_content(aml_file):
     return aml_content
 
 
+# Clean raw model response by extracting text content if it's a list of dicts, otherwise return as is
+def clean_response(raw_response):
+    if isinstance(response.content, str):                 
+        content = response.content
+    elif isinstance(response.content, list):
+        for item in response.content:
+            if isinstance(item, dict) and item.get("type") == "text":
+                content = item.get("text", "")
+                break
+    return content
+
+
 # Retrieve latest EPSS score for a CVE from FIRST.org
 def get_epss_score(cve_id):
     url = f"https://api.first.org/data/v1/epss?cve={cve_id}"

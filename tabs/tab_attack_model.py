@@ -10,6 +10,7 @@ import json
 
 # Local application imports
 from prompts import create_attack_tree_prompt
+from utils import clean_response
 
 # Create JSON schema for attack tree
 def create_attack_tree_schema():
@@ -211,7 +212,15 @@ def mermaid(code: str, height: int = 500) -> None:
         """,
         height=height,
     )
-    
+
+
+# Parse attack model data from uploaded Markdown file
+def parse_attack_model_markdown(md_text: str) -> dict:
+    match = re.search(r"```json\s*(.*?)\s*```", md_text, re.DOTALL)
+    if not match:
+        raise ValueError("No JSON code block found in markdown file.")
+    return json.loads(match.group(1))
+
 
 # Generate attack tree using selected model provider
 def generate_attack_tree(api_key, prompt):
@@ -245,7 +254,7 @@ def generate_attack_tree(api_key, prompt):
         st.error(f"Failed to generate attack tree: {str(e)}")
 
     try:
-        cleaned_response = clean_json_response(response.content)
+        cleaned_response = clean_json_response(clean_response(response.content))
         tree_data = json.loads(cleaned_response)
         return tree_data
     except json.JSONDecodeError:
@@ -278,13 +287,14 @@ def tab_attack_model():
             "Upload attack model data file (.json)", type=["json"]
         )
         if uploaded_data is not None:
-            json_bytes = uploaded_data.read()  # bytes
-            json_str = json_bytes.decode("utf-8")  # decode to string
-            at_dict = json.loads(json_str)  # parse JSON string to dict
-            st.session_state['attack_tree_data'] = at_dict
+            file_bytes = uploaded_data.read()
+            file_str = file_bytes.decode("utf-8")
+            at_dict = json.loads(file_str)
+
+            st.session_state["attack_tree_data"] = at_dict
+            st.session_state["attack_tree"] = convert_tree_to_mermaid(at_dict)
+            st.session_state["attack_paths"] = attack_tree_to_attack_paths(at_dict)
             st.success("Attack model data uploaded successfully.")
-            st.session_state['attack_tree'] = convert_tree_to_mermaid(st.session_state['attack_tree_data'])
-            st.session_state['attack_paths'] = attack_tree_to_attack_paths(st.session_state['attack_tree_data'])
     
     #----------------------------------------------------------------------------------------------
     # Display Attack Tree and Paths
@@ -302,21 +312,21 @@ def tab_attack_model():
         col1, col2, col3 = st.columns(3)
         with col1:
             st.download_button(
-                label="Download Attack Tree (Mermaid code)",
-                data=st.session_state['attack_tree'],
-                file_name="attack_tree.md",
-                mime="text/markdown",
-                help="Download the Mermaid code for the attack tree.",
-                key = "download_attack_tree"
-            )
-        with col2:
-            st.download_button(
                 label="Download Attack Tree (JSON)",
                 data=json.dumps(st.session_state['attack_tree_data'], indent=2),
                 file_name="attack_tree.json",
                 mime="json",
                 help="Download the raw attack tree data.",
                 key = "download_attack_tree_data"
+            )
+        with col2:
+            st.download_button(
+                label="Download Attack Tree (Mermaid code)",
+                data=st.session_state['attack_tree'],
+                file_name="attack_tree.md",
+                mime="text/markdown",
+                help="Download the Mermaid code for the attack tree.",
+                key = "download_attack_tree"
             )
         with col3:
             st.link_button("Open Mermaid Live", "https://mermaid.live")

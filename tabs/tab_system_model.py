@@ -64,10 +64,10 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 1 completed ({elapsed_secs:.2f} secs)")
-                if hasattr(internal_elements_xml, 'content'):
-                    internal_elements_xml = internal_elements_xml.content
-                else:
-                    internal_elements_xml = str(internal_elements_xml)
+                #if hasattr(internal_elements_xml, 'content'):
+                internal_elements_xml = clean_response(internal_elements_xml)
+                #else:
+                #    internal_elements_xml = str(internal_elements_xml)
                 print (f"[DEBUG] Internal Elements XML:\n{internal_elements_xml}...")  # Print for debugging
                 break  # success, exit retry loop
 
@@ -90,7 +90,8 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 print (f"[#] Generating AML - Step 2 [Attempt {attempt + 1}]")
                 start_time = time.time()
                 prompt_step2 = create_aml_prompt_step_2(attack_paths)
-                valid_pairs_json = client.invoke(prompt_step2, response_format={"type": "json_object"})
+                #valid_pairs_json = client.invoke(prompt_step2, response_format={"type": "json_object"})
+                valid_pairs_json = clean_response(client.invoke(prompt_step2, response_format={"type": "json_object"}))
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 2 completed ({elapsed_secs:.2f} secs)")
@@ -129,10 +130,11 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 3 completed ({elapsed_secs:.2f} secs)")
-                if hasattr(internal_links_xml, 'content'):
-                    internal_links_xml = internal_links_xml.content
-                else:
-                    internal_links_xml = str(internal_links_xml)
+                #if hasattr(internal_links_xml, 'content'):
+                #    internal_links_xml = internal_links_xml.content
+                #else:
+                #    internal_links_xml = str(internal_links_xml)
+                internal_links_xml = clean_response(internal_links_xml)
                 print (f"[DEBUG] Internal Links XML:\n{internal_links_xml}...")
                 break  # success, stop retrying
 
@@ -159,10 +161,11 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
-                if hasattr(final_aml_xml, 'content'):
-                    final_aml_xml = final_aml_xml.content
-                else:
-                    final_aml_xml = str(final_aml_xml)
+                #if hasattr(final_aml_xml, 'content'):
+                #    final_aml_xml = final_aml_xml.content
+                #else:
+                #    final_aml_xml = str(final_aml_xml)
+                final_aml_xml = clean_response(final_aml_xml)
                 break  # success, exit retry loop
 
             except Exception as e:

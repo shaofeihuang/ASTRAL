@@ -8,6 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Local application imports
 from prompts import create_threat_model_prompt
+from utils import clean_response
 
 # Convert threat model JSON to Markdown
 def tm_json_to_markdown(threat_model, arch_suggestions):
@@ -66,7 +67,7 @@ def tab_threat_model():
                         {"role": "user", "content": threat_model_prompt, "image": st.session_state.get('image_bytes', None)}
                     ]
                     response = client.invoke(messages, response_format={"type": "json_object"})
-                    model_output = json.loads(response.content)
+                    model_output = json.loads(clean_response(response.content))
                     st.session_state['threat_model'] = model_output.get("threat_model", [])
                     st.session_state['arch_suggestions'] = model_output.get("arch_suggestions", [])
 
