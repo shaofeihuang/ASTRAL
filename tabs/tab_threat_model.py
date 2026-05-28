@@ -9,26 +9,22 @@ from llm_functions import init_client
 from prompts import create_threat_model_prompt
 from utils import clean_response
 
-# Convert threat model JSON to Markdown
-def tm_json_to_markdown(threat_model, arch_suggestions):
-    markdown_output = "## Threat Model\n\n"
-
-    # Start the markdown table with headers
-    markdown_output += "| Threat Type | Scenario | Potential Impact |\n"
-    markdown_output += "|-------------|----------|------------------|\n"
-
-    # Fill the table rows with the threat model data
-    for threat in threat_model:
-        markdown_output += f"| {threat['Threat Type']} | {threat['Scenario']} | {threat['Potential Impact']} |\n"
-
-    markdown_output += "\n\n## Architecture Suggestions\n\n"
-    for suggestion in arch_suggestions:
-        markdown_output += f"- {suggestion}\n"
-
-    return markdown_output
-
 
 def tab_threat_model():
+    def json_to_markdown(threat_model, arch_suggestions):
+        markdown_output = "## Threat Model\n\n"
+        markdown_output += "| Threat Type | Scenario | Potential Impact |\n"
+        markdown_output += "|-------------|----------|------------------|\n"
+
+        for threat in threat_model:
+            markdown_output += f"| {threat['Threat Type']} | {threat['Scenario']} | {threat['Potential Impact']} |\n"
+
+        markdown_output += "\n\n## Architecture Suggestions\n\n"
+        for suggestion in arch_suggestions:
+            markdown_output += f"- {suggestion}\n"
+
+        return markdown_output
+
     st.info("Use this tab to generate a threat model tailored to the CPS system using the STRIDE-LM methodology, which expands upon the Microsoft STRIDE framework by including seven categories of threats: **S**poofing, **T**ampering, **R**epudiation, **I**nformation Disclosure, **D**enial of Service, **E**levation of Privilege, and **L**ateral **M**ovement. Architecture suggestions for improving the threat model will also be provided.")
     st.markdown("""---""")
     #----------------------------------------------------------------------------------------------
@@ -64,7 +60,7 @@ def tab_threat_model():
     if 'threat_model' in st.session_state:
         st.markdown("""---""")
         
-        markdown_output = tm_json_to_markdown(
+        markdown_output = json_to_markdown(
             st.session_state['threat_model'],
             st.session_state.get('arch_suggestions', [])
         )
