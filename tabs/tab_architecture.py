@@ -22,13 +22,17 @@ def tab_architecture():
         "Upload Architecture / Data Flow Diagram (DFD) Image / Text", type=["png", "jpg", "jpeg", "bmp", "gif", "txt"]
     )
 
+    file_type = None
+
     if uploaded_file is not None:
         st.session_state['arch_filename'] = uploaded_file.name
         if uploaded_file.name.endswith('.txt'):
+            file_type = 'text'
             st.session_state['arch_text'] = uploaded_file.read().decode('utf-8')
             st.text_area("Uploaded Architecture Text", value=st.session_state['arch_text'], height=300)
             arch_expl_prompt = create_arch_narration_prompt_text()
         else:
+            file_type = 'image'
             st.session_state['image_bytes'] = uploaded_file.read()
             st.image(st.session_state['image_bytes'], caption="Uploaded Image", width="stretch")
             arch_expl_prompt = create_arch_narration_prompt()
@@ -53,7 +57,7 @@ def tab_architecture():
                         # add Anthropic call here if needed
                         pass
 
-                    if 'arch_text' in st.session_state:
+                    if file_type == 'text':
                         messages=[
                             {"role": "user", "content": arch_expl_prompt + f"Architecture description: {st.session_state['arch_text']}"}
                         ]
