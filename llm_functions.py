@@ -4,6 +4,7 @@ from azure.core.exceptions import ResourceNotFoundError
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_deepseek import ChatDeepSeek
+from langchain_openrouter import ChatOpenRouter
 
 #----------------------------------------------------------------------------------------------
 # Model Token Limits Dictionary
@@ -25,8 +26,9 @@ model_token_limits = {
     "Anthropic:claude-opus-4.7": {"default": 128000, "max": 128000},
     "Anthropic:claude-sonnet-4.6": {"default": 64000, "max": 64000},
 
-    # Deepseek models
-    "DeepSeek:deepseek-v4-flash": {"default": 384000, "max": 384000},
+    # OpenRouter models
+    "OpenRouter:deepseek-v4-flash:free": {"default": 384000, "max": 384000},
+    "OpenRouter:nemotron-nano-12b-v2-vl:free": {"default": 128000, "max": 128000},
 }
 
 
@@ -35,22 +37,20 @@ model_token_limits = {
 #----------------------------------------------------------------------------------------------
 def on_model_provider_change():
     new_provider = st.session_state['model_provider']
-    # Set default model per provider first
+
     if new_provider == "Mistral":
         st.session_state['selected_model'] = "mistral-medium-latest"
     elif new_provider == "Gemini":
         st.session_state['selected_model'] = "gemini-2.5-flash"
     elif new_provider == "OpenAI":
         st.session_state['selected_model'] = "gpt-5.4"
-    elif new_provider == "DeepSeek":
-        st.session_state['selected_model'] = "deepseek-v4-flash"
+    elif new_provider == "OpenRouter":
+        st.session_state['selected_model'] = "deepseek/deepseek-v4-flash:free"
     elif new_provider == "Anthropic":
         st.session_state['selected_model'] = "claude-sonnet-4.6"
 
-    # Compose correct key for lookup
     st.session_state['current_model_key'] = f"{new_provider}:{st.session_state['selected_model']}"
 
-    # Set token limits from dict if existent, else fallback
     if st.session_state['current_model_key'] in model_token_limits:
         st.session_state['token_limit'] = model_token_limits[st.session_state['current_model_key']]["default"]
     else:
@@ -73,7 +73,7 @@ def on_model_selection_change():
 def select_llm_model():
     model_provider = st.selectbox(
     "Select your preferred model provider:",
-    ["Mistral", "Gemini", "DeepSeek", "OpenAI", "Anthropic"],
+    ["Mistral", "Gemini", "OpenRouter", "OpenAI", "Anthropic"],
     key="model_provider",
     index=0,
     on_change=on_model_provider_change,
@@ -137,15 +137,15 @@ def select_llm_model():
         )
 
 
-    if model_provider == "DeepSeek":
+    if model_provider == "OpenRouter":
         try:
-            st.session_state['api_key'] = st.session_state['client'].get_secret("DEEPSEEK-API-KEY").value
+            st.session_state['api_key'] = st.session_state['client'].get_secret("OPENROUTER-API-KEY").value
         except ResourceNotFoundError:
-            st.session_state['api_key'] = st.text_input("DeepSeek API Key", type="password")
+            st.session_state['api_key'] = st.text_input("OpenRouter API Key", type="password")
 
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-            ["deepseek-v4-flash"],
+            ["deepseek/deepseek-v4-flash:free", "nvidia/nemotron-nano-12b-v2-vl:free"],
             key="selected_model",
             on_change=on_model_selection_change,
             help="Select the model you would like to use."
@@ -176,5 +176,5 @@ def init_client():
     elif model_provider == "Anthropic":
         # add Anthropic call here if needed
         pass
-    elif model_provider == "DeepSeek":
-        return ChatDeepSeek(api_key=api_key, model=selected_model)
+    elif model_provider == "OpenRouter":
+        return ChatOpenRouter(api_key=api_key, model=selected_model, base_url="https://openrouter.ai/api/v1", max_tokens=st.session_state['token_limit'])
