@@ -8,36 +8,19 @@ from azure.core.exceptions import ResourceNotFoundError
 model_token_limits = {
 
     # Gemini models
-    "Gemini API:gemini-3.1-pro-preview": {"default": 1048576, "max": 1048576},
     "Gemini API:gemini-3.5-flash": {"default": 1048576, "max": 1048576},
     "Gemini API:gemini-2.5-flash": {"default": 1048576, "max": 1048576},
 
     # Mistral models
     "Mistral API:mistral-large-latest": {"default": 256000, "max": 256000},
     "Mistral API:mistral-medium-latest": {"default": 128000, "max": 128000},
-    "Mistral API:mistral-small-latest": {"default": 128000, "max": 128000},
-    "Mistral API:magistral-small-latest": {"default": 128000, "max": 128000},
-    "Mistral API:magistral-medium-latest": {"default": 128000, "max": 128000},
-    "Mistral API:ministral-8b-latest": {"default": 256000, "max": 256000},
 
     # OpenAI models
-    "OpenAI API:gpt-5": {"default": 128000, "max": 400000},
-    "OpenAI API:gpt-5-mini": {"default": 64000, "max": 400000},
-    "OpenAI API:gpt-5-nano": {"default": 64000, "max": 400000},
-    "OpenAI API:gpt-4.1": {"default": 128000, "max": 1000000},
-    "OpenAI API:gpt-4o": {"default": 64000, "max": 128000},
-    "OpenAI API:gpt-4o-mini": {"default": 64000, "max": 128000},
-    "OpenAI API:o3": {"default": 64000, "max": 200000},
-    "OpenAI API:o3-mini": {"default": 64000, "max": 200000},
-    "OpenAI API:o4-mini": {"default": 64000, "max": 200000},    
+    "OpenAI API:gpt-5.4": {"default": 128000, "max": 128000},  
 
     # Claude models
-    "Anthropic API:claude-sonnet-4-5-20250929": {"default": 64000, "max": 200000},
-    "Anthropic API:claude-sonnet-4-20250514": {"default": 64000, "max": 200000},
-    "Anthropic API:claude-opus-4-1-20250805": {"default": 64000, "max": 200000},
-    "Anthropic API:claude-opus-4-20250514": {"default": 64000, "max": 200000},
-    "Anthropic API:claude-3-7-sonnet-latest": {"default": 64000, "max": 200000},
-    "Anthropic API:claude-3-5-haiku-latest": {"default": 64000, "max": 200000},
+    "Anthropic API:claude-opus-4.7": {"default": 128000, "max": 128000},
+    "Anthropic API:claude-sonnet-4.6": {"default": 64000, "max": 64000},
 
 }
 
@@ -53,9 +36,9 @@ def on_model_provider_change():
     elif new_provider == "Gemini API":
         st.session_state['selected_model'] = "gemini-2.5-flash"
     elif new_provider == "OpenAI API":
-        st.session_state['selected_model'] = "gpt-5"
+        st.session_state['selected_model'] = "gpt-5.4"
     elif new_provider == "Anthropic API":
-        st.session_state['selected_model'] = "claude-sonnet-4-5-20250929"
+        st.session_state['selected_model'] = "claude-sonnet-4.6"
 
     # Compose correct key for lookup
     st.session_state['current_model_key'] = f"{new_provider}:{st.session_state['selected_model']}"
@@ -98,8 +81,7 @@ def select_llm_model():
         
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-            ["mistral-medium-latest", "mistral-large-latest", "mistral-small-latest", "magistral-medium-latest",
-                "magistral-small-latest", "ministral-8b-latest"],
+            ["mistral-medium-latest", "mistral-large-latest"],
             key="selected_model",
             on_change=on_model_selection_change,
             help="Select the model you would like to use."
@@ -113,7 +95,7 @@ def select_llm_model():
         
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-            ["gemini-3.1-pro-preview", "gemini-3.5-flash", "gemini-2.5-flash"],
+            ["gemini-3.5-flash", "gemini-2.5-flash"],
             key="selected_model",
             on_change=on_model_selection_change,
             help="Select the model you would like to use."
@@ -127,7 +109,7 @@ def select_llm_model():
 
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-            ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4o", "gpt-4o-mini", "o3", "o3-mini", "o4-mini"],
+            ["gpt-5.4"],
             key="selected_model",
             on_change=on_model_selection_change,
             help="Select the model you would like to use."
@@ -141,8 +123,7 @@ def select_llm_model():
 
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-            ["claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-opus-4-1-20250805", "claude-opus-4-20250514",
-                "claude-3-7-sonnet-latest", "claude-3-5-haiku-latest"],
+            ["claude-opus-4.7", "claude-sonnet-4.6"],
             key="selected_model",
             on_change=on_model_selection_change,
             help="Select the model you would like to use."
