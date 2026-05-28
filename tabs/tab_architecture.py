@@ -2,8 +2,6 @@
 import streamlit as st
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_anthropic import ChatAnthropic
-from langchain_openai import ChatOpenAI
 
 # Local application imports
 from prompts import create_arch_narration_prompt, create_arch_narration_prompt_text
@@ -49,15 +47,11 @@ def tab_architecture():
                             model=st.session_state['selected_model']
                         )
                     elif st.session_state['model_provider'] == "OpenAI API":
-                        client = ChatOpenAI(
-                            api_key=st.session_state['api_key'],
-                            model=st.session_state['selected_model']
-                        )
+                        # add OpenAI call here if needed
+                        pass
                     elif st.session_state['model_provider'] == "Anthropic API":
-                        client = ChatAnthropic(
-                            api_key=st.session_state['api_key'],
-                            model=st.session_state['selected_model']
-                        )
+                        # add Anthropic call here if needed
+                        pass
 
                     if 'arch_text' in st.session_state:
                         messages=[
