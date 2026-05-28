@@ -140,7 +140,7 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
 - Goal node may have children that are Asset, Vulnerability or Hazard nodes.
 - Vulnerability nodes may have children that are Vulnerabilities or Assets, but never Hazards.
 - Hazard nodes may have children that are Hazards or Assets, but never Vulnerabilities.
-7. The one and only attacker node is at the bottom of the tree structure, connected to all the attack paths leading to the attack goal.
+7. The one and only terminal node represents the attacker node, which is at the bottom of the tree structure and connected to all the attack paths leading to the attack goal.
 - The attacker node should be labeled with the prefix `[U01] Attacker`.
 - This attacker node must have children links (edges) to all leaf nodes (the last nodes) in every attack path in the tree.
 - This represents the attacker as the origin of all end-stage threats in the attack tree.
