@@ -8,20 +8,22 @@ from azure.core.exceptions import ResourceNotFoundError
 model_token_limits = {
 
     # Gemini models
-    "Gemini API:gemini-3.5-flash": {"default": 1048576, "max": 1048576},
-    "Gemini API:gemini-2.5-flash": {"default": 1048576, "max": 1048576},
+    "Gemini:gemini-3.5-flash": {"default": 1048576, "max": 1048576},
+    "Gemini:gemini-2.5-flash": {"default": 1048576, "max": 1048576},
 
     # Mistral models
-    "Mistral API:mistral-large-latest": {"default": 256000, "max": 256000},
-    "Mistral API:mistral-medium-latest": {"default": 128000, "max": 128000},
+    "Mistral:mistral-large-latest": {"default": 256000, "max": 256000},
+    "Mistral:mistral-medium-latest": {"default": 128000, "max": 128000},
 
     # OpenAI models
-    "OpenAI API:gpt-5.4": {"default": 128000, "max": 128000},  
+    "OpenAI:gpt-5.4": {"default": 128000, "max": 128000},  
 
     # Claude models
-    "Anthropic API:claude-opus-4.7": {"default": 128000, "max": 128000},
-    "Anthropic API:claude-sonnet-4.6": {"default": 64000, "max": 64000},
+    "Anthropic:claude-opus-4.7": {"default": 128000, "max": 128000},
+    "Anthropic:claude-sonnet-4.6": {"default": 64000, "max": 64000},
 
+    # Deepseek models
+    "DeepSeek:deepseek-v4-flash": {"default": 384000, "max": 384000},
 }
 
 
@@ -31,13 +33,15 @@ model_token_limits = {
 def on_model_provider_change():
     new_provider = st.session_state['model_provider']
     # Set default model per provider first
-    if new_provider == "Mistral API":
+    if new_provider == "Mistral":
         st.session_state['selected_model'] = "mistral-medium-latest"
-    elif new_provider == "Gemini API":
+    elif new_provider == "Gemini":
         st.session_state['selected_model'] = "gemini-2.5-flash"
-    elif new_provider == "OpenAI API":
+    elif new_provider == "OpenAI":
         st.session_state['selected_model'] = "gpt-5.4"
-    elif new_provider == "Anthropic API":
+    elif new_provider == "DeepSeek":
+        st.session_state['selected_model'] = "deepseek-v4-flash"
+    elif new_provider == "Anthropic":
         st.session_state['selected_model'] = "claude-sonnet-4.6"
 
     # Compose correct key for lookup
@@ -66,14 +70,14 @@ def on_model_selection_change():
 def select_llm_model():
     model_provider = st.selectbox(
     "Select your preferred model provider:",
-    ["Mistral API", "Gemini API", "OpenAI API", "Anthropic API"],
+    ["Mistral", "Gemini", "DeepSeek", "OpenAI", "Anthropic"],
     key="model_provider",
     index=0,
     on_change=on_model_provider_change,
     help="Select the model provider you would like to use. This will determine the models available for selection.",
     )
 
-    if model_provider == "Mistral API":
+    if model_provider == "Mistral":
         try:
             st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
         except ResourceNotFoundError:
@@ -87,7 +91,7 @@ def select_llm_model():
             help="Select the model you would like to use."
         )
         
-    if model_provider == "Gemini API":
+    if model_provider == "Gemini":
         try:
             st.session_state['api_key'] = st.session_state['client'].get_secret("GEMINI-API-KEY").value
         except ResourceNotFoundError:
@@ -101,7 +105,7 @@ def select_llm_model():
             help="Select the model you would like to use."
         )
 
-    if model_provider == "OpenAI API":
+    if model_provider == "OpenAI":
         try:
             st.session_state['api_key'] = st.session_state['client'].get_secret("OPENAI-API-KEY").value
         except ResourceNotFoundError:
@@ -115,7 +119,7 @@ def select_llm_model():
             help="Select the model you would like to use."
         )
 
-    if model_provider == "Anthropic API":
+    if model_provider == "Anthropic":
         try:
             st.session_state['api_key'] = st.session_state['client'].get_secret("ANTHROPIC-API-KEY").value
         except ResourceNotFoundError:
@@ -129,6 +133,20 @@ def select_llm_model():
             help="Select the model you would like to use."
         )
 
+
+    if model_provider == "DeepSeek":
+        try:
+            st.session_state['api_key'] = st.session_state['client'].get_secret("DEEPSEEK-API-KEY").value
+        except ResourceNotFoundError:
+            st.session_state['api_key'] = st.text_input("DeepSeek API Key", type="password")
+
+        selected_model = st.selectbox(
+            "Select the model you would like to use:",
+            ["deepseek-v4-flash"],
+            key="selected_model",
+            on_change=on_model_selection_change,
+            help="Select the model you would like to use."
+        )
     #----------------------------------------------------------------------------------------------
     # Set token limit based on selected model
     #----------------------------------------------------------------------------------------------

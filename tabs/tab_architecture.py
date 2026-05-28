@@ -2,6 +2,7 @@
 import streamlit as st
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_deepseek import ChatDeepSeek
 
 # Local application imports
 from prompts import create_arch_narration_prompt, create_arch_narration_prompt_text
@@ -40,22 +41,27 @@ def tab_architecture():
         if st.button("Generate Architectural Narration") and uploaded_file is not None:
             with st.spinner("Generating architectural narration..."):
                 try:
-                    if st.session_state['model_provider'] == "Mistral API":
+                    if st.session_state['model_provider'] == "Mistral":
                         client = ChatMistralAI(
                             api_key=st.session_state['api_key'],
                             model=st.session_state['selected_model']
                         )
-                    elif st.session_state['model_provider'] == "Gemini API":
+                    elif st.session_state['model_provider'] == "Gemini":
                         client = ChatGoogleGenerativeAI(
                             api_key=st.session_state['api_key'],
                             model=st.session_state['selected_model']
                         )
-                    elif st.session_state['model_provider'] == "OpenAI API":
+                    elif st.session_state['model_provider'] == "OpenAI":
                         # add OpenAI call here if needed
                         pass
-                    elif st.session_state['model_provider'] == "Anthropic API":
+                    elif st.session_state['model_provider'] == "Anthropic":
                         # add Anthropic call here if needed
                         pass
+                    elif st.session_state['model_provider'] == "DeepSeek":
+                        client = ChatDeepSeek(
+                            api_key=st.session_state['api_key'],
+                            model=st.session_state['selected_model']
+                        )
 
                     if file_type == 'text':
                         messages=[
@@ -102,24 +108,29 @@ def tab_architecture():
         if st.button("Re-Generate Architectural Narration"):
             with st.spinner("Generating architectural narration..."):
                 try:
-                    if st.session_state['model_provider'] == "Mistral API":
+                    if st.session_state['model_provider'] == "Mistral":
                         client = ChatMistralAI(
                             api_key=st.session_state['api_key'],
                             model=st.session_state['selected_model'],
                             max_tokens=st.session_state['token_limit']
                         )
-                    elif st.session_state['model_provider'] == "Gemini API":
+                    elif st.session_state['model_provider'] == "Gemini":
                         client = ChatGoogleGenerativeAI(
                             api_key=st.session_state['api_key'],
                             model=st.session_state['selected_model'],
                             max_tokens=st.session_state['token_limit']
                         )
-                    elif st.session_state['model_provider'] == "OpenAI API":
+                    elif st.session_state['model_provider'] == "OpenAI":
                         # add OpenAI call here if needed
                         pass
-                    elif st.session_state['model_provider'] == "Anthropic API":
+                    elif st.session_state['model_provider'] == "Anthropic":
                         # add Anthropic call here if needed
                         pass
+                    elif st.session_state['model_provider'] == "Deepseek":
+                        client = ChatDeepSeek(
+                            api_key=st.session_state['api_key'],
+                            model=st.session_state['selected_model']
+                        )
 
                     messages=[
                         {"role": "user", "content": arch_expl_prompt + f"Additional architectural details: {additional_detail}", "image": st.session_state['image_bytes']}

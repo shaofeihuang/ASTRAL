@@ -7,6 +7,7 @@ import time
 import streamlit as st
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_deepseek import ChatDeepSeek
 
 # Local application imports
 from prompts import *
@@ -23,7 +24,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
     # Initialize model client based on selected provider
     #------------------------------------------------------------------------------------------
     try:
-        if st.session_state['model_provider'] == "Mistral API":
+        if st.session_state['model_provider'] == "Mistral":
             client = ChatMistralAI(
                 api_key=st.session_state['api_key'],
                 model=st.session_state['selected_model'],
@@ -31,7 +32,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 max_retries=0,
                 timeout=timeout
             )
-        elif st.session_state['model_provider'] == "Gemini API":
+        elif st.session_state['model_provider'] == "Gemini":
             client = ChatGoogleGenerativeAI(
                 api_key=st.session_state['api_key'],
                 model=st.session_state['selected_model'],
@@ -39,12 +40,17 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 max_retries=0,
                 timeout=timeout
             )
-        elif st.session_state['model_provider'] == "OpenAI API":
+        elif st.session_state['model_provider'] == "OpenAI":
             # add OpenAI call here if needed
             pass
-        elif st.session_state['model_provider'] == "Anthropic API":
+        elif st.session_state['model_provider'] == "Anthropic":
             # add Anthropic call here if needed
             pass
+        elif st.session_state['model_provider'] == "DeepSeek":
+            client = ChatDeepSeek(
+                api_key=st.session_state['api_key'],
+                model=st.session_state['selected_model']
+            )
     except Exception as e:
         st.error(f"Failed to initialize model client: {str(e)}")
         st.stop()  # stop execution if client initialization fails
@@ -64,10 +70,6 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 1 completed ({elapsed_secs:.2f} secs)")
-                #if hasattr(internal_elements_xml, 'content'):
-                #    internal_elements_xml = internal_elements_xml.content
-                #else:
-                #    internal_elements_xml = str(internal_elements_xml)
                 internal_elements_xml = clean_response(internal_elements_xml)  # Clean response to extract text content
                 print (f"[DEBUG] Internal Elements XML:\n{internal_elements_xml}...")  # Print for debugging
                 break  # success, exit retry loop
@@ -131,10 +133,6 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 3 completed ({elapsed_secs:.2f} secs)")
-                #if hasattr(internal_links_xml, 'content'):
-                #    internal_links_xml = internal_links_xml.content
-                #else:
-                #    internal_links_xml = str(internal_links_xml)
                 internal_links_xml = clean_response(internal_links_xml)  # Clean response to extract text content
                 print (f"[DEBUG] Internal Links XML:\n{internal_links_xml}...")
                 break  # success, stop retrying
@@ -162,10 +160,6 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
-                #if hasattr(final_aml_xml, 'content'):
-                #    final_aml_xml = final_aml_xml.content
-                #else:
-                #    final_aml_xml = str(final_aml_xml)
                 final_aml_xml = clean_response(final_aml_xml)  # Clean response to extract text content
                 break  # success, exit retry loop
 

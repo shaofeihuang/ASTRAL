@@ -5,6 +5,7 @@ import json
 import streamlit as st
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_deepseek import ChatDeepSeek
 
 # Local application imports
 from prompts import create_threat_model_prompt
@@ -44,24 +45,29 @@ def tab_threat_model():
         if st.button("Generate STRIDE-LM Threat Model"):
             with st.spinner("Generating STRIDE-LM threat model..."):
                 try:
-                    if st.session_state['model_provider'] == "Mistral API":
+                    if st.session_state['model_provider'] == "Mistral":
                         client = ChatMistralAI(
                             api_key=st.session_state['api_key'],
                             model=st.session_state['selected_model'],
                             max_tokens=st.session_state['token_limit']
                         )
-                    elif st.session_state['model_provider'] == "Gemini API":
+                    elif st.session_state['model_provider'] == "Gemini":
                         client = ChatGoogleGenerativeAI(
                             api_key=st.session_state['api_key'],
                             model=st.session_state['selected_model'],
                             max_tokens=st.session_state['token_limit']
                         )
-                    elif st.session_state['model_provider'] == "OpenAI API":
+                    elif st.session_state['model_provider'] == "OpenAI":
                         # add OpenAI call here if needed
                         pass
-                    elif st.session_state['model_provider'] == "Anthropic API":
+                    elif st.session_state['model_provider'] == "Anthropic":
                         # add Anthropic call here if needed
                         pass
+                    elif st.session_state['model_provider'] == "DeepSeek":
+                        client = ChatDeepSeek(
+                            api_key=st.session_state['api_key'],
+                            model=st.session_state['selected_model']
+                        )
 
                     messages=[
                         {"role": "user", "content": threat_model_prompt, "image": st.session_state.get('image_bytes', None)}
