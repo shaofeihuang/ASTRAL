@@ -117,7 +117,7 @@ def at_json_to_markdown(arch_narration, threat_model):
 
 
 # Convert attack tree JSON to Mermaid syntax
-def convert_tree_to_mermaid(tree_data):
+def convert_tree_to_mermaid_old(tree_data):
     mermaid_lines = ["graph BT"]
 
     def process_node(node, parent_id=None):
@@ -140,6 +140,38 @@ def convert_tree_to_mermaid(tree_data):
         process_node(root_node)
 
     return "\n".join(mermaid_lines)
+
+def convert_tree_to_mermaid(tree_data):
+    mermaid_lines = ["graph BT"]
+    defined_nodes = set()
+
+    def process_node(node, parent_id=None):
+        node_id = node["id"]
+        node_label = node["label"]
+
+        # Quote label if it contains special characters
+        if " " in node_label or "(" in node_label or ")" in node_label:
+            node_label = f'"{node_label}"'
+
+        # Only define node once
+        if node_id not in defined_nodes:
+            mermaid_lines.append(f'    {node_id}[{node_label}]')
+            defined_nodes.add(node_id)
+
+        # Connect to parent (parent --> child direction)
+        if parent_id:
+            mermaid_lines.append(f'    {parent_id} --> {node_id}')
+
+        # Process children
+        if "children" in node:
+            for child in node["children"]:
+                process_node(child, node_id)
+
+    for root_node in tree_data["nodes"]:
+        process_node(root_node)
+
+    return "\n".join(mermaid_lines)
+
 
 
 # Extract Mermaid code from text
