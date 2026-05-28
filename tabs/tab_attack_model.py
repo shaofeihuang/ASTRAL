@@ -4,11 +4,10 @@ import re
 # Third-party imports
 import streamlit as st
 import streamlit.components.v1 as components
-from langchain_mistralai import ChatMistralAI
-from langchain_google_genai import ChatGoogleGenerativeAI
 import json
 
 # Local application imports
+from llm_functions import init_client
 from prompts import create_attack_tree_prompt
 from utils import clean_response
 
@@ -234,22 +233,7 @@ def generate_attack_tree(api_key, prompt):
     system_prompt = create_attack_tree_prompt()
     response = None
     try:
-            if st.session_state['model_provider'] == "Mistral API":
-                client = ChatMistralAI(
-                    api_key=api_key,
-                    model=st.session_state['selected_model']
-                )
-            elif st.session_state['model_provider'] == "Gemini API":
-                client = ChatGoogleGenerativeAI(
-                    api_key=api_key,
-                    model=st.session_state['selected_model']
-                )
-            elif st.session_state['model_provider'] == "OpenAI API":
-                # add OpenAI call here if needed
-                pass
-            elif st.session_state['model_provider'] == "Anthropic API":
-                # add Anthropic call here if needed
-                pass
+            client = init_client()
 
             messages=[
                 {"role": "system", "content": system_prompt},

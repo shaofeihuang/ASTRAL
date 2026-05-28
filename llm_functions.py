@@ -1,6 +1,9 @@
 # Third-party imports
 import streamlit as st
 from azure.core.exceptions import ResourceNotFoundError
+from langchain_mistralai import ChatMistralAI
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_deepseek import ChatDeepSeek
 
 #----------------------------------------------------------------------------------------------
 # Model Token Limits Dictionary
@@ -153,3 +156,25 @@ def select_llm_model():
     if 'token_limit' not in st.session_state:
         model_key = f"{model_provider}:{selected_model}"
         st.session_state['token_limit'] = model_token_limits[model_key]["default"]
+
+
+def init_client():
+    if 'model_provider' not in st.session_state or 'selected_model' not in st.session_state:
+        return None
+    
+    api_key = st.session_state.get('api_key', None)
+    model_provider = st.session_state['model_provider']
+    selected_model = st.session_state['selected_model']
+
+    if model_provider == "Mistral":
+        return ChatMistralAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'])
+    elif model_provider == "Gemini":
+        return ChatGoogleGenerativeAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'])
+    elif model_provider == "OpenAI":
+        # add OpenAI call here if needed
+        pass
+    elif model_provider == "Anthropic":
+        # add Anthropic call here if needed
+        pass
+    elif model_provider == "DeepSeek":
+        return ChatDeepSeek(api_key=api_key, model=selected_model)
