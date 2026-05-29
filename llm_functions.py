@@ -3,7 +3,6 @@ import streamlit as st
 from azure.core.exceptions import ResourceNotFoundError
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_deepseek import ChatDeepSeek
 from langchain_openrouter import ChatOpenRouter
 
 #----------------------------------------------------------------------------------------------
@@ -44,10 +43,10 @@ def on_model_provider_change():
         st.session_state['selected_model'] = "gemini-2.5-flash"
     elif new_provider == "OpenAI":
         st.session_state['selected_model'] = "gpt-5.4"
-    elif new_provider == "OpenRouter":
-        st.session_state['selected_model'] = "deepseek/deepseek-v4-flash:free"
     elif new_provider == "Anthropic":
         st.session_state['selected_model'] = "claude-sonnet-4.6"
+    elif new_provider == "OpenRouter":
+        st.session_state['selected_model'] = "deepseek/deepseek-v4-flash:free"
 
     st.session_state['current_model_key'] = f"{new_provider}:{st.session_state['selected_model']}"
 
