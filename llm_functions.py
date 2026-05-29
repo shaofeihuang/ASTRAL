@@ -135,7 +135,6 @@ def select_llm_model():
             help="Select the model you would like to use."
         )
 
-
     if model_provider == "OpenRouter":
         try:
             st.session_state['api_key'] = st.session_state['client'].get_secret("OPENROUTER-API-KEY").value
