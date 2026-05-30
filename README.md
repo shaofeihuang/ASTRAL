@@ -47,8 +47,9 @@ Probabilistic modelling capabilities:
 Flexible integration with multiple LLM providers:
 - Mistral AI
 - Google Gemini
-- OpenAI (GPT-4, GPT-3.5)
-- Anthropic (Claude)
+- OpenAI
+- Anthropic Claude
+- OpenRouter
 - Easy switching between providers based on availability and cost
 
 ---
@@ -59,7 +60,7 @@ Flexible integration with multiple LLM providers:
 
 - Python 3.8 or higher
 - pip package manager
-- API keys for at least one LLM provider (Gemini, Mistral, OpenAI, or Anthropic)
+- API keys for at least one LLM provider
 
 ### Setup Instructions
 
