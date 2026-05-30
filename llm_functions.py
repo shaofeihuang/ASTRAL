@@ -168,7 +168,7 @@ def init_client():
     if model_provider == "Mistral":
         return ChatMistralAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'], timeout=600)
     elif model_provider == "Gemini":
-        return ChatGoogleGenerativeAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'])
+        return ChatGoogleGenerativeAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'], timeout=600)
     elif model_provider == "OpenAI":
         # add OpenAI call here if needed
         pass
@@ -176,4 +176,4 @@ def init_client():
         # add Anthropic call here if needed
         pass
     elif model_provider == "OpenRouter":
-        return ChatOpenRouter(api_key=api_key, model=selected_model, base_url="https://openrouter.ai/api/v1", max_tokens=st.session_state['token_limit'])
+        return ChatOpenRouter(api_key=api_key, model=selected_model, base_url="https://openrouter.ai/api/v1", max_tokens=st.session_state['token_limit'], timeout=600)
