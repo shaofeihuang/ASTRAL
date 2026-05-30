@@ -43,7 +43,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 1 completed ({elapsed_secs:.2f} secs)")
                 internal_elements_xml = clean_response(internal_elements_xml)  # Clean response to extract text content
-                print (f"[DEBUG] Internal Elements XML:\n{internal_elements_xml}...")  # Print for debugging
+                print (f"[DEBUG] Internal Elements XML:\n{internal_elements_xml}")  # Print for debugging
                 break  # success, exit retry loop
 
             except Exception as e:
@@ -106,7 +106,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 3 completed ({elapsed_secs:.2f} secs)")
                 internal_links_xml = clean_response(internal_links_xml)  # Clean response to extract text content
-                print (f"[DEBUG] Internal Links XML:\n{internal_links_xml}...")
+                print (f"[DEBUG] Internal Links XML:\n{internal_links_xml}")
                 break  # success, stop retrying
 
             except Exception as e:
@@ -135,9 +135,10 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
                 final_aml_xml = clean_response(final_aml_xml)  # Clean response to extract text content
-                if not final_aml_xml.endswith(required_suffix):
+                print (f"[DEBUG] Final AML XML:\n{final_aml_xml}")  # Print for debugging
+                if not final_aml_xml.rstrip().endswith(required_suffix):
                     raise ValueError(
-                        "Generated AML XML is incomplete: missing closing </CAEXFile> tag."
+                        "Error: Generated AML XML is incomplete: missing closing </CAEXFile> tag."
                     )
                 break  # success, exit retry loop
 
