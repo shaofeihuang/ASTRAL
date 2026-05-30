@@ -127,26 +127,27 @@ Controlled sampling configuration:
 
 IMPORTANT - Follow these strictly enforced semantic guardrails:
 1. The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analysed.
-2. Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal.
-3. The tree should include all relevant attack paths and sub-paths based on the threat model.
-4. Analyse if assets, hazards, or vulnerabilities may be linked to assets, hazards, or vulnerabilities in separate attack paths, and if so, represent these relationships appropriately in the tree structure.
-5. Each node label must begin with a prefix indicating its type:
+2. The one and only terminal node represents the attacker node [U01] Attacker, which is at the bottom of the tree structure and connected to all the attack paths leading to the attack goal.
+- The attacker node should be labeled with the prefix `[U01] Attacker`.
+- This attacker node must have children links (edges) to all leaf nodes (the last nodes) in every attack path in the tree.
+- This represents the attacker as the origin of all end-stage threats in the attack tree.
+3. Each node in the tree should represent an Asset, Vulnerability, Hazard, or Goal.
+4. Each node must be unique and not reused across different branches of the tree. If a node appears in multiple attack paths, it should be duplicated with a unique ID to maintain the tree structure.
+5. The tree should include all relevant attack paths and sub-paths based on the threat model.
+6. Analyse if assets, hazards, or vulnerabilities may be linked to assets, hazards, or vulnerabilities in separate attack paths, and if so, represent these relationships appropriately in the tree structure.
+7. Each node label must begin with a prefix indicating its type:
 - `[A##]` for Asset nodes
 - `[V##]` for Vulnerability nodes
 - `[H##]` for Hazard nodes
 - `[G##]` for Goal node(s)
-6. Maintain parent-child relationships strictly according to the rules as follows:
+8. Maintain parent-child relationships strictly according to the rules as follows:
 - Asset nodes may have children that are Vulnerabilities, Hazards, or other Assets.
 - Goal node may have children that are Asset, Vulnerability or Hazard nodes.
 - Vulnerability nodes may have children that are Vulnerabilities or Assets, but never Hazards.
 - Hazard nodes may have children that are Hazards or Assets, but never Vulnerabilities.
-7. The one and only terminal node represents the attacker node, which is at the bottom of the tree structure and connected to all the attack paths leading to the attack goal.
-- The attacker node should be labeled with the prefix `[U01] Attacker`.
-- This attacker node must have children links (edges) to all leaf nodes (the last nodes) in every attack path in the tree.
-- This represents the attacker as the origin of all end-stage threats in the attack tree.
-8. Use simple IDs (e.g., root, vul1, haz1, asset1).
-9. Make labels clear, descriptive, and correctly prefixed.
-10. Ensure the JSON is properly formatted. The JSON structure should follow this format:
+9. Use simple IDs (e.g., root, vul1, haz1, asset1).
+10. Make labels clear, descriptive, and correctly prefixed.
+11. Ensure the JSON is properly formatted. The JSON structure should follow this format:
 {
     "nodes": [
         {
