@@ -53,6 +53,7 @@ def on_model_provider_change():
     if st.session_state['current_model_key'] in model_token_limits:
         st.session_state['token_limit'] = model_token_limits[st.session_state['current_model_key']]["default"]
     else:
+        print(f"Warning: No token limit found for {st.session_state['current_model_key']}. Using fallback default.")
         st.session_state['token_limit'] = 8000  # Fallback default
 
 
