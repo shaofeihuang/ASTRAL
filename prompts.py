@@ -126,7 +126,7 @@ Controlled sampling configuration:
 - top_p = {st.session_state['llm_top_p']}
 
 IMPORTANT - Follow these strictly enforced semantic guardrails:
-1. The one and only root node represents the attack goal, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analysed.
+1. The one and only root node represents the goal node [G01] CPS Disruption, which is the disruption or stoppage of cyber-physical system operations, taking into account the specific context of the system being analysed.
 2. The one and only terminal node represents the attacker node [U01] Attacker, which is at the bottom of the tree structure and connected to all the attack paths leading to the attack goal.
 - The attacker node should be labeled with the prefix `[U01] Attacker`.
 - This attacker node must have children links (edges) to all leaf nodes (the last nodes) in every attack path in the tree.
@@ -139,7 +139,8 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
 - `[A##]` for Asset nodes
 - `[V##]` for Vulnerability nodes
 - `[H##]` for Hazard nodes
-- `[G##]` for Goal node(s)
+- `[G01]` for Goal node
+- `[U01]` for Attacker node
 8. Maintain parent-child relationships strictly according to the rules as follows:
 - Asset nodes may have children that are Vulnerabilities, Hazards, or other Assets.
 - Goal node may have children that are Asset, Vulnerability or Hazard nodes.
@@ -303,6 +304,7 @@ Controlled sampling configuration:
 3. Remove duplicates - output each unique pair only once
 4. Use EXACT node IDs from paths (preserve prefixes and numbers)
 5. Attacker [U01] is always source for initial edges
+6. Goal [G01] is always target for final edges
 
 EXAMPLE:
 Attack Paths:
