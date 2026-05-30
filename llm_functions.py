@@ -166,7 +166,7 @@ def init_client():
     selected_model = st.session_state['selected_model']
 
     if model_provider == "Mistral":
-        return ChatMistralAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'])
+        return ChatMistralAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'], timeout=600)
     elif model_provider == "Gemini":
         return ChatGoogleGenerativeAI(api_key=api_key, model=selected_model, max_tokens=st.session_state['token_limit'])
     elif model_provider == "OpenAI":
