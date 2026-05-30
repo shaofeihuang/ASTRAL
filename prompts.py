@@ -305,6 +305,7 @@ Controlled sampling configuration:
 4. Use EXACT node IDs from paths (preserve prefixes and numbers)
 5. Attacker [U01] is always source for initial edges
 6. Goal [G01] is always target for final edges
+7. Do not create self-loops - source and target cannot be the same node
 
 EXAMPLE:
 Attack Paths:
