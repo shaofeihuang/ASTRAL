@@ -123,7 +123,8 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
     # Final Assembly of AutomationML Model
     #------------------------------------------------------------------------------------------
     with st.spinner("Generating AutomationML Model (Step 4) ..."):
-        required_suffix = "</CAEXFile>"
+        required_suffix_1 = "</CAEXFile>"
+        required_suffix_2 = "```"
 
         for attempt in range(max_retries):
             try:
@@ -136,9 +137,9 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
                 final_aml_xml = clean_response(final_aml_xml)  # Clean response to extract text content
                 print (f"[DEBUG] Final AML XML:\n{final_aml_xml}")  # Print for debugging
-                if not final_aml_xml.rstrip().endswith(required_suffix):
+                if not final_aml_xml.rstrip().endswith(required_suffix_1) and not final_aml_xml.rstrip().endswith(required_suffix_2):
                     raise ValueError(
-                        "Error: Generated AML XML is incomplete: missing closing </CAEXFile> tag."
+                        "Error: Generated AML XML is incomplete."
                     )
                 break  # success, exit retry loop
 
