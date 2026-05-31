@@ -1,0 +1,466 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] CPS Disruption: Compromise Tesla In-Vehicle Infotainment (IVI) System Operations",
+      "children": [
+        {
+          "id": "spoofing_root",
+          "label": "[H01] Spoofing Attacks on IVI System",
+          "children": [
+            {
+              "id": "spoofing_diag",
+              "label": "[H02] Spoof Diagnostic Requests via Cellular/Wi-Fi Interfaces",
+              "children": [
+                {
+                  "id": "vul_diag_auth",
+                  "label": "[V01] Weak Authentication in Tesla IVI External Communication Protocols",
+                  "children": [
+                    {
+                      "id": "asset_cellular_modem",
+                      "label": "[A01] Cellular Modem (4G/5G) in Telematics Control Unit (TCU)",
+                      "children": [
+                        {
+                          "id": "attacker_spoofing_diag_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "spoofing_bluetooth",
+              "label": "[H03] Spoof Paired Mobile Device via Bluetooth Exploits",
+              "children": [
+                {
+                  "id": "vul_bluetooth_pairing",
+                  "label": "[V02] Bluetooth Pairing Process Vulnerabilities (e.g., BlueBorne)",
+                  "children": [
+                    {
+                      "id": "asset_bluetooth_stack",
+                      "label": "[A02] Bluetooth Stack in IVI Head Unit",
+                      "children": [
+                        {
+                          "id": "attacker_spoofing_bluetooth_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tampering_root",
+          "label": "[H04] Tampering with IVI System Components",
+          "children": [
+            {
+              "id": "tampering_firmware_obd",
+              "label": "[H05] Tamper with Firmware via OBD-II Port Access",
+              "children": [
+                {
+                  "id": "vul_firmware_update",
+                  "label": "[V03] Unsecured Firmware Update Process via OBD-II",
+                  "children": [
+                    {
+                      "id": "asset_obd_ii_port",
+                      "label": "[A03] OBD-II Diagnostic Port",
+                      "children": [
+                        {
+                          "id": "attacker_tampering_firmware_obd_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "tampering_js_injection",
+              "label": "[H06] Inject Malicious JavaScript via IVI Web Browser",
+              "children": [
+                {
+                  "id": "vul_browser_engine",
+                  "label": "[V04] Memory Corruption in IVI Web Browser Engine",
+                  "children": [
+                    {
+                      "id": "asset_ivi_browser",
+                      "label": "[A04] Web Browser in IVI Head Unit",
+                      "children": [
+                        {
+                          "id": "attacker_tampering_js_injection_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_root",
+          "label": "[H07] Repudiation: Undetected Malicious Actions",
+          "children": [
+            {
+              "id": "repudiation_can_spoofing",
+              "label": "[H08] Spoof CAN Bus Messages Without Logging",
+              "children": [
+                {
+                  "id": "vul_can_logging",
+                  "label": "[V05] Insufficient Logging of CAN Bus Messages",
+                  "children": [
+                    {
+                      "id": "asset_can_bus_interface",
+                      "label": "[A05] CAN Bus Interface in IVI Head Unit",
+                      "children": [
+                        {
+                          "id": "attacker_repudiation_can_spoofing_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure_root",
+          "label": "[H09] Information Disclosure from IVI System",
+          "children": [
+            {
+              "id": "info_disclosure_can_eavesdrop",
+              "label": "[H10] Eavesdrop on CAN Bus Messages via Cellular/Wi-Fi",
+              "children": [
+                {
+                  "id": "vul_can_protocol",
+                  "label": "[V06] Unencrypted CAN Bus Message Transmission",
+                  "children": [
+                    {
+                      "id": "asset_cellular_wifi_interface",
+                      "label": "[A06] Cellular/Wi-Fi Interface in TCU",
+                      "children": [
+                        {
+                          "id": "attacker_info_disclosure_can_eavesdrop_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "info_disclosure_browser_exploit",
+              "label": "[H11] Exfiltrate User Data via IVI Browser Exploit",
+              "children": [
+                {
+                  "id": "vul_browser_sandbox",
+                  "label": "[V07] Inadequate Sandboxing in IVI Browser",
+                  "children": [
+                    {
+                      "id": "asset_user_data_storage",
+                      "label": "[A07] User Data Storage (Contacts, Navigation History)",
+                      "children": [
+                        {
+                          "id": "attacker_info_disclosure_browser_exploit_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_root",
+          "label": "[H12] Denial of Service (DoS) on IVI System",
+          "children": [
+            {
+              "id": "dos_can_flood",
+              "label": "[H13] Flood IVI with Malicious CAN Messages",
+              "children": [
+                {
+                  "id": "vul_can_protocol_dos",
+                  "label": "[V08] Lack of Rate Limiting in CAN Message Processing",
+                  "children": [
+                    {
+                      "id": "asset_can_bus_gateway",
+                      "label": "[A08] CAN Bus Gateway in IVI Head Unit",
+                      "children": [
+                        {
+                          "id": "attacker_dos_can_flood_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "dos_browser_crash",
+              "label": "[H14] Crash IVI Browser via Malicious JavaScript",
+              "children": [
+                {
+                  "id": "vul_browser_dos",
+                  "label": "[V09] Unhandled Exceptions in Browser Rendering Engine",
+                  "children": [
+                    {
+                      "id": "asset_ivi_browser_engine",
+                      "label": "[A09] Browser Engine in IVI Head Unit",
+                      "children": [
+                        {
+                          "id": "attacker_dos_browser_crash_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "priv_esc_root",
+          "label": "[H15] Elevation of Privilege in IVI System",
+          "children": [
+            {
+              "id": "priv_esc_can_exploit",
+              "label": "[H16] Exploit CAN Message Handling for Privilege Escalation",
+              "children": [
+                {
+                  "id": "vul_can_priv_esc",
+                  "label": "[V10] Improper Input Validation in CAN Message Parser",
+                  "children": [
+                    {
+                      "id": "asset_can_message_handler",
+                      "label": "[A10] CAN Message Handler in IVI Firmware",
+                      "children": [
+                        {
+                          "id": "attacker_priv_esc_can_exploit_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement_root",
+          "label": "[H17] Lateral Movement from IVI to Other Vehicle Systems",
+          "children": [
+            {
+              "id": "lateral_movement_telematics",
+              "label": "[H18] Pivot from IVI to Telematics Control Unit (TCU)",
+              "children": [
+                {
+                  "id": "vul_ivi_tcu_interface",
+                  "label": "[V11] Insecure IPC Between IVI and TCU",
+                  "children": [
+                    {
+                      "id": "asset_ivi_tcu_communication",
+                      "label": "[A11] Communication Channel Between IVI and TCU",
+                      "children": [
+                        {
+                          "id": "attacker_lateral_movement_telematics_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "lateral_movement_safety",
+              "label": "[H19] Pivot from IVI to Safety-Critical ECUs",
+              "children": [
+                {
+                  "id": "vul_ivi_ecu_seg",
+                  "label": "[V12] Inadequate Network Segmentation Between IVI and ECUs",
+                  "children": [
+                    {
+                      "id": "asset_ecu_gateway",
+                      "label": "[A12] Gateway Between IVI Ethernet and CAN FD Bus",
+                      "children": [
+                        {
+                          "id": "attacker_lateral_movement_safety_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain_root",
+          "label": "[H20] Supply Chain Compromise of IVI System",
+          "children": [
+            {
+              "id": "supply_chain_ota",
+              "label": "[H21] Deliver Malicious Payload via Compromised OTA Update",
+              "children": [
+                {
+                  "id": "vul_ota_verification",
+                  "label": "[V13] Weak Cryptographic Verification of OTA Updates",
+                  "children": [
+                    {
+                      "id": "asset_ota_server",
+                      "label": "[A13] Tesla OTA Update Server (Purdue Level 3.5)",
+                      "children": [
+                        {
+                          "id": "attacker_supply_chain_ota_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "supply_chain_third_party",
+              "label": "[H22] Trojanize Third-Party Apps in Tesla App Store",
+              "children": [
+                {
+                  "id": "vul_app_vetting",
+                  "label": "[V14] Insufficient Vetting of Third-Party Applications",
+                  "children": [
+                    {
+                      "id": "asset_third_party_app_store",
+                      "label": "[A14] Tesla Third-Party App Repository",
+                      "children": [
+                        {
+                          "id": "attacker_supply_chain_third_party_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_access_root",
+          "label": "[H23] Physical Access Exploits on IVI System",
+          "children": [
+            {
+              "id": "physical_usb_bad_usb",
+              "label": "[H24] Execute BadUSB Attack via IVI USB Port",
+              "children": [
+                {
+                  "id": "vul_usb_input_validation",
+                  "label": "[V15] Lack of Input Validation for USB HID Devices",
+                  "children": [
+                    {
+                      "id": "asset_ivi_usb_port",
+                      "label": "[A15] USB Port in IVI Head Unit",
+                      "children": [
+                        {
+                          "id": "attacker_physical_usb_bad_usb_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "physical_jtag_exploit",
+              "label": "[H25] Exploit JTAG/UART Interfaces for Firmware Dumping",
+              "children": [
+                {
+                  "id": "vul_jtag_access_control",
+                  "label": "[V16] Unlocked JTAG/UART Debug Interfaces",
+                  "children": [
+                    {
+                      "id": "asset_ivi_debug_port",
+                      "label": "[A16] JTAG/UART Debug Port on IVI PCB",
+                      "children": [
+                        {
+                          "id": "attacker_physical_jtag_exploit_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "insider_threat_root",
+          "label": "[H26] Insider Threat Exploits on IVI System",
+          "children": [
+            {
+              "id": "insider_service_mode",
+              "label": "[H27] Abuse Service Mode Diagnostic Commands",
+              "children": [
+                {
+                  "id": "vul_service_auth",
+                  "label": "[V17] Weak Authentication for Service Mode Access",
+                  "children": [
+                    {
+                      "id": "asset_service_diagnostic_tool",
+                      "label": "[A17] Tesla Service Diagnostic Tool/Software",
+                      "children": [
+                        {
+                          "id": "attacker_insider_service_mode_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "insider_backdoor",
+              "label": "[H28] Activate Undocumented Backdoors in IVI Firmware",
+              "children": [
+                {
+                  "id": "vul_firmware_backdoor",
+                  "label": "[V18] Hardcoded Credentials/Backdoors in IVI Firmware",
+                  "children": [
+                    {
+                      "id": "asset_ivi_firmware_image",
+                      "label": "[A18] IVI Firmware Image (Encrypted Partition)",
+                      "children": [
+                        {
+                          "id": "attacker_insider_backdoor_1",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

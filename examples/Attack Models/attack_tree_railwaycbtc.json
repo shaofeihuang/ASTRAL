@@ -1,0 +1,520 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] CPS Disruption: Compromise Communications-Based Train Control (CBTC) System Operations",
+      "children": [
+        {
+          "id": "spoof_train_wireless_comm",
+          "label": "[H01] Spoof Train Identity via Wireless Communication Exploits",
+          "children": [
+            {
+              "id": "weak_auth_wireless_protocol",
+              "label": "[V01] Weak Authentication in CBTC Radio Protocol (e.g., IEEE 802.11p)",
+              "children": [
+                {
+                  "id": "false_position_reports",
+                  "label": "[H02] False Train Position Reports to Zone Controller",
+                  "children": [
+                    {
+                      "id": "miscalculated_train_separation",
+                      "label": "[H03] Miscalculation of Train Separation Leading to Collisions",
+                      "children": [
+                        {
+                          "id": "attacker_spoof_train_identity",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "compromised_onboard_systems",
+              "label": "[A01] Onboard Train Systems (ATP/ATO Units)",
+              "children": [
+                {
+                  "id": "spoof_vital_signs",
+                  "label": "[V02] Spoofing Vital Signs (Speed/Direction) via Compromised Onboard Software",
+                  "children": [
+                    {
+                      "id": "incorrect_movement_authorities",
+                      "label": "[H04] Incorrect Movement Authorities Issued by Zone Controller",
+                      "children": [
+                        {
+                          "id": "derailments_collisions",
+                          "label": "[H05] Derailments or Collisions Due to False Authorities",
+                          "children": [
+                            {
+                              "id": "attacker_spoof_vital_signs",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tamper_wayside_equipment",
+          "label": "[H06] Tamper with Wayside Equipment (Track Circuits/Interlockings)",
+          "children": [
+            {
+              "id": "unauthorized_physical_access",
+              "label": "[V03] Unauthorized Physical Access to Wayside Controllers",
+              "children": [
+                {
+                  "id": "alter_track_circuit_params",
+                  "label": "[H07] Alter Track Circuit Parameters to Generate False Occupancy Reports",
+                  "children": [
+                    {
+                      "id": "incorrect_train_routing",
+                      "label": "[H08] Incorrect Train Routing Leading to Collisions",
+                      "children": [
+                        {
+                          "id": "attacker_tamper_wayside",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "exploit_onboard_software_vuln",
+              "label": "[A02] Train Onboard Software (e.g., Communication Stack with CVE-2020-25163)",
+              "children": [
+                {
+                  "id": "buffer_overflow_braking_system",
+                  "label": "[V04] Buffer Overflow in Braking System Control Logic",
+                  "children": [
+                    {
+                      "id": "alter_braking_params",
+                      "label": "[H09] Altered Braking Parameters Causing Speed Limit Violations",
+                      "children": [
+                        {
+                          "id": "derailments_due_to_speed",
+                          "label": "[H10] Derailments Due to Excessive Speed",
+                          "children": [
+                            {
+                              "id": "attacker_exploit_braking_vuln",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_event_data",
+          "label": "[H11] Repudiation of Train Event Data (Event Recorder Tampering)",
+          "children": [
+            {
+              "id": "compromised_event_recorder",
+              "label": "[A03] Train Event Recorder System",
+              "children": [
+                {
+                  "id": "unauthorized_data_modification",
+                  "label": "[V05] Unauthorized Modification of Recorded Event Data",
+                  "children": [
+                    {
+                      "id": "hindered_incident_investigation",
+                      "label": "[H12] Hindered Incident Investigations Due to Tampered Logs",
+                      "children": [
+                        {
+                          "id": "attacker_tamper_event_data",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure_wireless",
+          "label": "[H13] Information Disclosure via Wireless Protocol Exploits",
+          "children": [
+            {
+              "id": "vulnerable_encryption_scheme",
+              "label": "[V06] Vulnerable Encryption in CBTC Radio (e.g., CVE-2019-1010218)",
+              "children": [
+                {
+                  "id": "intercept_train_positions",
+                  "label": "[H14] Interception of Train Positions and Movement Authorities",
+                  "children": [
+                    {
+                      "id": "targeted_operational_attacks",
+                      "label": "[H15] Enabled Targeted Attacks Using Intercepted Operational Data",
+                      "children": [
+                        {
+                          "id": "attacker_intercept_wireless_data",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_wireless_network",
+          "label": "[H16] Denial-of-Service (DoS) on CBTC Wireless Network",
+          "children": [
+            {
+              "id": "wireless_network_vulnerability",
+              "label": "[V07] Lack of Anti-Jamming/DoS Protections in CBTC Radio",
+              "children": [
+                {
+                  "id": "overwhelm_communication_links",
+                  "label": "[H17] Overwhelm Train-to-Wayside Communication Links",
+                  "children": [
+                    {
+                      "id": "loss_situational_awareness",
+                      "label": "[H18] Loss of Situational Awareness Leading to Collisions",
+                      "children": [
+                        {
+                          "id": "attacker_launch_dos",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "elevation_of_privilege",
+          "label": "[H19] Elevation of Privilege in Train Onboard Systems",
+          "children": [
+            {
+              "id": "onboard_os_vulnerability",
+              "label": "[A04] Onboard Operating System (e.g., CVE-2021-31956)",
+              "children": [
+                {
+                  "id": "privilege_escalation_flaw",
+                  "label": "[V08] Privilege Escalation Vulnerability in Train Control Software",
+                  "children": [
+                    {
+                      "id": "unauthorized_control_commands",
+                      "label": "[H20] Issuance of Unauthorized Control Commands",
+                      "children": [
+                        {
+                          "id": "safety_incidents_from_unauthorized_commands",
+                          "label": "[H21] Safety Incidents from Unauthorized Commands",
+                          "children": [
+                            {
+                              "id": "attacker_elevate_privileges",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement_passenger_systems",
+          "label": "[H22] Lateral Movement from Passenger Systems to Train Control",
+          "children": [
+            {
+              "id": "weak_segmentation_passenger_network",
+              "label": "[V09] Weak Network Segmentation Between Passenger and Control Systems",
+              "children": [
+                {
+                  "id": "compromised_passenger_info_system",
+                  "label": "[A05] Passenger Information System (Displays/Announcements)",
+                  "children": [
+                    {
+                      "id": "pivot_to_train_control",
+                      "label": "[H23] Pivot from Passenger System to Vital Train Control Networks",
+                      "children": [
+                        {
+                          "id": "safety_incidents_from_lateral_movement",
+                          "label": "[H24] Safety Incidents Due to Compromised Train Control",
+                          "children": [
+                            {
+                              "id": "attacker_exploit_lateral_movement",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "time_synchronization_attack",
+          "label": "[H25] Time Synchronization Attack (PTP Spoofing)",
+          "children": [
+            {
+              "id": "compromised_ptp_grandmaster",
+              "label": "[A06] PTP Grandmaster Clock",
+              "children": [
+                {
+                  "id": "ptp_spoofing_vulnerability",
+                  "label": "[V10] Lack of PTP Authentication Enabling Spoofing",
+                  "children": [
+                    {
+                      "id": "desynchronized_train_localization",
+                      "label": "[H26] Desynchronized Train Localization Leading to Collisions",
+                      "children": [
+                        {
+                          "id": "attacker_spoof_ptp",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain_compromise",
+          "label": "[H27] Supply Chain Compromise (Malicious Firmware/Updates)",
+          "children": [
+            {
+              "id": "third_party_vendor_access",
+              "label": "[A07] Third-Party Vendor Update Mechanisms (SFTP/Proprietary Protocols)",
+              "children": [
+                {
+                  "id": "trojaned_firmware_updates",
+                  "label": "[V11] Trojaned Firmware Updates for Wayside/Trainborne Controllers",
+                  "children": [
+                    {
+                      "id": "embedded_backdoors_in_critical_systems",
+                      "label": "[H28] Embedded Backdoors in Safety-Critical Systems",
+                      "children": [
+                        {
+                          "id": "attacker_compromise_supply_chain",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "counterfeit_wayside_components",
+              "label": "[A08] Counterfeit Wayside Equipment (e.g., Switch Machines)",
+              "children": [
+                {
+                  "id": "hidden_backdoor_in_hardware",
+                  "label": "[V12] Hidden Backdoors in Counterfeit Hardware",
+                  "children": [
+                    {
+                      "id": "unauthorized_control_via_backdoor",
+                      "label": "[H29] Unauthorized Control of Track Switches/Signals via Backdoor",
+                      "children": [
+                        {
+                          "id": "attacker_exploit_counterfeit_hardware",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "social_engineering_operator",
+          "label": "[H30] Social Engineering of Train Operators/Maintenance Personnel",
+          "children": [
+            {
+              "id": "human_factor_vulnerabilities",
+              "label": "[V13] Lack of Multi-Factor Authentication (MFA) for Critical HMI Actions",
+              "children": [
+                {
+                  "id": "unauthorized_manual_overrides",
+                  "label": "[H31] Unauthorized Manual Overrides of Safety Systems",
+                  "children": [
+                    {
+                      "id": "collisions_due_to_human_error",
+                      "label": "[H32] Collisions or Derailments Due to Disabled Safeguards",
+                      "children": [
+                        {
+                          "id": "attacker_social_engineer_operator",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "phishing_maintenance_personnel",
+              "label": "[V14] Phishing Attacks Targeting Maintenance Personnel Credentials",
+              "children": [
+                {
+                  "id": "compromised_engineering_workstations",
+                  "label": "[A09] Engineering Workstations with Configuration Access",
+                  "children": [
+                    {
+                      "id": "malicious_configuration_changes",
+                      "label": "[H33] Malicious Changes to Signal Timing or Train Schedules",
+                      "children": [
+                        {
+                          "id": "operational_disruptions_from_misconfiguration",
+                          "label": "[H34] Operational Disruptions or Safety Incidents from Misconfigurations",
+                          "children": [
+                            {
+                              "id": "attacker_phish_maintenance",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "remote_access_exploits",
+          "label": "[H35] Exploitation of Remote Access Gateways (VPN/Jump Servers)",
+          "children": [
+            {
+              "id": "vulnerable_vpn_implementations",
+              "label": "[V15] Unpatched VPN Vulnerabilities (e.g., IPSec Flaws)",
+              "children": [
+                {
+                  "id": "unauthorized_remote_command_execution",
+                  "label": "[H36] Unauthorized Remote Command Execution on Wayside Controllers",
+                  "children": [
+                    {
+                      "id": "disrupt_train_routing",
+                      "label": "[H37] Disruption of Train Routing or Signal Control",
+                      "children": [
+                        {
+                          "id": "attacker_exploit_vpn",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "credential_stuffing_jump_servers",
+              "label": "[V16] Weak Credentials on Jump Servers Enabling Brute Force",
+              "children": [
+                {
+                  "id": "compromised_engineering_vlans",
+                  "label": "[A10] Engineering VLANs with Access to Firmware Deployment Systems",
+                  "children": [
+                    {
+                      "id": "deploy_malicious_firmware",
+                      "label": "[H38] Deployment of Malicious Firmware to Trainborne Systems",
+                      "children": [
+                        {
+                          "id": "system-wide_compromise_via_remote_access",
+                          "label": "[H39] System-Wide Compromise via Remote Access Pathways",
+                          "children": [
+                            {
+                              "id": "attacker_credential_stuffing",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_usb_attacks",
+          "label": "[H40] Physical USB-Based Attacks on Wayside/Trainborne Systems",
+          "children": [
+            {
+              "id": "unsecured_usb_ports",
+              "label": "[V17] Unsecured USB Ports on Wayside Controllers or Onboard Units",
+              "children": [
+                {
+                  "id": "malicious_firmware_via_usb",
+                  "label": "[H41] Injection of Malicious Firmware via USB (e.g., BadUSB)",
+                  "children": [
+                    {
+                      "id": "compromise_vital_control_systems",
+                      "label": "[H42] Compromise of Vital Control Systems (e.g., ATP/Interlockings)",
+                      "children": [
+                        {
+                          "id": "attacker_usb_physical_access",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "outdated_av_maintenance_laptops",
+              "label": "[A11] Maintenance Laptops with Outdated Antivirus",
+              "children": [
+                {
+                  "id": "malware_spread_to_engineering_network",
+                  "label": "[V18] Malware Spread from Maintenance Laptops to Engineering Networks",
+                  "children": [
+                    {
+                      "id": "lateral_movement_to_ccs",
+                      "label": "[H43] Lateral Movement to Central Control System (CCS)",
+                      "children": [
+                        {
+                          "id": "system_wide_infection",
+                          "label": "[H44] System-Wide Infection Leading to Operational Halt",
+                          "children": [
+                            {
+                              "id": "attacker_infect_via_laptop",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

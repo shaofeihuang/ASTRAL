@@ -1,0 +1,466 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] CPS Disruption: Compromise of Automotive Door Assembly Line Operations",
+      "children": [
+        {
+          "id": "spoofing_goal",
+          "label": "[G02] Achieve Spoofing-Based Disruption",
+          "children": [
+            {
+              "id": "plc_spoofing",
+              "label": "[A01] PLC (Programmable Logic Controller) Robotic Arm Command Interface",
+              "children": [
+                {
+                  "id": "plc_auth_weakness",
+                  "label": "[V01] Weak Authentication in PLC (Default Credentials/No MFA)",
+                  "children": [
+                    {
+                      "id": "spoofed_weld_commands",
+                      "label": "[H01] Spoofed Welding Commands Leading to Structural Weakness",
+                      "children": [
+                        {
+                          "id": "attacker_plc_spoof",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "hmi_spoofing",
+              "label": "[A02] HMI (Human-Machine Interface) Operator Workstation",
+              "children": [
+                {
+                  "id": "hmi_ip_spoofing",
+                  "label": "[V02] IP Spoofing Vulnerability in HMI Session Management",
+                  "children": [
+                    {
+                      "id": "conveyor_speed_manipulation",
+                      "label": "[H02] Unsafe Conveyor Speed Commands Causing Worker Injuries",
+                      "children": [
+                        {
+                          "id": "attacker_hmi_spoof",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tampering_goal",
+          "label": "[G03] Achieve Tampering-Based Disruption",
+          "children": [
+            {
+              "id": "scada_tampering",
+              "label": "[A03] SCADA System Configuration Interface",
+              "children": [
+                {
+                  "id": "scada_cve_2017_5164",
+                  "label": "[V03] CVE-2017-5164 (Siemens SCADA Vulnerability)",
+                  "children": [
+                    {
+                      "id": "press_force_misconfig",
+                      "label": "[H03] Excessive Hydraulic Press Force Damaging Door Panels",
+                      "children": [
+                        {
+                          "id": "attacker_scada_tamper",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "mes_tampering",
+              "label": "[A04] MES (Manufacturing Execution System) Production Scheduler",
+              "children": [
+                {
+                  "id": "mes_schedule_vuln",
+                  "label": "[V04] Insecure Direct Object Reference in MES Scheduling API",
+                  "children": [
+                    {
+                      "id": "production_delay_cascade",
+                      "label": "[H04] Cascading Production Delays from Schedule Tampering",
+                      "children": [
+                        {
+                          "id": "attacker_mes_tamper",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_goal",
+          "label": "[G04] Achieve Repudiation-Based Disruption",
+          "children": [
+            {
+              "id": "plc_logging",
+              "label": "[A05] PLC Audit Logging System",
+              "children": [
+                {
+                  "id": "plc_logging_insufficient",
+                  "label": "[V05] Insufficient Logging of Critical Parameter Changes",
+                  "children": [
+                    {
+                      "id": "paint_mixing_untraceable",
+                      "label": "[H05] Untraceable Paint Mixing Ratio Alterations Causing Defects",
+                      "children": [
+                        {
+                          "id": "attacker_plc_repudiate",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure_goal",
+          "label": "[G05] Achieve Information Disclosure-Based Disruption",
+          "children": [
+            {
+              "id": "hmi_data_leak",
+              "label": "[A06] HMI Proprietary Process Data Storage",
+              "children": [
+                {
+                  "id": "hmi_cve_2018_4834",
+                  "label": "[V06] CVE-2018-4834 (Rockwell HMI Information Disclosure)",
+                  "children": [
+                    {
+                      "id": "process_secrets_theft",
+                      "label": "[H06] Theft of Proprietary Assembly Process Intellectual Property",
+                      "children": [
+                        {
+                          "id": "attacker_hmi_disclose",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "mes_employee_data",
+              "label": "[A07] MES Employee Records Database",
+              "children": [
+                {
+                  "id": "mes_db_misconfig",
+                  "label": "[V07] Misconfigured Database Permissions Allowing Unauthorized Access",
+                  "children": [
+                    {
+                      "id": "employee_privacy_violation",
+                      "label": "[H07] Unauthorized Disclosure of Sensitive Employee Information",
+                      "children": [
+                        {
+                          "id": "attacker_mes_disclose",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_goal",
+          "label": "[G06] Achieve Denial-of-Service-Based Disruption",
+          "children": [
+            {
+              "id": "scada_dos",
+              "label": "[A08] SCADA System Core Services",
+              "children": [
+                {
+                  "id": "scada_protocol_flood",
+                  "label": "[V08] Unprotected OPC UA Classic Ports Susceptible to Flooding",
+                  "children": [
+                    {
+                      "id": "scada_system_crash",
+                      "label": "[H08] SCADA System Crash Halting Production Line",
+                      "children": [
+                        {
+                          "id": "attacker_scada_dos",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "network_dos",
+              "label": "[A09] OT Network Infrastructure (Switches/Routers)",
+              "children": [
+                {
+                  "id": "network_flood_vuln",
+                  "label": "[V09] Lack of Storm Control on Industrial Switches",
+                  "children": [
+                    {
+                      "id": "network_outage_coordination_loss",
+                      "label": "[H09] Complete Loss of Component Coordination from Network Outage",
+                      "children": [
+                        {
+                          "id": "attacker_network_dos",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "priv_escalation_goal",
+          "label": "[G07] Achieve Privilege Escalation-Based Disruption",
+          "children": [
+            {
+              "id": "plc_priv_esc",
+              "label": "[A10] PLC Administrative Access Control",
+              "children": [
+                {
+                  "id": "plc_cve_2019_10975",
+                  "label": "[V10] CVE-2019-10975 (Schneider Electric PLC Privilege Escalation)",
+                  "children": [
+                    {
+                      "id": "plc_critical_process_manipulation",
+                      "label": "[H10] Unauthorized Critical Process Manipulation via Elevated PLC Access",
+                      "children": [
+                        {
+                          "id": "attacker_plc_priv_esc",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement_goal",
+          "label": "[G08] Achieve Lateral Movement-Based Disruption",
+          "children": [
+            {
+              "id": "it_ot_boundary",
+              "label": "[A11] IT-OT Boundary Firewall/Router",
+              "children": [
+                {
+                  "id": "boundary_misconfig",
+                  "label": "[V11] Firewall Misconfiguration Allowing Unrestricted IT\u2192OT Traffic",
+                  "children": [
+                    {
+                      "id": "ot_system_compromise_via_it",
+                      "label": "[H11] OT System Compromise Originating from IT Network",
+                      "children": [
+                        {
+                          "id": "attacker_lateral_movement",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "weak_segmentation",
+              "label": "[A12] Flat OT Network Architecture",
+              "children": [
+                {
+                  "id": "no_microsegmentation",
+                  "label": "[V12] Lack of Microsegmentation Between Purdue Levels 2-3",
+                  "children": [
+                    {
+                      "id": "mes_to_plc_unauthorized_access",
+                      "label": "[H12] Unauthorized MES\u2192PLC Command Injection via Lateral Movement",
+                      "children": [
+                        {
+                          "id": "attacker_weak_segmentation",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain_goal",
+          "label": "[G09] Achieve Supply Chain-Based Disruption",
+          "children": [
+            {
+              "id": "third_party_software",
+              "label": "[A13] Vendor-Supplied PLC Firmware/OPC UA Stack",
+              "children": [
+                {
+                  "id": "known_cve_in_firmware",
+                  "label": "[V13] Known Unpatched CVE in Vendor-Supplied Firmware",
+                  "children": [
+                    {
+                      "id": "malicious_firmware_update",
+                      "label": "[H13] Compromised Firmware Update Introducing Backdoor",
+                      "children": [
+                        {
+                          "id": "attacker_supply_chain",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "supplier_access",
+              "label": "[A14] Supplier Remote Maintenance VPN Portal",
+              "children": [
+                {
+                  "id": "default_supplier_credentials",
+                  "label": "[V14] Default/Weak Credentials on Supplier VPN Accounts",
+                  "children": [
+                    {
+                      "id": "supplier_credential_abuse",
+                      "label": "[H14] Abuse of Supplier Credentials for Unauthorized PLC Access",
+                      "children": [
+                        {
+                          "id": "attacker_supplier_access",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "social_engineering_goal",
+          "label": "[G10] Achieve Social Engineering-Based Disruption",
+          "children": [
+            {
+              "id": "operator_phishing",
+              "label": "[A15] Operator Workstation (Email/HMI Access)",
+              "children": [
+                {
+                  "id": "phishing_vulnerability",
+                  "label": "[V15] Lack of Operator Security Awareness Training",
+                  "children": [
+                    {
+                      "id": "hmi_credential_harvesting",
+                      "label": "[H15] Harvested HMI Credentials via Phishing Campaign",
+                      "children": [
+                        {
+                          "id": "attacker_operator_phish",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "fake_erp_messages",
+              "label": "[A16] ERP-MES Communication Channel",
+              "children": [
+                {
+                  "id": "erp_message_spoofing",
+                  "label": "[V16] Lack of Message Authentication Between ERP and MES",
+                  "children": [
+                    {
+                      "id": "unauthorized_production_changes",
+                      "label": "[H16] Spoofed ERP Messages Triggering Unauthorized Production Changes",
+                      "children": [
+                        {
+                          "id": "attacker_fake_erp",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_goal",
+          "label": "[G11] Achieve Physical Access-Based Disruption",
+          "children": [
+            {
+              "id": "plc_programming_port",
+              "label": "[A17] PLC Physical Programming Port (RS-232/USB)",
+              "children": [
+                {
+                  "id": "unsecured_plc_port",
+                  "label": "[V17] Unsecured Physical Access to PLC Programming Interface",
+                  "children": [
+                    {
+                      "id": "plc_logic_tampering",
+                      "label": "[H17] Direct Tampering with PLC Ladder Logic via Physical Access",
+                      "children": [
+                        {
+                          "id": "attacker_plc_physical",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "sensor_actuator_tampering",
+              "label": "[A18] Field-Level Sensors/Actuators (4-20mA/I/O Links)",
+              "children": [
+                {
+                  "id": "unprotected_field_wiring",
+                  "label": "[V18] Unprotected Field Wiring Susceptible to Signal Injection",
+                  "children": [
+                    {
+                      "id": "sensor_spoofing_physical",
+                      "label": "[H18] Physical Spoofing of Sensor Signals (e.g., Temperature/Pressure)",
+                      "children": [
+                        {
+                          "id": "attacker_sensor_physical",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

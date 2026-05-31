@@ -1,0 +1,492 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] CPS Disruption: Compromise of District Heating System Operations",
+      "children": [
+        {
+          "id": "spoofing_root",
+          "label": "[H01] Spoofing Attacks Leading to Unauthorized Control Actions",
+          "children": [
+            {
+              "id": "spoof_hmi_commands",
+              "label": "[H02] Spoofing of HMI Commands via Weak Authentication",
+              "children": [
+                {
+                  "id": "hmi_weak_auth",
+                  "label": "[V01] Weak Authentication in HMI (e.g., Default Credentials, No MFA)",
+                  "children": [
+                    {
+                      "id": "hmi_software_vuln",
+                      "label": "[V02] HMI Software Vulnerability (e.g., CVE-2018-10622 in GE HMI)",
+                      "children": [
+                        {
+                          "id": "attacker_spoof_hmi",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "hmi_spoofed_setpoints",
+                  "label": "[A01] Spoofed Temperature Setpoints Sent to PLCs",
+                  "children": [
+                    {
+                      "id": "plc_unauth_commands",
+                      "label": "[V03] PLCs Accepting Unauthenticated Commands",
+                      "children": [
+                        {
+                          "id": "attacker_spoof_plc",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "spoof_scada_credentials",
+              "label": "[H03] Spoofing via Compromised SCADA Credentials",
+              "children": [
+                {
+                  "id": "scada_cred_theft",
+                  "label": "[V04] Theft of SCADA Credentials (Phishing, Keylogging)",
+                  "children": [
+                    {
+                      "id": "attacker_phish_creds",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "scada_spoofed_commands",
+                  "label": "[A02] Spoofed Control Commands to PLCs/RTUs",
+                  "children": [
+                    {
+                      "id": "plc_no_command_auth",
+                      "label": "[V05] Lack of Command Authentication in PLCs",
+                      "children": [
+                        {
+                          "id": "attacker_spoof_scada",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tampering_root",
+          "label": "[H04] Tampering with Sensor Data or Control Logic",
+          "children": [
+            {
+              "id": "tamper_sensor_data",
+              "label": "[H05] Tampering with Sensor Data in Transit",
+              "children": [
+                {
+                  "id": "fieldbus_no_integrity",
+                  "label": "[V06] Lack of Integrity Checks in Fieldbus (Modbus, Profibus)",
+                  "children": [
+                    {
+                      "id": "attacker_tamper_sensor",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "fake_sensor_readings",
+                  "label": "[A03] Falsified Temperature/Pressure Readings Sent to PLCs",
+                  "children": [
+                    {
+                      "id": "plc_trusts_sensor_data",
+                      "label": "[V07] PLCs Trust Sensor Data Without Validation",
+                      "children": [
+                        {
+                          "id": "attacker_fake_sensor",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "tamper_plc_firmware",
+              "label": "[H06] Tampering with PLC/RTU Firmware",
+              "children": [
+                {
+                  "id": "plc_firmware_vuln",
+                  "label": "[V08] Vulnerable PLC Firmware (e.g., CVE-2017-12736 in Siemens)",
+                  "children": [
+                    {
+                      "id": "attacker_exploit_firmware",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "modified_control_logic",
+                  "label": "[A04] Altered Control Logic Causing Unsafe Operations",
+                  "children": [
+                    {
+                      "id": "plc_no_firmware_signing",
+                      "label": "[V09] Lack of Firmware Signing/Verification in PLCs",
+                      "children": [
+                        {
+                          "id": "attacker_modify_firmware",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_root",
+          "label": "[H07] Repudiation: Unlogged or Anonymous Malicious Actions",
+          "children": [
+            {
+              "id": "no_logging_mechanisms",
+              "label": "[V10] Lack of Comprehensive Logging in SCADA/HMI",
+              "children": [
+                {
+                  "id": "attacker_act_unlogged",
+                  "label": "[U01] Attacker"
+                }
+              ]
+            },
+            {
+              "id": "anonymous_opc_ua",
+              "label": "[V11] OPC UA Misconfigured to Allow Anonymous Access",
+              "children": [
+                {
+                  "id": "attacker_exploit_opc_ua",
+                  "label": "[U01] Attacker"
+                }
+              ]
+            },
+            {
+              "id": "unlogged_plc_changes",
+              "label": "[A05] Unlogged Changes to PLC Control Logic",
+              "children": [
+                {
+                  "id": "plc_no_audit_logs",
+                  "label": "[V12] PLCs Lack Audit Logging for Logic Changes",
+                  "children": [
+                    {
+                      "id": "attacker_modify_plc_unlogged",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure_root",
+          "label": "[H08] Information Disclosure Leading to Further Attacks",
+          "children": [
+            {
+              "id": "hmi_info_leak",
+              "label": "[V13] HMI Software Information Leak (e.g., CVE-2018-10622)",
+              "children": [
+                {
+                  "id": "attacker_exfiltrate_hmi",
+                  "label": "[U01] Attacker"
+                }
+              ]
+            },
+            {
+              "id": "scada_db_access",
+              "label": "[A06] Unauthorized Access to SCADA Database (Historian)",
+              "children": [
+                {
+                  "id": "scada_db_weak_auth",
+                  "label": "[V14] Weak Authentication for SCADA Database Access",
+                  "children": [
+                    {
+                      "id": "attacker_access_scada_db",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "network_sniffing",
+              "label": "[H09] Passive Network Sniffing of Unencrypted OT Traffic",
+              "children": [
+                {
+                  "id": "unencrypted_fieldbus",
+                  "label": "[V15] Unencrypted Fieldbus Traffic (Modbus, Profibus)",
+                  "children": [
+                    {
+                      "id": "attacker_sniff_traffic",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_root",
+          "label": "[H10] Denial of Service (DoS) Disrupting System Operations",
+          "children": [
+            {
+              "id": "network_flooding",
+              "label": "[H11] Network Flooding Attack on OT Infrastructure",
+              "children": [
+                {
+                  "id": "no_ot_dos_protection",
+                  "label": "[V16] Lack of DoS Protection in OT Networks",
+                  "children": [
+                    {
+                      "id": "attacker_flood_network",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "disrupted_plc_comms",
+                  "label": "[A07] Disrupted Communication Between PLCs and SCADA",
+                  "children": [
+                    {
+                      "id": "plc_no_redundancy",
+                      "label": "[V17] Lack of Redundant Communication Paths for PLCs",
+                      "children": [
+                        {
+                          "id": "attacker_disrupt_comms",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "rtu_crash",
+              "label": "[H12] Crashing of RTUs via Exploited Vulnerabilities",
+              "children": [
+                {
+                  "id": "rtu_firmware_vuln",
+                  "label": "[V18] Vulnerable RTU Firmware (e.g., Buffer Overflow)",
+                  "children": [
+                    {
+                      "id": "attacker_crash_rtu",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "rtu_unresponsive",
+                  "label": "[A08] RTUs Become Unresponsive to SCADA Commands",
+                  "children": [
+                    {
+                      "id": "scada_no_rtu_failover",
+                      "label": "[V19] SCADA Lacks RTU Failover Mechanisms",
+                      "children": [
+                        {
+                          "id": "attacker_disrupt_rtu",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "priv_escalation_root",
+          "label": "[H13] Privilege Escalation in SCADA/OT Systems",
+          "children": [
+            {
+              "id": "scada_priv_esc",
+              "label": "[V20] SCADA Software Privilege Escalation Vulnerability",
+              "children": [
+                {
+                  "id": "attacker_esc_scada_privs",
+                  "label": "[U01] Attacker"
+                }
+              ]
+            },
+            {
+              "id": "engineering_ws_access",
+              "label": "[A09] Unauthorized Access to Engineering Workstation",
+              "children": [
+                {
+                  "id": "ws_weak_access_control",
+                  "label": "[V21] Weak Access Control on Engineering Workstations",
+                  "children": [
+                    {
+                      "id": "attacker_access_ws",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "plc_logic_modified",
+                  "label": "[A10] Malicious Modification of PLC Control Logic",
+                  "children": [
+                    {
+                      "id": "plc_no_logic_integrity",
+                      "label": "[V22] Lack of Integrity Checks for PLC Logic Uploads",
+                      "children": [
+                        {
+                          "id": "attacker_modify_plc_logic",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement_root",
+          "label": "[H14] Lateral Movement from IT to OT Networks",
+          "children": [
+            {
+              "id": "it_ot_seg_bypass",
+              "label": "[V23] Bypassing IT-OT Segmentation (Firewall Misconfig, VPN Exploits)",
+              "children": [
+                {
+                  "id": "attacker_bypass_segmentation",
+                  "label": "[U01] Attacker"
+                }
+              ]
+            },
+            {
+              "id": "compromised_gateway",
+              "label": "[A11] Compromised OT-IT Gateway (e.g., OPC UA Broker)",
+              "children": [
+                {
+                  "id": "gateway_weak_auth",
+                  "label": "[V24] Weak Authentication on OT-IT Gateway",
+                  "children": [
+                    {
+                      "id": "attacker_compromise_gateway",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "ot_network_access",
+                  "label": "[A12] Unauthorized Access to OT Network via Gateway",
+                  "children": [
+                    {
+                      "id": "ot_no_network_monitoring",
+                      "label": "[V25] Lack of Network Monitoring in OT Segments",
+                      "children": [
+                        {
+                          "id": "attacker_access_ot",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_tampering_root",
+          "label": "[H15] Physical Tampering with Field Devices",
+          "children": [
+            {
+              "id": "unsecured_field_devices",
+              "label": "[V26] Unsecured Physical Access to Sensors/Actuators",
+              "children": [
+                {
+                  "id": "attacker_tamper_physically",
+                  "label": "[U01] Attacker"
+                }
+              ]
+            },
+            {
+              "id": "plc_console_access",
+              "label": "[A13] Unauthorized Access to PLC Serial Console",
+              "children": [
+                {
+                  "id": "plc_no_console_auth",
+                  "label": "[V27] Lack of Authentication for PLC Console Access",
+                  "children": [
+                    {
+                      "id": "attacker_access_plc_console",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "plc_firmware_flash",
+                  "label": "[A14] Malicious Firmware Flash via PLC Console",
+                  "children": [
+                    {
+                      "id": "plc_no_firmware_auth",
+                      "label": "[V28] Lack of Authentication for Firmware Updates",
+                      "children": [
+                        {
+                          "id": "attacker_flash_firmware",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain_root",
+          "label": "[H16] Supply Chain Attacks via Malicious Components",
+          "children": [
+            {
+              "id": "counterfeit_plc_modules",
+              "label": "[V29] Counterfeit or Malicious PLC Hardware Modules",
+              "children": [
+                {
+                  "id": "attacker_supply_counterfeit",
+                  "label": "[U01] Attacker"
+                }
+              ]
+            },
+            {
+              "id": "malicious_firmware_update",
+              "label": "[A15] Malicious Firmware Update from Compromised Vendor",
+              "children": [
+                {
+                  "id": "no_firmware_verification",
+                  "label": "[V30] Lack of Cryptographic Verification for Firmware Updates",
+                  "children": [
+                    {
+                      "id": "attacker_push_malicious_fw",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

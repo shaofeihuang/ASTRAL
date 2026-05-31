@@ -1,0 +1,456 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] CPS Disruption in Medical Cyber-Physical Systems",
+      "children": [
+        {
+          "id": "spoofing_medical_device",
+          "label": "[H01] Spoofing of Legitimate Medical Devices",
+          "children": [
+            {
+              "id": "weak_auth_mechanism",
+              "label": "[V01] Weak Authentication in Device-Control System Communication",
+              "children": [
+                {
+                  "id": "modbus_no_auth",
+                  "label": "[A01] Modbus TCP Without Authentication",
+                  "children": [
+                    {
+                      "id": "attacker_spoofing_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "opc_ua_misconfig",
+                  "label": "[A02] Misconfigured OPC UA Certificates",
+                  "children": [
+                    {
+                      "id": "attacker_spoofing_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "falsified_sensor_data",
+              "label": "[H02] Falsified Sensor Data Injection",
+              "children": [
+                {
+                  "id": "unvalidated_input_hmi",
+                  "label": "[V02] Unvalidated Input at HMI Level",
+                  "children": [
+                    {
+                      "id": "hmi_software_vuln",
+                      "label": "[A03] Vulnerable HMI Software (e.g., CVE-2020-25159)",
+                      "children": [
+                        {
+                          "id": "attacker_spoofing_3",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tampering_firmware",
+          "label": "[H03] Tampering with Medical Device Firmware",
+          "children": [
+            {
+              "id": "insecure_fw_update",
+              "label": "[V03] Insecure Firmware Update Mechanism",
+              "children": [
+                {
+                  "id": "unencrypted_fw_channel",
+                  "label": "[A04] Unencrypted Firmware Update Channel",
+                  "children": [
+                    {
+                      "id": "attacker_tampering_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "default_credentials_fw",
+                  "label": "[A05] Default Credentials in Firmware Update Portal",
+                  "children": [
+                    {
+                      "id": "attacker_tampering_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "physical_tampering",
+              "label": "[H04] Physical Tampering with Medical Devices",
+              "children": [
+                {
+                  "id": "unsecured_usb_ports",
+                  "label": "[A06] Unsecured USB Ports on Medical Devices",
+                  "children": [
+                    {
+                      "id": "attacker_tampering_3",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "unlocked_debug_consoles",
+                  "label": "[A07] Unlocked Debug Consoles (e.g., JTAG, UART)",
+                  "children": [
+                    {
+                      "id": "attacker_tampering_4",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_actions",
+          "label": "[H05] Repudiation of Malicious Actions",
+          "children": [
+            {
+              "id": "insufficient_logging",
+              "label": "[V04] Insufficient Logging and Monitoring",
+              "children": [
+                {
+                  "id": "disabled_audit_logs",
+                  "label": "[A08] Disabled Audit Logs on Critical Devices",
+                  "children": [
+                    {
+                      "id": "attacker_repudiation_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "unencrypted_log_storage",
+                  "label": "[A09] Unencrypted Log Storage",
+                  "children": [
+                    {
+                      "id": "attacker_repudiation_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "compromised_operator_creds",
+              "label": "[V05] Compromised Operator Credentials",
+              "children": [
+                {
+                  "id": "weak_password_policies",
+                  "label": "[A10] Weak Password Policies for OT Access",
+                  "children": [
+                    {
+                      "id": "attacker_repudiation_3",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure",
+          "label": "[H06] Unauthorized Information Disclosure",
+          "children": [
+            {
+              "id": "weak_network_encryption",
+              "label": "[V06] Weak Network Encryption",
+              "children": [
+                {
+                  "id": "outdated_tls_ot",
+                  "label": "[A11] Outdated TLS in OT Protocols (e.g., Modbus/TLS 1.0)",
+                  "children": [
+                    {
+                      "id": "attacker_info_disclosure_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "exposed_api_endpoints",
+              "label": "[V07] Exposed API Endpoints in DMZ",
+              "children": [
+                {
+                  "id": "unauthenticated_opc_ua",
+                  "label": "[A12] Unauthenticated OPC UA Endpoints",
+                  "children": [
+                    {
+                      "id": "attacker_info_disclosure_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_medical_services",
+          "label": "[H07] Denial of Service in Medical Services",
+          "children": [
+            {
+              "id": "network_flooding",
+              "label": "[V08] Network Flooding Vulnerabilities",
+              "children": [
+                {
+                  "id": "unsegmented_ot_network",
+                  "label": "[A13] Unsegmented OT Network Allowing Broadcast Storms",
+                  "children": [
+                    {
+                      "id": "attacker_dos_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "protocol_specific_dos",
+              "label": "[V09] Protocol-Specific DoS (e.g., Modbus, DICOM)",
+              "children": [
+                {
+                  "id": "modbus_malformed_packets",
+                  "label": "[A14] Modbus Malformed Packet Handling Vulnerabilities",
+                  "children": [
+                    {
+                      "id": "attacker_dos_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "privilege_escalation",
+          "label": "[H08] Elevation of Privilege in Medical CPS",
+          "children": [
+            {
+              "id": "vulnerable_ot_software",
+              "label": "[V10] Vulnerable OT Software (e.g., CVE-2018-14847)",
+              "children": [
+                {
+                  "id": "unpatched_plc_firmware",
+                  "label": "[A15] Unpatched PLC Firmware",
+                  "children": [
+                    {
+                      "id": "attacker_priv_esc_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "misconfigured_rbac",
+              "label": "[V11] Misconfigured Role-Based Access Control (RBAC)",
+              "children": [
+                {
+                  "id": "overprivileged_service_accounts",
+                  "label": "[A16] Overprivileged Service Accounts in OT",
+                  "children": [
+                    {
+                      "id": "attacker_priv_esc_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement",
+          "label": "[H09] Lateral Movement Across Purdue Levels",
+          "children": [
+            {
+              "id": "weak_segmentation",
+              "label": "[V12] Weak Segmentation Between IT/OT Zones",
+              "children": [
+                {
+                  "id": "flat_ot_network",
+                  "label": "[A17] Flat OT Network Topology",
+                  "children": [
+                    {
+                      "id": "attacker_lateral_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "unmonitored_vlans",
+                  "label": "[A18] Unmonitored VLANs Between Levels 3 and 2",
+                  "children": [
+                    {
+                      "id": "attacker_lateral_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "compromised_gateway",
+              "label": "[V13] Compromised IT-OT Gateway (e.g., OPC UA Proxy)",
+              "children": [
+                {
+                  "id": "default_creds_gateway",
+                  "label": "[A19] Default Credentials on IT-OT Gateway",
+                  "children": [
+                    {
+                      "id": "attacker_lateral_3",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain_risks",
+          "label": "[H10] Supply Chain Compromise",
+          "children": [
+            {
+              "id": "third_party_firmware",
+              "label": "[V14] Malicious Third-Party Firmware Updates",
+              "children": [
+                {
+                  "id": "unverified_vendor_updates",
+                  "label": "[A20] Unverified Vendor-Signed Firmware",
+                  "children": [
+                    {
+                      "id": "attacker_supply_chain_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "pre_compromised_devices",
+              "label": "[V15] Pre-Compromised Medical Devices (e.g., Implanted Backdoors)",
+              "children": [
+                {
+                  "id": "cots_default_backdoors",
+                  "label": "[A21] Default Backdoors in COTS Medical Devices",
+                  "children": [
+                    {
+                      "id": "attacker_supply_chain_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "insider_threats",
+          "label": "[H11] Insider Threats (Privileged Access Abuse)",
+          "children": [
+            {
+              "id": "abuse_of_privileged_access",
+              "label": "[V16] Abuse of Privileged OT Access",
+              "children": [
+                {
+                  "id": "unmonitored_admin_workstations",
+                  "label": "[A22] Unmonitored Admin Workstations with OT Access",
+                  "children": [
+                    {
+                      "id": "attacker_insider_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "social_engineering_ot",
+              "label": "[V17] Social Engineering Targeting OT Operators",
+              "children": [
+                {
+                  "id": "phishing_ot_creds",
+                  "label": "[A23] Phishing for OT Operator Credentials",
+                  "children": [
+                    {
+                      "id": "attacker_insider_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "wireless_exploitation",
+          "label": "[H12] Exploitation of Wireless Medical Interfaces",
+          "children": [
+            {
+              "id": "unsecured_wireless_protocols",
+              "label": "[V18] Unsecured Wireless Protocols (e.g., BLE, Zigbee)",
+              "children": [
+                {
+                  "id": "ble_no_encryption",
+                  "label": "[A24] BLE Devices Without Encryption",
+                  "children": [
+                    {
+                      "id": "attacker_wireless_1",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "default_zigbee_keys",
+                  "label": "[A25] Default Zigbee Network Keys",
+                  "children": [
+                    {
+                      "id": "attacker_wireless_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "rogue_wireless_ap",
+              "label": "[V19] Rogue Wireless Access Points in Medical Zones",
+              "children": [
+                {
+                  "id": "unauthorized_wifi_iot",
+                  "label": "[A26] Unauthorized Wi-Fi on Medical IoT Devices",
+                  "children": [
+                    {
+                      "id": "attacker_wireless_3",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

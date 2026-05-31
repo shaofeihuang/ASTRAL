@@ -1,0 +1,566 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] Solar PV Cyber-Physical System (CPS) Disruption: Compromise inverter operations to disrupt grid stability, damage equipment, or halt power generation",
+      "children": [
+        {
+          "id": "spoofing_root",
+          "label": "[H01] Spoofing Attacks: Manipulate control signals or identities to deceive CPS components",
+          "children": [
+            {
+              "id": "spoofing_protocol",
+              "label": "[H02] Protocol Spoofing: Exploit weak authentication in Modbus/DNP3/OPC UA to inject falsified commands",
+              "children": [
+                {
+                  "id": "modbus_no_auth",
+                  "label": "[V01] Modbus/DNP3 Lack of Authentication: Default configurations allow unauthenticated command injection",
+                  "children": [
+                    {
+                      "id": "modbus_inverter_cmd",
+                      "label": "[A01] Inverter Control Interface: Modbus/TCP port 502 exposed to spoofed setpoint injections (e.g., voltage/frequency adjustments)",
+                      "children": [
+                        {
+                          "id": "attacker_spoof_cmd",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "dnp3_gateway",
+                      "label": "[A02] Gateway DNP3 Stack: Vulnerable to unauthenticated control messages from spoofed master stations",
+                      "children": [
+                        {
+                          "id": "attacker_dnp3_spoof",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "spoofing_firmware",
+              "label": "[H03] Firmware Update Spoofing: Compromise update mechanisms to deploy malicious firmware",
+              "children": [
+                {
+                  "id": "unsecured_ota",
+                  "label": "[V02] Unsecured Over-the-Air (OTA) Updates: Lack of code-signing verification in inverter firmware update process",
+                  "children": [
+                    {
+                      "id": "inverter_ota_port",
+                      "label": "[A03] Inverter OTA Update Port: HTTP/HTTPS endpoint (e.g., port 80/443) accepting unsigned firmware binaries",
+                      "children": [
+                        {
+                          "id": "attacker_fake_update",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cloud_update_server",
+                      "label": "[A04] Cloud Update Server: Compromised or spoofed server pushing backdoored firmware via MQTT/REST APIs",
+                      "children": [
+                        {
+                          "id": "attacker_malicious_server",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "spoofing_hmi",
+              "label": "[H04] HMI Session Spoofing: Hijack operator sessions to issue unauthorized commands",
+              "children": [
+                {
+                  "id": "hmi_session_hijack",
+                  "label": "[V03] Weak Session Management: Predictable session tokens or missing CSRF protections in HMI web interface",
+                  "children": [
+                    {
+                      "id": "hmi_web_portal",
+                      "label": "[A05] HMI Web Portal: Port 80/443 with cookie-based auth vulnerable to session replay",
+                      "children": [
+                        {
+                          "id": "attacker_session_spoof",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tampering_root",
+          "label": "[H05] Tampering Attacks: Unauthorized modification of hardware, software, or data",
+          "children": [
+            {
+              "id": "tampering_physical",
+              "label": "[H06] Physical Tampering: Direct manipulation of inverter hardware or local interfaces",
+              "children": [
+                {
+                  "id": "unsecured_ports",
+                  "label": "[V04] Unsecured Local Ports: USB/serial/Ethernet ports with no authentication or logging",
+                  "children": [
+                    {
+                      "id": "inverter_usb_port",
+                      "label": "[A06] Inverter USB Configuration Port: Exposed port allowing firmware flashes or debug access",
+                      "children": [
+                        {
+                          "id": "attacker_physical_usb",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "plc_serial_port",
+                      "label": "[A07] PLC Serial Port: RS-232/485 interface with default credentials for programming",
+                      "children": [
+                        {
+                          "id": "attacker_physical_serial",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "bypassed_safety",
+                  "label": "[V05] Safety Bypass Vulnerabilities: Jumpers or debug headers allowing disabling of protective relays",
+                  "children": [
+                    {
+                      "id": "inverter_pcb",
+                      "label": "[A08] Inverter PCB: Exposed test points or jumpers to disable overvoltage/overcurrent protection",
+                      "children": [
+                        {
+                          "id": "attacker_pcb_tamper",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "tampering_comms",
+              "label": "[H07] Communication Tampering: Intercept and modify in-transit data between components",
+              "children": [
+                {
+                  "id": "unencrypted_fieldbus",
+                  "label": "[V06] Unencrypted Fieldbus Traffic: Modbus RTU/Profibus messages susceptible to MITM modifications",
+                  "children": [
+                    {
+                      "id": "modbus_rtu_bus",
+                      "label": "[A09] Modbus RTU Bus: Shared serial bus between inverter and sensors/actuators (e.g., RS-485)",
+                      "children": [
+                        {
+                          "id": "attacker_modbus_mitm",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "rogue_gateway",
+                  "label": "[V07] Rogue Gateway Injection: Compromised protocol translator (e.g., Modbus-to-MQTT) altering telemetry/commands",
+                  "children": [
+                    {
+                      "id": "protocol_gateway",
+                      "label": "[A10] Protocol Gateway Device: Linux/RTOS-based translator with weak access controls",
+                      "children": [
+                        {
+                          "id": "attacker_gateway_hijack",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "tampering_data",
+              "label": "[H08] Data Integrity Tampering: Alter stored configurations or telemetry to induce unsafe operations",
+              "children": [
+                {
+                  "id": "unprotected_configs",
+                  "label": "[V08] Unprotected Configuration Files: Plaintext or weakly encrypted inverter settings (e.g., MPPT curves, grid codes)",
+                  "children": [
+                    {
+                      "id": "inverter_config_file",
+                      "label": "[A11] Inverter Configuration File: Stored on local flash or SD card with no integrity checks",
+                      "children": [
+                        {
+                          "id": "attacker_config_tamper",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "false_telemetry",
+                  "label": "[V09] False Telemetry Injection: Compromised sensors feeding manipulated data to control loops",
+                  "children": [
+                    {
+                      "id": "temperature_sensor",
+                      "label": "[A12] Temperature Sensor: I2C/analog sensor feeding falsified overheating data to trigger shutdowns",
+                      "children": [
+                        {
+                          "id": "attacker_sensor_spoof",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_root",
+          "label": "[H10] Repudiation Attacks: Obscure attack origins by exploiting weak logging or audit trails",
+          "children": [
+            {
+              "id": "missing_logs",
+              "label": "[V10] Missing or Tamperable Logs: Inverter/PLC event logs disabled, overwritable, or stored in plaintext",
+              "children": [
+                {
+                  "id": "inverter_event_log",
+                  "label": "[A13] Inverter Event Log: Local circular buffer with no cryptographic protections",
+                  "children": [
+                    {
+                      "id": "attacker_log_wipe",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "plc_audit_trail",
+                  "label": "[A14] PLC Audit Trail: Syslog/SEL events sent unencrypted to HMI, susceptible to interception/modification",
+                  "children": [
+                    {
+                      "id": "attacker_audit_spoof",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "anonymous_actions",
+              "label": "[V11] Anonymous Control Actions: Commands executed without operator attribution (e.g., Modbus function codes)",
+              "children": [
+                {
+                  "id": "modbus_write_coils",
+                  "label": "[A15] Modbus Write Coils (FC5): Unattributed command to toggle inverter relays/breakers",
+                  "children": [
+                    {
+                      "id": "attacker_anonymous_cmd",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure_root",
+          "label": "[H12] Information Disclosure: Exfiltrate sensitive data to enable further attacks",
+          "children": [
+            {
+              "id": "unencrypted_comms",
+              "label": "[V12] Unencrypted Communication Channels: Cleartext protocols leaking telemetry or credentials",
+              "children": [
+                {
+                  "id": "modbus_tcp_cleartext",
+                  "label": "[A16] Modbus/TCP Cleartext: Port 502 traffic exposing inverter registers (e.g., power output, faults)",
+                  "children": [
+                    {
+                      "id": "attacker_sniff_modbus",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "mqtt_anonymous",
+                  "label": "[A17] Anonymous MQTT Broker: Telemetry published to unsecured MQTT topics (e.g., 'solar/inverter/#')",
+                  "children": [
+                    {
+                      "id": "attacker_subscribe_mqtt",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "hardcoded_secrets",
+              "label": "[V13] Hardcoded Credentials: Default or backdoor credentials in firmware/HMI",
+              "children": [
+                {
+                  "id": "inverter_default_creds",
+                  "label": "[A18] Inverter Default Credentials: 'admin:admin' or vendor-specific backdoors in web interface",
+                  "children": [
+                    {
+                      "id": "attacker_brute_force",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "plc_engineering_creds",
+                  "label": "[A19] PLC Engineering Credentials: Hardcoded 'service' account for vendor diagnostics",
+                  "children": [
+                    {
+                      "id": "attacker_plc_access",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "firmware_reverse",
+              "label": "[V14] Firmware Reverse Engineering: Extractable firmware binaries containing proprietary algorithms or crypto keys",
+              "children": [
+                {
+                  "id": "inverter_firmware_bin",
+                  "label": "[A20] Inverter Firmware Binary: Downgradable or dumpable via JTAG/UART with weak readout protection",
+                  "children": [
+                    {
+                      "id": "attacker_firmware_extract",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_root",
+          "label": "[H15] Denial-of-Service (DoS) Attacks: Disrupt inverter operations or communications",
+          "children": [
+            {
+              "id": "network_flooding",
+              "label": "[V15] Network Flooding: Vulnerability to packet storms on fieldbus or IP networks",
+              "children": [
+                {
+                  "id": "modbus_udp_flood",
+                  "label": "[A21] Modbus/UDP Flood: Port 502 UDP flood causing inverter communication timeout",
+                  "children": [
+                    {
+                      "id": "attacker_udp_flood",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "hmi_web_dos",
+                  "label": "[A22] HMI Web Interface: Slowloris-style attack on port 80/443 exhausting connections",
+                  "children": [
+                    {
+                      "id": "attacker_http_flood",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "firmware_crash",
+              "label": "[V16] Firmware Crash Triggers: Malformed packets or commands causing inverter reboot/lockup",
+              "children": [
+                {
+                  "id": "modbus_fuzz",
+                  "label": "[A23] Modbus Fuzzing: Crafted Modbus PDUs triggering buffer overflows in inverter stack",
+                  "children": [
+                    {
+                      "id": "attacker_modbus_fuzz",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "dnp3_malformed",
+                  "label": "[A24] Malformed DNP3 Objects: Invalid object headers causing PLC parse errors",
+                  "children": [
+                    {
+                      "id": "attacker_dnp3_crash",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "physical_dos",
+              "label": "[V17] Physical DoS: Overload or damage inverter components via control commands",
+              "children": [
+                {
+                  "id": "overload_actuators",
+                  "label": "[A25] Actuator Overload: Rapid PWM cycling or relay toggling causing thermal stress",
+                  "children": [
+                    {
+                      "id": "attacker_pwm_abuse",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "grid_desync",
+                  "label": "[A26] Grid Desynchronization: Spoofed grid frequency commands forcing inverter trip",
+                  "children": [
+                    {
+                      "id": "attacker_frequency_spoof",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "eop_root",
+          "label": "[H18] Elevation of Privilege: Gain unauthorized high-level access to inverter controls",
+          "children": [
+            {
+              "id": "privilege_escalation",
+              "label": "[V18] Privilege Escalation: Exploit vulnerabilities to move from low to high privileges",
+              "children": [
+                {
+                  "id": "hmi_rce",
+                  "label": "[V19] HMI Remote Code Execution: Buffer overflow in HMI web server (e.g., CVE-202X-1234)",
+                  "children": [
+                    {
+                      "id": "hmi_web_server",
+                      "label": "[A27] HMI Web Server: Apache/Boa server with stack overflow in CGI handler",
+                      "children": [
+                        {
+                          "id": "attacker_hmi_exploit",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "plc_ladder_logic",
+                  "label": "[V20] PLC Ladder Logic Injection: Unauthorized modifications to control logic via engineering port",
+                  "children": [
+                    {
+                      "id": "plc_programming_port",
+                      "label": "[A28] PLC Programming Port: Ethernet port with weak auth for ladder logic uploads",
+                      "children": [
+                        {
+                          "id": "attacker_plc_inject",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "credential_theft",
+              "label": "[V21] Credential Theft: Extract or reuse credentials to access high-privilege functions",
+              "children": [
+                {
+                  "id": "hmi_password_dump",
+                  "label": "[A29] HMI Password Database: Plaintext or weakly hashed credentials in HMI config files",
+                  "children": [
+                    {
+                      "id": "attacker_cred_theft",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "engineering_workstation",
+                  "label": "[A30] Engineering Workstation: Stored inverter/PLC credentials in vendor software (e.g., Siemens TIA Portal)",
+                  "children": [
+                    {
+                      "id": "attacker_workstation_creds",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_root",
+          "label": "[H22] Lateral Movement: Pivot from compromised components to target the inverter",
+          "children": [
+            {
+              "id": "compromised_adjacent",
+              "label": "[V22] Compromised Adjacent Systems: Exploit trust relationships with EMS/SCADA or peer inverters",
+              "children": [
+                {
+                  "id": "ems_scada_link",
+                  "label": "[A31] EMS/SCADA Trusted Link: Modbus/OPC UA connection from compromised SCADA to inverter",
+                  "children": [
+                    {
+                      "id": "attacker_scada_pivot",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "peer_inverter",
+                  "label": "[A32] Peer Inverter: SunSpec/IEC 61850 trust relationship allowing lateral command injection",
+                  "children": [
+                    {
+                      "id": "attacker_peer_pivot",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "supply_chain_compromise",
+              "label": "[V23] Supply Chain Compromise: Malicious components or updates from third-party vendors",
+              "children": [
+                {
+                  "id": "third_party_firmware",
+                  "label": "[A33] Third-Party Firmware: Compromised inverter firmware from OEM or integrator",
+                  "children": [
+                    {
+                      "id": "attacker_supply_chain",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                },
+                {
+                  "id": "vendor_diagnostics",
+                  "label": "[A34] Vendor Diagnostic Tools: Backdoored engineering software (e.g., SolarEdge SetApp)",
+                  "children": [
+                    {
+                      "id": "attacker_diagnostic_tool",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

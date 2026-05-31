@@ -1,0 +1,530 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] Cyber-Physical System (CPS) Disruption in Healthcare Environment",
+      "children": [
+        {
+          "id": "spoof_medical_device",
+          "label": "[H01] Spoofing of Legitimate Medical Devices",
+          "children": [
+            {
+              "id": "infusion_pump_spoof",
+              "label": "[A01] Infusion Pump (MedFusion 3000) Authentication Bypass",
+              "children": [
+                {
+                  "id": "cve_2022_1234",
+                  "label": "[V01] Exploit CVE-2022-1234 (Weak Device Authentication Protocol)",
+                  "children": [
+                    {
+                      "id": "wilddraw_campaign",
+                      "label": "[H02] WildDraw Campaign Exploitation Framework",
+                      "children": [
+                        {
+                          "id": "attacker_spoof",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "protocol_weakness",
+              "label": "[V02] Exploitable Weakness in Medical Device Communication Protocol (e.g., DICOM, HL7)",
+              "children": [
+                {
+                  "id": "mitm_spoofing",
+                  "label": "[H03] Man-in-the-Middle (MITM) Spoofing Attack",
+                  "children": [
+                    {
+                      "id": "attacker_spoof_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tamper_device_config",
+          "label": "[H04] Tampering with Medical Device Configuration",
+          "children": [
+            {
+              "id": "radiology_system_tamper",
+              "label": "[A02] Radiology Imaging System (RadiologyXpert 5000) Configuration",
+              "children": [
+                {
+                  "id": "cve_2023_5678",
+                  "label": "[V03] Exploit CVE-2023-5678 (Unauthorized Configuration Changes)",
+                  "children": [
+                    {
+                      "id": "darkmed_campaign",
+                      "label": "[H05] DarkMed Campaign Tampering Framework",
+                      "children": [
+                        {
+                          "id": "attacker_tamper",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "firmware_tamper",
+              "label": "[A03] Medical Device Firmware (e.g., PLC, Embedded Controller)",
+              "children": [
+                {
+                  "id": "unsecured_update_mechanism",
+                  "label": "[V04] Unsecured Firmware Update Mechanism (e.g., TFTP, HTTP)",
+                  "children": [
+                    {
+                      "id": "malicious_firmware_injection",
+                      "label": "[H06] Injection of Malicious Firmware via Supply Chain or Local Access",
+                      "children": [
+                        {
+                          "id": "attacker_tamper_2",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_attacks",
+          "label": "[H07] Repudiation Attacks (Log Tampering/Evasion)",
+          "children": [
+            {
+              "id": "audit_log_weakness",
+              "label": "[A04] Audit Logging System (e.g., SIEM, Local Device Logs)",
+              "children": [
+                {
+                  "id": "insufficient_logging",
+                  "label": "[V05] Insufficient Logging and Monitoring Capabilities",
+                  "children": [
+                    {
+                      "id": "log_deletion",
+                      "label": "[H08] Deletion or Alteration of Log Files",
+                      "children": [
+                        {
+                          "id": "attacker_repudiation",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "timestomping",
+              "label": "[H09] Timestomping or Log Injection via Compromised Credentials",
+              "children": [
+                {
+                  "id": "compromised_admin_creds",
+                  "label": "[V06] Compromised Administrative Credentials (e.g., Default/Weak Passwords)",
+                  "children": [
+                    {
+                      "id": "attacker_repudiation_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "information_disclosure",
+          "label": "[H10] Unauthorized Information Disclosure (Data Breach)",
+          "children": [
+            {
+              "id": "patient_data_transmission",
+              "label": "[A05] Patient Data Transmission (e.g., EHR to Medical Device)",
+              "children": [
+                {
+                  "id": "cve_2021_9012",
+                  "label": "[V07] Exploit CVE-2021-9012 (Unencrypted Data Transmission)",
+                  "children": [
+                    {
+                      "id": "silentsnoop_eavesdropping",
+                      "label": "[H11] SilentSnoop Campaign Eavesdropping Framework",
+                      "children": [
+                        {
+                          "id": "attacker_info_disc",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "unsecured_api_endpoint",
+              "label": "[A06] Unsecured Cloud API Endpoint (e.g., FHIR/HL7 Gateway)",
+              "children": [
+                {
+                  "id": "excessive_data_exposure",
+                  "label": "[V08] Excessive Data Exposure via Misconfigured API Permissions",
+                  "children": [
+                    {
+                      "id": "api_data_exfiltration",
+                      "label": "[H12] Automated Exfiltration of Sensitive Data via API Abuse",
+                      "children": [
+                        {
+                          "id": "attacker_info_disc_2",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "denial_of_service",
+          "label": "[H13] Denial-of-Service (DoS) Against Critical Medical Systems",
+          "children": [
+            {
+              "id": "lifesupport_device_dos",
+              "label": "[A07] Life-Support Device (LifeSupport 4000) Network Interface",
+              "children": [
+                {
+                  "id": "cve_2022_3456",
+                  "label": "[V09] Exploit CVE-2022-3456 (Device Communication Protocol Flooding)",
+                  "children": [
+                    {
+                      "id": "crashoverload_attack",
+                      "label": "[H14] CrashOverload Campaign DoS Framework",
+                      "children": [
+                        {
+                          "id": "attacker_dos",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "network_infrastructure_dos",
+              "label": "[A08] Network Infrastructure (e.g., Routers, Switches)",
+              "children": [
+                {
+                  "id": "unpatched_network_devices",
+                  "label": "[V10] Unpatched Network Devices Vulnerable to DoS (e.g., Cisco, Juniper CVEs)",
+                  "children": [
+                    {
+                      "id": "network_flooding",
+                      "label": "[H15] SYN Flood or ICMP Flood Attack on Critical Segments",
+                      "children": [
+                        {
+                          "id": "attacker_dos_2",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "privilege_escalation",
+          "label": "[H16] Privilege Escalation in Medical CPS",
+          "children": [
+            {
+              "id": "user_management_system",
+              "label": "[A09] User Management System (MedAdmin Pro)",
+              "children": [
+                {
+                  "id": "cve_2023_7890",
+                  "label": "[V11] Exploit CVE-2023-7890 (Privilege Escalation Vulnerability)",
+                  "children": [
+                    {
+                      "id": "privesc_campaign",
+                      "label": "[H17] PrivEsc Campaign Exploitation Framework",
+                      "children": [
+                        {
+                          "id": "attacker_priv_esc",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "misconfigured_access_controls",
+              "label": "[V12] Misconfigured Access Controls (e.g., Over-Permissive RBAC)",
+              "children": [
+                {
+                  "id": "lateral_priv_esc",
+                  "label": "[H18] Lateral Movement with Escalated Privileges",
+                  "children": [
+                    {
+                      "id": "attacker_priv_esc_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement",
+          "label": "[H19] Lateral Movement Across Medical CPS Zones",
+          "children": [
+            {
+              "id": "weak_network_segmentation",
+              "label": "[V13] Weak Network Segmentation (e.g., Flat VLAN, Missing Firewall Rules)",
+              "children": [
+                {
+                  "id": "pivot_from_low_security_device",
+                  "label": "[H20] Pivot from Compromised Low-Security Device (e.g., Printer, IoT Sensor)",
+                  "children": [
+                    {
+                      "id": "attacker_lateral",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "shared_credentials",
+              "label": "[A10] Shared or Default Credentials Across Devices",
+              "children": [
+                {
+                  "id": "credential_reuse_attack",
+                  "label": "[H21] Credential Reuse Attack for Lateral Movement",
+                  "children": [
+                    {
+                      "id": "attacker_lateral_2",
+                      "label": "[U01] Attacker"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain_compromise",
+          "label": "[H22] Supply Chain Compromise (Hardware/Firmware Tampering)",
+          "children": [
+            {
+              "id": "third_party_firmware",
+              "label": "[A11] Third-Party Firmware or Software Updates",
+              "children": [
+                {
+                  "id": "malicious_vendor_update",
+                  "label": "[V14] Malicious or Backdoored Vendor Update (e.g., SolarWinds-style Attack)",
+                  "children": [
+                    {
+                      "id": "supply_chain_attack_vector",
+                      "label": "[H23] Compromised Update Server or CDN Hijacking",
+                      "children": [
+                        {
+                          "id": "attacker_supply_chain",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "counterfeit_hardware",
+              "label": "[A12] Counterfeit or Tampered Hardware (e.g., PLCs, Medical Devices)",
+              "children": [
+                {
+                  "id": "hardware_backdoor",
+                  "label": "[V15] Hardware-Level Backdoor (e.g., FPGA Trojan, BIOS Implant)",
+                  "children": [
+                    {
+                      "id": "physical_tampering",
+                      "label": "[H24] Physical Tampering During Shipping or Maintenance",
+                      "children": [
+                        {
+                          "id": "attacker_supply_chain_2",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ai_ml_manipulation",
+          "label": "[H25] AI/ML Model Manipulation (Poisoning/Evasion)",
+          "children": [
+            {
+              "id": "ai_training_data",
+              "label": "[A13] AI Training Data (e.g., Historian, EHR Datasets)",
+              "children": [
+                {
+                  "id": "data_poisoning",
+                  "label": "[V16] Adversarial Data Poisoning in Training Pipeline",
+                  "children": [
+                    {
+                      "id": "ai_model_compromise",
+                      "label": "[H26] Compromised AI Model Leading to Misdiagnosis",
+                      "children": [
+                        {
+                          "id": "attacker_ai_ml",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ai_inference_evade",
+              "label": "[A14] AI Inference Engine (e.g., Predictive Diagnostics Model)",
+              "children": [
+                {
+                  "id": "adversarial_input",
+                  "label": "[V17] Adversarial Inputs to Evasion Attack (e.g., Perturbed Sensor Data)",
+                  "children": [
+                    {
+                      "id": "false_negative_exploitation",
+                      "label": "[H27] Exploitation of False Negatives in Critical Alerts",
+                      "children": [
+                        {
+                          "id": "attacker_ai_ml_2",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_intrusion",
+          "label": "[H28] Physical Intrusion and Direct Tampering",
+          "children": [
+            {
+              "id": "unsecured_physical_access",
+              "label": "[A15] Unsecured Physical Access Points (e.g., Network Jacks, USB Ports)",
+              "children": [
+                {
+                  "id": "usb_based_attack",
+                  "label": "[V18] USB-Based Attack (e.g., BadUSB, Rubber Ducky)",
+                  "children": [
+                    {
+                      "id": "local_device_compromise",
+                      "label": "[H29] Local Compromise of Medical Device or HMI",
+                      "children": [
+                        {
+                          "id": "attacker_physical",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "biometric_bypass",
+              "label": "[A16] Biometric or Physical Access Control System",
+              "children": [
+                {
+                  "id": "access_control_exploit",
+                  "label": "[V19] Exploit in Physical Access Control (e.g., RFID Cloning, Tailgating)",
+                  "children": [
+                    {
+                      "id": "unauthorized_physical_access",
+                      "label": "[H30] Unauthorized Access to Restricted Areas (e.g., Server Rooms, Device Closets)",
+                      "children": [
+                        {
+                          "id": "attacker_physical_2",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "social_engineering",
+          "label": "[H31] Social Engineering and Insider Threats",
+          "children": [
+            {
+              "id": "clinical_staff_targeting",
+              "label": "[A17] Clinical Staff (e.g., Nurses, Technicians)",
+              "children": [
+                {
+                  "id": "phishing_attack",
+                  "label": "[V20] Phishing or Spear-Phishing Attack (e.g., Credential Harvesting)",
+                  "children": [
+                    {
+                      "id": "compromised_credentials",
+                      "label": "[H32] Compromised Credentials for EHR or Medical Device Access",
+                      "children": [
+                        {
+                          "id": "attacker_social",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "maintenance_personnel",
+              "label": "[A18] Maintenance or Vendor Support Personnel",
+              "children": [
+                {
+                  "id": "fake_patch_request",
+                  "label": "[V21] Fake 'Urgent Patch' or 'Maintenance' Request",
+                  "children": [
+                    {
+                      "id": "malicious_on_site_action",
+                      "label": "[H33] On-Site Execution of Malicious Actions (e.g., Firmware Flashing)",
+                      "children": [
+                        {
+                          "id": "attacker_social_2",
+                          "label": "[U01] Attacker"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

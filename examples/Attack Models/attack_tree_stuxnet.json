@@ -1,0 +1,494 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "label": "[G01] CPS Disruption: Compromise of Nuclear Power Plant Cyber-Physical Systems Leading to Operational Disruption or Safety Hazard",
+      "children": [
+        {
+          "id": "spoofing_path",
+          "label": "[H01] Unauthorized Control Actions via Spoofed Operator Credentials",
+          "children": [
+            {
+              "id": "hmi_spoof_1",
+              "label": "[A01] Siemens SIMATIC HMI (Purdue Level 3)",
+              "children": [
+                {
+                  "id": "hmi_vuln_1",
+                  "label": "[V01] Weak Authentication Mechanism (CVE-2017-9618)",
+                  "children": [
+                    {
+                      "id": "hmi_exploit_1",
+                      "label": "[H02] Unauthorized HMI Access via Credential Spoofing",
+                      "children": [
+                        {
+                          "id": "plc_command_injection_1",
+                          "label": "[A02] PLC Command Injection (Modbus/TCP or S7 Protocol)",
+                          "children": [
+                            {
+                              "id": "plc_unsafe_operation_1",
+                              "label": "[H03] Unsafe Control Actions (e.g., Valve Manipulation, Rod Positioning)",
+                              "children": [
+                                {
+                                  "id": "attacker_spoofing",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tampering_path",
+          "label": "[H04] Altered Control Logic via Compromised Engineering Workstation",
+          "children": [
+            {
+              "id": "ews_tamper_1",
+              "label": "[A03] Schneider Electric EcoStruxure Engineering Workstation (Purdue Level 3)",
+              "children": [
+                {
+                  "id": "ews_vuln_1",
+                  "label": "[V02] Supply Chain Compromise (CVE-2020-15782)",
+                  "children": [
+                    {
+                      "id": "logic_tamper_1",
+                      "label": "[H05] Malicious Control Logic Injection (e.g., Altered Setpoints, Disabled Safeguards)",
+                      "children": [
+                        {
+                          "id": "plc_deploy_1",
+                          "label": "[A04] PLC Firmware/Logic Deployment (S7 or CIP Protocol)",
+                          "children": [
+                            {
+                              "id": "unsafe_process_conditions_1",
+                              "label": "[H06] Unsafe Process Conditions (e.g., Overpressure, Coolant Loss)",
+                              "children": [
+                                {
+                                  "id": "attacker_tampering",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "repudiation_path",
+          "label": "[H07] Loss of Accountability via Disabled Logging",
+          "children": [
+            {
+              "id": "historian_repudiation_1",
+              "label": "[A05] OSIsoft PI Historian Server (Purdue Level 3.5)",
+              "children": [
+                {
+                  "id": "historian_vuln_1",
+                  "label": "[V03] Logging Mechanism Disablement (CVE-2018-10612)",
+                  "children": [
+                    {
+                      "id": "log_tamper_1",
+                      "label": "[H08] Unauthorized Deletion/Modification of Process Logs",
+                      "children": [
+                        {
+                          "id": "forensic_evasion_1",
+                          "label": "[H09] Hindrance of Incident Response and Attribution",
+                          "children": [
+                            {
+                              "id": "attacker_repudiation",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "info_disclosure_path",
+          "label": "[H10] Exposure of Sensitive Operational Data",
+          "children": [
+            {
+              "id": "protocol_disclosure_1",
+              "label": "[A06] Modbus/TCP Communication Link (Purdue Level 3-2)",
+              "children": [
+                {
+                  "id": "protocol_vuln_1",
+                  "label": "[V04] Unencrypted Protocol Traffic (CVE-2019-10958)",
+                  "children": [
+                    {
+                      "id": "traffic_intercept_1",
+                      "label": "[H11] Eavesdropping on HMI-PLC Traffic (e.g., Setpoints, Alarm States)",
+                      "children": [
+                        {
+                          "id": "data_exfil_1",
+                          "label": "[A07] Operational Data Exfiltration to C2 Server",
+                          "children": [
+                            {
+                              "id": "process_insight_abuse_1",
+                              "label": "[H12] Adversary Gains Insight for Further Exploitation (e.g., Timing Attacks, Sabotage Planning)",
+                              "children": [
+                                {
+                                  "id": "attacker_disclosure",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dos_path",
+          "label": "[H13] Disruption of Critical Communication Pathways",
+          "children": [
+            {
+              "id": "network_dos_1",
+              "label": "[A08] Cisco Industrial Switch (Purdue Level 2-3 Boundary)",
+              "children": [
+                {
+                  "id": "network_vuln_1",
+                  "label": "[V05] Network Flooding Vulnerability (CVE-2016-5696)",
+                  "children": [
+                    {
+                      "id": "traffic_flood_1",
+                      "label": "[H14] Modbus/TCP or DNP3 Traffic Flooding",
+                      "children": [
+                        {
+                          "id": "comm_loss_1",
+                          "label": "[H15] Loss of HMI-PLC Communication (e.g., Valve Status, Sensor Feedback)",
+                          "children": [
+                            {
+                              "id": "unsafe_state_transition_1",
+                              "label": "[H16] Unsafe Process State Transition Due to Lack of Feedback",
+                              "children": [
+                                {
+                                  "id": "attacker_dos",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "priv_escalation_path",
+          "label": "[H17] Unauthorized Administrative Access to Engineering Workstation",
+          "children": [
+            {
+              "id": "ews_priv_esc_1",
+              "label": "[A09] Siemens SIMATIC PCS 7 Engineering Workstation (Purdue Level 3)",
+              "children": [
+                {
+                  "id": "ews_vuln_2",
+                  "label": "[V06] Privilege Escalation Vulnerability (CVE-2021-22893)",
+                  "children": [
+                    {
+                      "id": "admin_access_1",
+                      "label": "[H18] Administrative Access to Control Logic Repository",
+                      "children": [
+                        {
+                          "id": "malicious_deployment_1",
+                          "label": "[A10] Deployment of Malicious Control Logic to PLCs (S7 Protocol)",
+                          "children": [
+                            {
+                              "id": "safety_bypass_1",
+                              "label": "[H19] Bypass of Safety Instrumented Systems (SIS) or Interlocks",
+                              "children": [
+                                {
+                                  "id": "attacker_priv_esc",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lateral_movement_path",
+          "label": "[H20] Compromise of Critical Systems via Lateral Movement",
+          "children": [
+            {
+              "id": "printer_pivot_1",
+              "label": "[A11] Network-Attached Printer (Purdue Level 3.5)",
+              "children": [
+                {
+                  "id": "printer_vuln_1",
+                  "label": "[V07] Default Credentials or Unpatched Firmware",
+                  "children": [
+                    {
+                      "id": "pivot_to_hmi_1",
+                      "label": "[A12] Pivot to HMI via Weak Network Segmentation",
+                      "children": [
+                        {
+                          "id": "hmi_lateral_1",
+                          "label": "[A13] Siemens WinCC HMI (Purdue Level 3)",
+                          "children": [
+                            {
+                              "id": "hmi_exploit_2",
+                              "label": "[V08] Unauthenticated Command Execution (e.g., via OPC UA)",
+                              "children": [
+                                {
+                                  "id": "plc_unsafe_command_1",
+                                  "label": "[H21] Unsafe PLC Commands (e.g., Emergency Shutdown Disablement)",
+                                  "children": [
+                                    {
+                                      "id": "attacker_lateral",
+                                      "label": "[U01] Attacker"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "supply_chain_path",
+          "label": "[H22] Compromised Firmware or Remote Support Tools",
+          "children": [
+            {
+              "id": "vendor_update_1",
+              "label": "[A14] Vendor-Signed Firmware Update (Purdue Level 2-3)",
+              "children": [
+                {
+                  "id": "firmware_vuln_1",
+                  "label": "[V09] Backdoored Firmware (e.g., via Compromised Vendor Portal)",
+                  "children": [
+                    {
+                      "id": "plc_backdoor_1",
+                      "label": "[A15] Backdoor in PLC Logic (e.g., Hidden Function Blocks)",
+                      "children": [
+                        {
+                          "id": "process_sabotage_1",
+                          "label": "[H23] Delayed or Conditional Sabotage (e.g., Time-Based Attack)",
+                          "children": [
+                            {
+                              "id": "attacker_supply_chain",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "remote_support_1",
+              "label": "[A16] Vendor Remote Support Tool (e.g., TeamViewer, Siemens TIA Portal Remote)",
+              "children": [
+                {
+                  "id": "support_vuln_1",
+                  "label": "[V10] Excessive Privileges or Weak Authentication",
+                  "children": [
+                    {
+                      "id": "support_session_hijack_1",
+                      "label": "[H24] Hijacked Remote Support Session",
+                      "children": [
+                        {
+                          "id": "plc_reprogram_1",
+                          "label": "[A17] Direct Reprogramming of PLCs via Vendor Tool",
+                          "children": [
+                            {
+                              "id": "unsafe_control_1",
+                              "label": "[H25] Unsafe Control Actions (e.g., Coolant Pump Disablement)",
+                              "children": [
+                                {
+                                  "id": "attacker_remote_support",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "data_integrity_path",
+          "label": "[H26] Tampering with Process Data or Setpoints",
+          "children": [
+            {
+              "id": "historian_integrity_1",
+              "label": "[A18] OSIsoft PI Historian Database (Purdue Level 3.5)",
+              "children": [
+                {
+                  "id": "historian_vuln_2",
+                  "label": "[V11] SQL Injection or Direct Database Access",
+                  "children": [
+                    {
+                      "id": "data_manipulation_1",
+                      "label": "[H27] Alteration of Stored Process Data (e.g., Temperature, Pressure Records)",
+                      "children": [
+                        {
+                          "id": "compliance_violation_1",
+                          "label": "[H28] Falsified Compliance Reports or Masked Anomalies",
+                          "children": [
+                            {
+                              "id": "attacker_data_integrity",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "setpoint_injection_1",
+              "label": "[A19] HMI Setpoint Injection Interface (Purdue Level 3)",
+              "children": [
+                {
+                  "id": "hmi_vuln_3",
+                  "label": "[V12] Lack of Input Validation in Setpoint Fields",
+                  "children": [
+                    {
+                      "id": "setpoint_abuse_1",
+                      "label": "[H29] Unauthorized Modification of Control Loop Setpoints (e.g., Reactor Power, Coolant Flow)",
+                      "children": [
+                        {
+                          "id": "plc_unsafe_setpoint_1",
+                          "label": "[A20] PLC Execution of Unsafe Setpoints (e.g., Overpower Condition)",
+                          "children": [
+                            {
+                              "id": "physical_damage_1",
+                              "label": "[H30] Physical Damage to Reactor Components or Safety Systems",
+                              "children": [
+                                {
+                                  "id": "attacker_setpoint",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "physical_tampering_path",
+          "label": "[H31] Physical Tampering with Field Devices",
+          "children": [
+            {
+              "id": "sensor_tamper_1",
+              "label": "[A21] Radiation Monitor Sensor (Purdue Level 0-1)",
+              "children": [
+                {
+                  "id": "sensor_vuln_1",
+                  "label": "[V13] Lack of Physical Security or Tamper-Evident Seals",
+                  "children": [
+                    {
+                      "id": "sensor_spoof_1",
+                      "label": "[H32] Spoofed Sensor Readings (e.g., False Low-Radiation Signals)",
+                      "children": [
+                        {
+                          "id": "plc_false_feedback_1",
+                          "label": "[A22] PLC Receives False Process Feedback",
+                          "children": [
+                            {
+                              "id": "unsafe_control_decision_1",
+                              "label": "[H33] Unsafe Automated Control Decisions (e.g., Disabled Safety Actions)",
+                              "children": [
+                                {
+                                  "id": "attacker_physical",
+                                  "label": "[U01] Attacker"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "actuator_sabotage_1",
+              "label": "[A23] Coolant Valve Actuator (Purdue Level 0-1)",
+              "children": [
+                {
+                  "id": "actuator_vuln_1",
+                  "label": "[V14] Unsecured Actuator Control Interface (e.g., Modbus RTU)",
+                  "children": [
+                    {
+                      "id": "actuator_jam_1",
+                      "label": "[H34] Actuator Jamming or Unauthorized Command Injection",
+                      "children": [
+                        {
+                          "id": "coolant_loss_1",
+                          "label": "[H35] Loss of Coolant Flow or Overpressure Scenario",
+                          "children": [
+                            {
+                              "id": "attacker_actuator",
+                              "label": "[U01] Attacker"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
