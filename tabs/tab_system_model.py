@@ -139,7 +139,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 print (f"[DEBUG] Final AML XML:\n{final_aml_xml}")  # Print for debugging
                 if not final_aml_xml.rstrip().endswith(required_suffix_1) and not final_aml_xml.rstrip().endswith(required_suffix_2):
                     raise ValueError(
-                        "Error: Generated AML XML is incomplete."
+                        "Generated AML is incomplete."
                     )
                 break  # success, exit retry loop
 

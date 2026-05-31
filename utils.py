@@ -42,28 +42,27 @@ def clean_aml_content(aml_file):
 
 # Clean raw model response by extracting text content if it's a list of dicts, otherwise return as is
 def clean_response(response):
-    #print("Raw response:", response)  # Debugging output
+    #print("[DEBUG] Raw response:", response)  # Debugging output
     if isinstance(response, list):
-        print("-----------------------------------------------------------------------")
-        print("Response is a list. Attempting to extract text content from dict items.")
-        print("-----------------------------------------------------------------------")
+        print("------------------------------------------------------------------------------")
+        print("[DEBUG] Response is a list. Attempting to extract text content from dict items.")
+        print("------------------------------------------------------------------------------")
         for item in response:
-            print("Inspecting item:", item)  # Debugging output
             if isinstance(item, dict) and item.get("type") == "text":
                 content = item.get("text", "")
                 break
     elif hasattr(response, 'content'):
-        print("-----------------------------------------------------")
-        print("Response has 'content' attribute. Extracting content.")  # Debugging output
-        print("-----------------------------------------------------")
+        print("-------------------------------------------------------------")
+        print("[DEBUG] Response has 'content' attribute. Extracting content.")
+        print("-------------------------------------------------------------")
         content = response.content
     else:
-        print("--------------------------------------------------------------------------------")
-        print("Response is not a list or does not have 'content' attribute. Using raw response.")  # Debugging output
-        print("--------------------------------------------------------------------------------")
+        print("----------------------------------------------------------------------------------------")
+        print("[DEBUG] Response is not a list or does not have 'content' attribute. Using raw response.")  # Debugging output
+        print("----------------------------------------------------------------------------------------")
         content = response
 
-    #print ("Cleaned content:", content)  # Debugging output
+    #print ("[DEBUG] Cleaned content:", content)  # Debugging output
     return content
 
 
