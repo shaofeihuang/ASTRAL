@@ -132,6 +132,9 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 start_time = time.time()
                 prompt_step4 = create_aml_prompt_step_4(internal_elements_xml, internal_links_xml)
                 final_aml_xml = client.invoke(prompt_step4)
+                print ("----------------------------------------------------")
+                print (f"[DEBUG] Raw Final AML XML:\n{final_aml_xml[:500]}")  # Print raw response for debugging
+                print ("----------------------------------------------------")
                 end_time = time.time()
                 elapsed_secs = end_time - start_time
                 st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")

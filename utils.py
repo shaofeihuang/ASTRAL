@@ -44,22 +44,22 @@ def clean_aml_content(aml_file):
 def clean_response(response):
     #print("[DEBUG] Raw response:", response)  # Debugging output
     if isinstance(response, list):
-        print("------------------------------------------------------------------------------")
-        print("[DEBUG] Response is a list. Attempting to extract text content from dict items.")
-        print("------------------------------------------------------------------------------")
+        #print("------------------------------------------------------------------------------")
+        #print("[DEBUG] Response is a list. Attempting to extract text content from dict items.")
+        #print("------------------------------------------------------------------------------")
         for item in response:
             if isinstance(item, dict) and item.get("type") == "text":
                 content = item.get("text", "")
                 break
     elif hasattr(response, 'content'):
-        print("-------------------------------------------------------------")
-        print("[DEBUG] Response has 'content' attribute. Extracting content.")
-        print("-------------------------------------------------------------")
+        #print("-------------------------------------------------------------")
+        #print("[DEBUG] Response has 'content' attribute. Extracting content.")
+        #print("-------------------------------------------------------------")
         content = response.content
     else:
-        print("----------------------------------------------------------------------------------------")
-        print("[DEBUG] Response is not a list or does not have 'content' attribute. Using raw response.")  # Debugging output
-        print("----------------------------------------------------------------------------------------")
+        #print("----------------------------------------------------------------------------------------")
+        #print("[DEBUG] Response is not a list or does not have 'content' attribute. Using raw response.")  # Debugging output
+        #print("----------------------------------------------------------------------------------------")
         content = response
 
     #print ("[DEBUG] Cleaned content:", content)  # Debugging output
