@@ -137,7 +137,7 @@ def generate_model_aml(arch_narration, threat_model, attack_paths):
                 st.success(f"Step 4 completed ({elapsed_secs:.2f} secs)")
                 final_aml_xml = clean_response(final_aml_xml)  # Clean response to extract text content
                 print ("----------------------------------------------------")
-                print (f"[DEBUG] Final AML XML:\n{final_aml_xml[:500]}")  # Print for debugging
+                print (f"[DEBUG] Final AML XML:\n{final_aml_xml[-500:]}")  # Print for debugging
                 print ("----------------------------------------------------")
                 if not final_aml_xml.rstrip().endswith(required_suffix_1) and not final_aml_xml.rstrip().endswith(required_suffix_2):
                     raise ValueError(
