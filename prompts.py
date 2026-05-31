@@ -135,7 +135,7 @@ IMPORTANT - Follow these strictly enforced semantic guardrails:
 4. Each node must be unique and not reused across different branches of the tree. If a node appears in multiple attack paths, it should be duplicated with a unique ID to maintain the tree structure.
 5. The tree should include all relevant attack paths and sub-paths based on the threat model.
 6. Analyse if assets, hazards, or vulnerabilities may be linked to assets, hazards, or vulnerabilities in separate attack paths, and if so, represent these relationships appropriately in the tree structure.
-7. Each node label must begin with a prefix indicating its type:
+7. Each node label must begin with a prefix (alphabet followed by two numbers) indicating its type:
 - `[A##]` for Asset nodes
 - `[V##]` for Vulnerability nodes
 - `[H##]` for Hazard nodes
@@ -274,7 +274,7 @@ Attack Paths (extract ALL unique nodes):
 4. Interface ID format: "Interface_[NodePrefixOnly]" (e.g., Interface_A01, Interface_V01)
 5. Populate attributes with realistic values based on node description
 6. For unknown CVEs: CVE="N/A", EPSS="N/A"
-7. Probabilities: 0.0-1.0 floats
+7. Probabilities and failure rates: 0.0-1.0 floats
 8. CVSS: Use valid vector format (CVSS:3.1/AV:N/AC:L/...)
 
 ## OUTPUT
