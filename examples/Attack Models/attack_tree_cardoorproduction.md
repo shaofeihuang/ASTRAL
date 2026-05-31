@@ -1,182 +1,149 @@
 graph BT
-    root["[G01] Disruption or Stoppage of Cyber-Physical System Operations in Automotive Door Assembly Line"]
-    spoofing_path["[G02] Spoof Legitimate Commands to Disrupt Operations"]
-    spoofing_path --> root
-    plc_asset["[A01] PLCs Controlling Robotic Arms and Conveyor Systems"]
-    plc_asset --> spoofing_path
-    plc_auth_vuln["[V01] Authentication Bypass Vulnerability (CVE-2021-3474) in PLC Firmware"]
-    plc_auth_vuln --> plc_asset
-    plc_unpatched["[A02] Unpatched PLCs with Default or Weak Credentials"]
-    plc_unpatched --> plc_auth_vuln
+    root["[G01] CPS Disruption: Compromise of Automotive Door Assembly Line Operations"]
+    spoofing_goal["[G02] Achieve Spoofing-Based Disruption"]
+    spoofing_goal --> root
+    plc_spoofing["[A01] PLC (Programmable Logic Controller) Robotic Arm Command Interface"]
+    plc_spoofing --> spoofing_goal
+    plc_auth_weakness["[V01] Weak Authentication in PLC (Default Credentials/No MFA)"]
+    plc_auth_weakness --> plc_spoofing
+    spoofed_weld_commands["[H01] Spoofed Welding Commands Leading to Structural Weakness"]
+    spoofed_weld_commands --> plc_auth_weakness
     attacker["[U01] Attacker"]
-    attacker --> plc_unpatched
-    plc_spoof_hazard["[H01] Spoofed Commands Sent to Robotic Arms via Compromised Engineering Workstation"]
-    plc_spoof_hazard --> plc_asset
-    robotic_misalignment["[H02] Misalignment or Erratic Movement of Robotic Arms Due to Spoofed Calibration Commands"]
-    robotic_misalignment --> plc_spoof_hazard
-    attacker["[U01] Attacker"]
-    attacker --> robotic_misalignment
-    production_defects["[H03] Production of Defective Car Doors Due to Incorrect Assembly Parameters"]
-    production_defects --> plc_spoof_hazard
-    attacker["[U01] Attacker"]
-    attacker --> production_defects
-    tampering_path["[G03] Tamper with HMI or PLC Parameters to Cause Physical Damage"]
-    tampering_path --> root
-    hmi_asset["[A03] HMI Touchscreens for Conveyor Belt and Robotic Arm Control"]
-    hmi_asset --> tampering_path
-    hmi_software_vuln["[V02] Parameter Tampering Vulnerability in HMI Software (CVE-2020-14497)"]
-    hmi_software_vuln --> hmi_asset
-    hmi_unsecured_access["[A04] Unsecured Physical or Remote Access to HMI Terminals"]
-    hmi_unsecured_access --> hmi_software_vuln
-    attacker["[U01] Attacker"]
-    attacker --> hmi_unsecured_access
-    conveyor_tamper_hazard["[H04] Unsafe Conveyor Belt Speed Settings Due to Tampered HMI Parameters"]
-    conveyor_tamper_hazard --> hmi_asset
-    mechanical_failure["[H05] Mechanical Failure or Overheating of Conveyor Motors"]
-    mechanical_failure --> conveyor_tamper_hazard
-    attacker["[U01] Attacker"]
-    attacker --> mechanical_failure
-    worker_injury["[H06] Worker Injury Due to Uncontrolled Conveyor Movement"]
-    worker_injury --> conveyor_tamper_hazard
-    attacker["[U01] Attacker"]
-    attacker --> worker_injury
-    repudiation_path["[G04] Delete or Alter Logs to Conceal Malicious Activity"]
-    repudiation_path --> root
-    scada_logging["[A05] SCADA System Logging and Historian Database"]
-    scada_logging --> repudiation_path
-    log_deletion_vuln["[V03] Log Deletion/Manipulation Vulnerability (CVE-2019-10994) in SCADA Software"]
-    log_deletion_vuln --> scada_logging
-    scada_admin_access["[A06] Compromised SCADA Admin Credentials via Phishing or Brute Force"]
-    scada_admin_access --> log_deletion_vuln
-    attacker["[U01] Attacker"]
-    attacker --> scada_admin_access
-    log_tamper_hazard["[H07] Deletion of Critical Logs Recording Robotic Arm Actions"]
-    log_tamper_hazard --> scada_logging
-    undetected_attacks["[H08] Prolonged Undetected Attacks Due to Lack of Audit Trails"]
-    undetected_attacks --> log_tamper_hazard
-    attacker["[U01] Attacker"]
-    attacker --> undetected_attacks
-    compliance_violation["[H09] Regulatory Compliance Violations Due to Missing Logs"]
-    compliance_violation --> log_tamper_hazard
-    attacker["[U01] Attacker"]
-    attacker --> compliance_violation
-    info_disclosure_path["[G05] Exfiltrate Sensitive Production Data for Industrial Espionage"]
-    info_disclosure_path --> root
-    industrial_router["[A07] Industrial Routers and Cloud Gateway Interfaces"]
-    industrial_router --> info_disclosure_path
-    router_exfil_vuln["[V04] Data Exfiltration Vulnerability in Industrial Routers (CVE-2021-22893)"]
-    router_exfil_vuln --> industrial_router
-    unencrypted_comms["[A08] Unencrypted Communication Between Routers and Cloud Services"]
-    unencrypted_comms --> router_exfil_vuln
-    attacker["[U01] Attacker"]
-    attacker --> unencrypted_comms
-    data_leak_hazard["[H10] Interception of Proprietary Door Designs and Production Schedules"]
-    data_leak_hazard --> industrial_router
-    ip_theft["[H11] Theft of Intellectual Property Leading to Competitive Disadvantage"]
-    ip_theft --> data_leak_hazard
-    attacker["[U01] Attacker"]
-    attacker --> ip_theft
-    financial_loss["[H12] Financial Losses Due to Espionage or Blackmail"]
-    financial_loss --> data_leak_hazard
-    attacker["[U01] Attacker"]
-    attacker --> financial_loss
-    dos_path["[G06] Disrupt SCADA Network Availability via Denial-of-Service"]
-    dos_path --> root
-    scada_network["[A09] SCADA Network Communication Protocols (OPC UA, Modbus TCP)"]
-    scada_network --> dos_path
-    dos_vuln["[V05] Network Flooding Vulnerability in SCADA Protocols (CVE-2020-13576)"]
-    dos_vuln --> scada_network
-    unsegmented_network["[A10] Poorly Segmented IT/OT Network Allowing DoS Propagation"]
-    unsegmented_network --> dos_vuln
-    attacker["[U01] Attacker"]
-    attacker --> unsegmented_network
-    scada_outage_hazard["[H13] SCADA System Unresponsiveness Due to Malicious Packet Flooding"]
-    scada_outage_hazard --> scada_network
-    production_halt["[H14] Complete Halt of Production Line Due to SCADA Outage"]
-    production_halt --> scada_outage_hazard
-    attacker["[U01] Attacker"]
-    attacker --> production_halt
-    manual_override_risk["[H15] Risk of Manual Override Errors During Downtime"]
-    manual_override_risk --> scada_outage_hazard
-    attacker["[U01] Attacker"]
-    attacker --> manual_override_risk
-    priv_escalation_path["[G07] Elevate Privileges to Gain Control Over Critical PLCs"]
-    priv_escalation_path --> root
-    access_control_system["[A11] OT Access Control System for PLC Programming"]
-    access_control_system --> priv_escalation_path
-    priv_esc_vuln["[V06] Privilege Escalation Vulnerability (CVE-2021-27108) in Access Control Software"]
-    priv_esc_vuln --> access_control_system
-    default_service_accounts["[A12] Default or Shared Service Accounts with Elevated Privileges"]
-    default_service_accounts --> priv_esc_vuln
-    attacker["[U01] Attacker"]
-    attacker --> default_service_accounts
-    plc_takeover_hazard["[H16] Unauthorized Administrative Access to Robotic Arm PLCs"]
-    plc_takeover_hazard --> access_control_system
-    unsafe_operations["[H17] Unsafe or Unintended Operations of Robotic Arms"]
-    unsafe_operations --> plc_takeover_hazard
-    attacker["[U01] Attacker"]
-    attacker --> unsafe_operations
-    equipment_damage["[H18] Physical Damage to Robotic Arms or Conveyor Systems"]
-    equipment_damage --> plc_takeover_hazard
-    attacker["[U01] Attacker"]
-    attacker --> equipment_damage
-    lateral_movement_path["[G08] Move Laterally from IT to OT to Compromise Field Devices"]
-    lateral_movement_path --> root
-    it_ot_gateway["[A13] IT/OT Gateway (Firewalls, DMZ, Engineering Workstations)"]
-    it_ot_gateway --> lateral_movement_path
-    lateral_movement_vuln["[V07] Network Segmentation Bypass Vulnerability (CVE-2020-1472)"]
-    lateral_movement_vuln --> it_ot_gateway
-    compromised_it_host["[A14] Compromised IT Host (e.g., Engineer’s Laptop) with OT Network Access"]
-    compromised_it_host --> lateral_movement_vuln
-    attacker["[U01] Attacker"]
-    attacker --> compromised_it_host
-    field_device_compromise["[H19] Compromise of PLCs or Fieldbus Devices via Lateral Movement"]
-    field_device_compromise --> it_ot_gateway
-    conveyor_disruption["[H20] Disruption of Conveyor Belt Synchronization Leading to Production Delays"]
-    conveyor_disruption --> field_device_compromise
-    attacker["[U01] Attacker"]
-    attacker --> conveyor_disruption
-    safety_system_bypass["[H21] Bypass of Safety Instrumented Systems (SIS) via PLC Tampering"]
-    safety_system_bypass --> field_device_compromise
-    attacker["[U01] Attacker"]
-    attacker --> safety_system_bypass
-    supply_chain_path["[G09] Compromise Supply Chain to Introduce Malicious Firmware or Components"]
-    supply_chain_path --> root
-    vendor_update_mechanism["[A15] Vendor Firmware Update Mechanism for PLCs/HMIs"]
-    vendor_update_mechanism --> supply_chain_path
-    firmware_tamper_vuln["[V08] Lack of Firmware Integrity Checks in Update Process"]
-    firmware_tamper_vuln --> vendor_update_mechanism
-    untrusted_update_source["[A16] Untrusted or Compromised Vendor Update Servers"]
-    untrusted_update_source --> firmware_tamper_vuln
-    attacker["[U01] Attacker"]
-    attacker --> untrusted_update_source
-    malicious_firmware_hazard["[H22] Deployment of Malicious Firmware to PLCs via Legitimate Update Channel"]
-    malicious_firmware_hazard --> vendor_update_mechanism
-    backdoor_installation["[H23] Installation of Persistent Backdoors in PLC Firmware"]
-    backdoor_installation --> malicious_firmware_hazard
-    attacker["[U01] Attacker"]
-    attacker --> backdoor_installation
-    sabotage_triggers["[H24] Sabotage Triggers Embedded in Firmware (e.g., Time-Based or Event-Based)"]
-    sabotage_triggers --> malicious_firmware_hazard
-    attacker["[U01] Attacker"]
-    attacker --> sabotage_triggers
-    physical_tampering_path["[G10] Physically Tamper with Field Devices or Safety Systems"]
-    physical_tampering_path --> root
-    field_devices["[A17] Field Devices (Sensors, Actuators, Safety Relays)"]
-    field_devices --> physical_tampering_path
-    physical_access_vuln["[V09] Unsecured Physical Access to PLC Cabinets or Fieldbus Junctions"]
-    physical_access_vuln --> field_devices
-    unlocked_cabinets["[A18] Unlocked or Poorly Secured PLC Cabinets in Production Floor"]
-    unlocked_cabinets --> physical_access_vuln
-    attacker["[U01] Attacker"]
-    attacker --> unlocked_cabinets
-    safety_bypass_hazard["[H25] Physical Tampering with Safety Instrumented Systems (SIS) Wiring"]
-    safety_bypass_hazard --> field_devices
-    emergency_stop_failure["[H26] Failure of Emergency Stop Functions Due to Tampered Wiring"]
-    emergency_stop_failure --> safety_bypass_hazard
-    attacker["[U01] Attacker"]
-    attacker --> emergency_stop_failure
-    false_safety_signals["[H27] Injection of False Safety Signals to Bypass Interlocks"]
-    false_safety_signals --> safety_bypass_hazard
-    attacker["[U01] Attacker"]
-    attacker --> false_safety_signals
+    attacker --> spoofed_weld_commands
+    hmi_spoofing["[A02] HMI (Human-Machine Interface) Operator Workstation"]
+    hmi_spoofing --> spoofing_goal
+    hmi_ip_spoofing["[V02] IP Spoofing Vulnerability in HMI Session Management"]
+    hmi_ip_spoofing --> hmi_spoofing
+    conveyor_speed_manipulation["[H02] Unsafe Conveyor Speed Commands Causing Worker Injuries"]
+    conveyor_speed_manipulation --> hmi_ip_spoofing
+    attacker --> conveyor_speed_manipulation
+    tampering_goal["[G03] Achieve Tampering-Based Disruption"]
+    tampering_goal --> root
+    scada_tampering["[A03] SCADA System Configuration Interface"]
+    scada_tampering --> tampering_goal
+    scada_cve_2017_5164["[V03] CVE-2017-5164 (Siemens SCADA Vulnerability)"]
+    scada_cve_2017_5164 --> scada_tampering
+    press_force_misconfig["[H03] Excessive Hydraulic Press Force Damaging Door Panels"]
+    press_force_misconfig --> scada_cve_2017_5164
+    attacker --> press_force_misconfig
+    mes_tampering["[A04] MES (Manufacturing Execution System) Production Scheduler"]
+    mes_tampering --> tampering_goal
+    mes_schedule_vuln["[V04] Insecure Direct Object Reference in MES Scheduling API"]
+    mes_schedule_vuln --> mes_tampering
+    production_delay_cascade["[H04] Cascading Production Delays from Schedule Tampering"]
+    production_delay_cascade --> mes_schedule_vuln
+    attacker --> production_delay_cascade
+    repudiation_goal["[G04] Achieve Repudiation-Based Disruption"]
+    repudiation_goal --> root
+    plc_logging["[A05] PLC Audit Logging System"]
+    plc_logging --> repudiation_goal
+    plc_logging_insufficient["[V05] Insufficient Logging of Critical Parameter Changes"]
+    plc_logging_insufficient --> plc_logging
+    paint_mixing_untraceable["[H05] Untraceable Paint Mixing Ratio Alterations Causing Defects"]
+    paint_mixing_untraceable --> plc_logging_insufficient
+    attacker --> paint_mixing_untraceable
+    info_disclosure_goal["[G05] Achieve Information Disclosure-Based Disruption"]
+    info_disclosure_goal --> root
+    hmi_data_leak["[A06] HMI Proprietary Process Data Storage"]
+    hmi_data_leak --> info_disclosure_goal
+    hmi_cve_2018_4834["[V06] CVE-2018-4834 (Rockwell HMI Information Disclosure)"]
+    hmi_cve_2018_4834 --> hmi_data_leak
+    process_secrets_theft["[H06] Theft of Proprietary Assembly Process Intellectual Property"]
+    process_secrets_theft --> hmi_cve_2018_4834
+    attacker --> process_secrets_theft
+    mes_employee_data["[A07] MES Employee Records Database"]
+    mes_employee_data --> info_disclosure_goal
+    mes_db_misconfig["[V07] Misconfigured Database Permissions Allowing Unauthorized Access"]
+    mes_db_misconfig --> mes_employee_data
+    employee_privacy_violation["[H07] Unauthorized Disclosure of Sensitive Employee Information"]
+    employee_privacy_violation --> mes_db_misconfig
+    attacker --> employee_privacy_violation
+    dos_goal["[G06] Achieve Denial-of-Service-Based Disruption"]
+    dos_goal --> root
+    scada_dos["[A08] SCADA System Core Services"]
+    scada_dos --> dos_goal
+    scada_protocol_flood["[V08] Unprotected OPC UA Classic Ports Susceptible to Flooding"]
+    scada_protocol_flood --> scada_dos
+    scada_system_crash["[H08] SCADA System Crash Halting Production Line"]
+    scada_system_crash --> scada_protocol_flood
+    attacker --> scada_system_crash
+    network_dos["[A09] OT Network Infrastructure (Switches/Routers)"]
+    network_dos --> dos_goal
+    network_flood_vuln["[V09] Lack of Storm Control on Industrial Switches"]
+    network_flood_vuln --> network_dos
+    network_outage_coordination_loss["[H09] Complete Loss of Component Coordination from Network Outage"]
+    network_outage_coordination_loss --> network_flood_vuln
+    attacker --> network_outage_coordination_loss
+    priv_escalation_goal["[G07] Achieve Privilege Escalation-Based Disruption"]
+    priv_escalation_goal --> root
+    plc_priv_esc["[A10] PLC Administrative Access Control"]
+    plc_priv_esc --> priv_escalation_goal
+    plc_cve_2019_10975["[V10] CVE-2019-10975 (Schneider Electric PLC Privilege Escalation)"]
+    plc_cve_2019_10975 --> plc_priv_esc
+    plc_critical_process_manipulation["[H10] Unauthorized Critical Process Manipulation via Elevated PLC Access"]
+    plc_critical_process_manipulation --> plc_cve_2019_10975
+    attacker --> plc_critical_process_manipulation
+    lateral_movement_goal["[G08] Achieve Lateral Movement-Based Disruption"]
+    lateral_movement_goal --> root
+    it_ot_boundary["[A11] IT-OT Boundary Firewall/Router"]
+    it_ot_boundary --> lateral_movement_goal
+    boundary_misconfig["[V11] Firewall Misconfiguration Allowing Unrestricted IT→OT Traffic"]
+    boundary_misconfig --> it_ot_boundary
+    ot_system_compromise_via_it["[H11] OT System Compromise Originating from IT Network"]
+    ot_system_compromise_via_it --> boundary_misconfig
+    attacker --> ot_system_compromise_via_it
+    weak_segmentation["[A12] Flat OT Network Architecture"]
+    weak_segmentation --> lateral_movement_goal
+    no_microsegmentation["[V12] Lack of Microsegmentation Between Purdue Levels 2-3"]
+    no_microsegmentation --> weak_segmentation
+    mes_to_plc_unauthorized_access["[H12] Unauthorized MES→PLC Command Injection via Lateral Movement"]
+    mes_to_plc_unauthorized_access --> no_microsegmentation
+    attacker --> mes_to_plc_unauthorized_access
+    supply_chain_goal["[G09] Achieve Supply Chain-Based Disruption"]
+    supply_chain_goal --> root
+    third_party_software["[A13] Vendor-Supplied PLC Firmware/OPC UA Stack"]
+    third_party_software --> supply_chain_goal
+    known_cve_in_firmware["[V13] Known Unpatched CVE in Vendor-Supplied Firmware"]
+    known_cve_in_firmware --> third_party_software
+    malicious_firmware_update["[H13] Compromised Firmware Update Introducing Backdoor"]
+    malicious_firmware_update --> known_cve_in_firmware
+    attacker --> malicious_firmware_update
+    supplier_access["[A14] Supplier Remote Maintenance VPN Portal"]
+    supplier_access --> supply_chain_goal
+    default_supplier_credentials["[V14] Default/Weak Credentials on Supplier VPN Accounts"]
+    default_supplier_credentials --> supplier_access
+    supplier_credential_abuse["[H14] Abuse of Supplier Credentials for Unauthorized PLC Access"]
+    supplier_credential_abuse --> default_supplier_credentials
+    attacker --> supplier_credential_abuse
+    social_engineering_goal["[G10] Achieve Social Engineering-Based Disruption"]
+    social_engineering_goal --> root
+    operator_phishing["[A15] Operator Workstation (Email/HMI Access)"]
+    operator_phishing --> social_engineering_goal
+    phishing_vulnerability["[V15] Lack of Operator Security Awareness Training"]
+    phishing_vulnerability --> operator_phishing
+    hmi_credential_harvesting["[H15] Harvested HMI Credentials via Phishing Campaign"]
+    hmi_credential_harvesting --> phishing_vulnerability
+    attacker --> hmi_credential_harvesting
+    fake_erp_messages["[A16] ERP-MES Communication Channel"]
+    fake_erp_messages --> social_engineering_goal
+    erp_message_spoofing["[V16] Lack of Message Authentication Between ERP and MES"]
+    erp_message_spoofing --> fake_erp_messages
+    unauthorized_production_changes["[H16] Spoofed ERP Messages Triggering Unauthorized Production Changes"]
+    unauthorized_production_changes --> erp_message_spoofing
+    attacker --> unauthorized_production_changes
+    physical_goal["[G11] Achieve Physical Access-Based Disruption"]
+    physical_goal --> root
+    plc_programming_port["[A17] PLC Physical Programming Port (RS-232/USB)"]
+    plc_programming_port --> physical_goal
+    unsecured_plc_port["[V17] Unsecured Physical Access to PLC Programming Interface"]
+    unsecured_plc_port --> plc_programming_port
+    plc_logic_tampering["[H17] Direct Tampering with PLC Ladder Logic via Physical Access"]
+    plc_logic_tampering --> unsecured_plc_port
+    attacker --> plc_logic_tampering
+    sensor_actuator_tampering["[A18] Field-Level Sensors/Actuators (4-20mA/I/O Links)"]
+    sensor_actuator_tampering --> physical_goal
+    unprotected_field_wiring["[V18] Unprotected Field Wiring Susceptible to Signal Injection"]
+    unprotected_field_wiring --> sensor_actuator_tampering
+    sensor_spoofing_physical["[H18] Physical Spoofing of Sensor Signals (e.g., Temperature/Pressure)"]
+    sensor_spoofing_physical --> unprotected_field_wiring
+    attacker --> sensor_spoofing_physical

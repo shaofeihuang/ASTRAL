@@ -1,210 +1,143 @@
 graph BT
-    root["[G00] Disrupt or Stop Cyber-Physical System Operations in Medical Environment"]
-    spoof_goal["[G01] Achieve Spoofing of Legitimate Devices/Commands"]
-    spoof_goal --> root
-    asset_network["[A01] Network Infrastructure (IT/OT Convergence)"]
-    asset_network --> spoof_goal
-    vul_auth_weak["[V01] Weak or Missing Authentication in Device Protocols (e.g., HL7, DICOM)"]
-    vul_auth_weak --> asset_network
-    asset_med_device["[A02] Medical Devices (e.g., Infusion Pumps, Ventilators)"]
-    asset_med_device --> vul_auth_weak
-    haz_false_data["[H01] Injection of False Patient Vitals or Device Commands"]
-    haz_false_data --> asset_med_device
+    root["[G01] CPS Disruption in Medical Cyber-Physical Systems"]
+    spoofing_medical_device["[H01] Spoofing of Legitimate Medical Devices"]
+    spoofing_medical_device --> root
+    weak_auth_mechanism["[V01] Weak Authentication in Device-Control System Communication"]
+    weak_auth_mechanism --> spoofing_medical_device
+    modbus_no_auth["[A01] Modbus TCP Without Authentication"]
+    modbus_no_auth --> weak_auth_mechanism
     attacker["[U01] Attacker"]
-    attacker --> haz_false_data
-    vul_proto_spoof["[V02] Protocol Spoofing (e.g., Modbus, BACnet) Due to Lack of Cryptographic Validation"]
-    vul_proto_spoof --> asset_network
-    asset_gateway["[A03] Protocol Gateway Devices (IT ↔ OT Translation)"]
-    asset_gateway --> vul_proto_spoof
-    haz_control_hijack["[H02] Hijacking of Control Commands to Actuators (e.g., Drug Dosage, Surgical Robots)"]
-    haz_control_hijack --> asset_gateway
-    attacker["[U01] Attacker"]
-    attacker --> haz_control_hijack
-    asset_wireless["[A04] Wireless Access Points (Wi-Fi, BLE, Zigbee)"]
-    asset_wireless --> spoof_goal
-    vul_rogue_ap["[V03] Rogue Access Point Spoofing (e.g., Evil Twin Attack on Medical IoT)"]
-    vul_rogue_ap --> asset_wireless
-    asset_sensor["[A05] Wireless Sensors (e.g., ECG, SpO2 Monitors)"]
-    asset_sensor --> vul_rogue_ap
-    haz_false_telemetry["[H03] Spoofed Telemetry Data Leading to Misdiagnosis"]
-    haz_false_telemetry --> asset_sensor
-    attacker["[U01] Attacker"]
-    attacker --> haz_false_telemetry
-    tamper_goal["[G02] Tamper with Device Configurations or Patient Data"]
-    tamper_goal --> root
-    asset_ehr["[A06] Electronic Health Record (EHR) Systems"]
-    asset_ehr --> tamper_goal
-    vul_input_val["[V04] Lack of Input Validation in Patient Data Fields (e.g., Dosage Parameters)"]
-    vul_input_val --> asset_ehr
-    haz_incorrect_rx["[H04] Altered Prescription Data Causing Overdose/Underdose"]
-    haz_incorrect_rx --> vul_input_val
-    attacker["[U01] Attacker"]
-    attacker --> haz_incorrect_rx
-    vul_inject_sql["[V05] SQL Injection in EHR Database Queries"]
-    vul_inject_sql --> asset_ehr
-    asset_patient_db["[A07] Patient Database (PHI Storage)"]
-    asset_patient_db --> vul_inject_sql
-    haz_data_corrupt["[H05] Corruption or Deletion of Critical Patient Records"]
-    haz_data_corrupt --> asset_patient_db
-    attacker["[U01] Attacker"]
-    attacker --> haz_data_corrupt
-    asset_firmware["[A08] Firmware Update Mechanisms (OTA, Vendor Portals)"]
-    asset_firmware --> tamper_goal
-    vul_unauth_update["[V06] Unauthenticated Firmware Upload (e.g., CVE-2019-10974)"]
-    vul_unauth_update --> asset_firmware
-    asset_embedded_ctrl["[A09] Embedded Controllers (PLC-like Logic in Devices)"]
-    asset_embedded_ctrl --> vul_unauth_update
-    haz_malicious_fw["[H06] Malicious Firmware Leading to Device Brick or Malfunction"]
-    haz_malicious_fw --> asset_embedded_ctrl
-    attacker["[U01] Attacker"]
-    attacker --> haz_malicious_fw
-    vul_mitm_update["[V07] MITM on Firmware Download (e.g., Compromised Vendor Server or DNS Spoofing)"]
-    vul_mitm_update --> asset_firmware
-    haz_backdoor_install["[H07] Installation of Persistent Backdoor in Device Firmware"]
-    haz_backdoor_install --> vul_mitm_update
-    attacker["[U01] Attacker"]
-    attacker --> haz_backdoor_install
-    repud_goal["[G03] Perform Actions Without Traceability (Repudiation)"]
-    repud_goal --> root
-    asset_iam["[A10] Identity and Access Management (IAM) Systems"]
-    asset_iam --> repud_goal
-    vul_log_tamper["[V08] Insufficient Logging or Log Tampering (e.g., Disabled Audit Trails)"]
-    vul_log_tamper --> asset_iam
-    asset_admin_workstation["[A11] Administrative Workstations (Configuration/Management)"]
-    asset_admin_workstation --> vul_log_tamper
-    haz_untraceable_actions["[H08] Unauthorized Configuration Changes Without Attribution"]
-    haz_untraceable_actions --> asset_admin_workstation
-    attacker["[U01] Attacker"]
-    attacker --> haz_untraceable_actions
-    asset_siem["[A12] SIEM/Centralized Logging Systems"]
-    asset_siem --> repud_goal
-    vul_time_spoof["[V09] NTP Spoofing to Disrupt Event Timestamps"]
-    vul_time_spoof --> asset_siem
-    haz_event_obfuscation["[H09] Obfuscation of Attack Timeline in Logs"]
-    haz_event_obfuscation --> vul_time_spoof
-    attacker["[U01] Attacker"]
-    attacker --> haz_event_obfuscation
-    info_disc_goal["[G04] Exfiltrate Sensitive Patient or Device Data"]
-    info_disc_goal --> root
-    asset_network_traffic["[A13] Unencrypted Network Traffic (IT ↔ OT)"]
-    asset_network_traffic --> info_disc_goal
-    vul_sniffing["[V10] Passive Sniffing of Cleartext Protocols (e.g., HL7v2, Modbus)"]
-    vul_sniffing --> asset_network_traffic
-    asset_phi_data["[A14] Patient Health Information (PHI) in Transit"]
-    asset_phi_data --> vul_sniffing
-    haz_data_leak["[H10] Exfiltration of PHI to External Servers"]
-    haz_data_leak --> asset_phi_data
-    attacker["[U01] Attacker"]
-    attacker --> haz_data_leak
-    asset_cloud_sync["[A15] Cloud-Synchronized Devices (e.g., Remote Diagnostics)"]
-    asset_cloud_sync --> info_disc_goal
-    vul_misconfig_storage["[V11] Misconfigured Cloud Storage (e.g., Public S3 Buckets)"]
-    vul_misconfig_storage --> asset_cloud_sync
-    asset_device_backups["[A16] Device Configuration Backups (e.g., Therapy Parameters)"]
-    asset_device_backups --> vul_misconfig_storage
-    haz_config_leak["[H11] Exposure of Sensitive Device Configurations"]
-    haz_config_leak --> asset_device_backups
-    attacker["[U01] Attacker"]
-    attacker --> haz_config_leak
-    dos_goal["[G05] Disrupt Availability of Critical Systems (DoS)"]
-    dos_goal --> root
-    asset_hmi["[A17] Human-Machine Interfaces (HMIs)"]
-    asset_hmi --> dos_goal
-    vul_flooding["[V12] UDP/TCP Flooding on HMI-Device Communication (e.g., Modbus TCP)"]
-    vul_flooding --> asset_hmi
-    haz_device_unresponsive["[H12] Unresponsive Critical Devices (e.g., Ventilators, Infusion Pumps)"]
-    haz_device_unresponsive --> vul_flooding
-    attacker["[U01] Attacker"]
-    attacker --> haz_device_unresponsive
-    asset_wireless_jammer["[A18] Wireless Spectrum (2.4GHz, ISM Bands)"]
-    asset_wireless_jammer --> dos_goal
-    vul_jamming["[V13] RF Jamming of Wireless Medical Devices (e.g., BLE, Zigbee)"]
-    vul_jamming --> asset_wireless_jammer
-    haz_sensor_dropout["[H13] Loss of Telemetry from Wireless Sensors (e.g., ECG, SpO2)"]
-    haz_sensor_dropout --> vul_jamming
-    attacker["[U01] Attacker"]
-    attacker --> haz_sensor_dropout
-    asset_ntp["[A19] NTP Servers (Time Synchronization)"]
-    asset_ntp --> dos_goal
-    vul_ntp_amplification["[V14] NTP Amplification Attack on OT Network"]
-    vul_ntp_amplification --> asset_ntp
-    haz_time_desync["[H14] Desynchronized Device Clocks Causing Event Correlation Failures"]
-    haz_time_desync --> vul_ntp_amplification
-    attacker["[U01] Attacker"]
-    attacker --> haz_time_desync
-    eop_goal["[G06] Elevate Privileges to Gain Unauthorized Control"]
-    eop_goal --> root
-    asset_iam_weak["[A20] IAM Systems with Default/Misconfigured RBAC"]
-    asset_iam_weak --> eop_goal
-    vul_priv_esc["[V15] Privilege Escalation via Exploitable Services (e.g., CVE-2019-10974)"]
-    vul_priv_esc --> asset_iam_weak
-    asset_admin_console["[A21] Administrative Consoles (Device Management)"]
-    asset_admin_console --> vul_priv_esc
-    haz_full_device_control["[H15] Unauthorized Administrative Access to Critical Devices"]
-    haz_full_device_control --> asset_admin_console
-    attacker["[U01] Attacker"]
-    attacker --> haz_full_device_control
-    asset_shared_creds["[A22] Shared or Hardcoded Credentials in Medical Devices"]
-    asset_shared_creds --> eop_goal
-    vul_cred_reuse["[V16] Credential Reuse Across Devices (e.g., Default Manufacturer Passwords)"]
-    vul_cred_reuse --> asset_shared_creds
-    haz_lateral_movement["[H16] Lateral Movement Across Compromised Devices"]
-    haz_lateral_movement --> vul_cred_reuse
-    attacker["[U01] Attacker"]
-    attacker --> haz_lateral_movement
-    lateral_goal["[G07] Move Laterally Across Network Segments"]
-    lateral_goal --> root
-    asset_segmentation["[A23] Poorly Segmented IT/OT Network"]
-    asset_segmentation --> lateral_goal
-    vul_flat_network["[V17] Flat Network Architecture (No Micro-Segmentation)"]
-    vul_flat_network --> asset_segmentation
-    asset_vpn_gateway["[A24] VPN Gateways (Remote Access)"]
-    asset_vpn_gateway --> vul_flat_network
-    haz_ot_from_it["[H17] Pivot from IT to OT via Compromised VPN or Jump Host"]
-    haz_ot_from_it --> asset_vpn_gateway
-    attacker["[U01] Attacker"]
-    attacker --> haz_ot_from_it
-    asset_trust_relationship["[A25] Implicit Trust Relationships Between Devices"]
-    asset_trust_relationship --> lateral_goal
-    vul_trust_exploit["[V18] Exploitation of Trusted Device Communication (e.g., HL7 Auto-Forwarding)"]
-    vul_trust_exploit --> asset_trust_relationship
-    haz_auto_propagation["[H18] Automatic Propagation of Malware via Trusted Channels"]
-    haz_auto_propagation --> vul_trust_exploit
-    attacker["[U01] Attacker"]
-    attacker --> haz_auto_propagation
-    physical_goal["[G08] Exploit Physical Access to Compromise Systems"]
-    physical_goal --> root
-    asset_usb_ports["[A26] Unsecured USB/Serial Ports on Medical Devices"]
-    asset_usb_ports --> physical_goal
-    vul_usb_exploit["[V19] USB-Based Exploitation (e.g., BadUSB, Rubber Ducky)"]
-    vul_usb_exploit --> asset_usb_ports
-    haz_firmware_flash["[H19] Unauthorized Firmware Flashing via Physical Ports"]
-    haz_firmware_flash --> vul_usb_exploit
-    attacker["[U01] Attacker"]
-    attacker --> haz_firmware_flash
-    asset_maintenance_mode["[A27] Maintenance Mode Interfaces (e.g., JTAG, UART)"]
-    asset_maintenance_mode --> physical_goal
-    vul_debug_access["[V20] Unprotected Debug/Service Modes (e.g., Manufacturer Backdoors)"]
-    vul_debug_access --> asset_maintenance_mode
-    haz_bypass_auth["[H20] Bypass of Authentication via Maintenance Ports"]
-    haz_bypass_auth --> vul_debug_access
-    attacker["[U01] Attacker"]
-    attacker --> haz_bypass_auth
-    supply_chain_goal["[G09] Compromise via Supply Chain or Third-Party Vectors"]
-    supply_chain_goal --> root
-    asset_vendor_portal["[A28] Vendor Update Portals (Firmware/Patch Distribution)"]
-    asset_vendor_portal --> supply_chain_goal
-    vul_vendor_compromise["[V21] Compromised Vendor Systems (e.g., SolarWinds-style Attack)"]
-    vul_vendor_compromise --> asset_vendor_portal
-    haz_malicious_updates["[H21] Distribution of Malicious Updates to Devices"]
-    haz_malicious_updates --> vul_vendor_compromise
-    attacker["[U01] Attacker"]
-    attacker --> haz_malicious_updates
-    asset_third_party["[A29] Third-Party Integrators (Remote Support Access)"]
-    asset_third_party --> supply_chain_goal
-    vul_remote_tool["[V22] Exploitable Remote Support Tools (e.g., TeamViewer, RDP)"]
-    vul_remote_tool --> asset_third_party
-    haz_persistent_access["[H22] Persistent Access via Legitimate Remote Support Channels"]
-    haz_persistent_access --> vul_remote_tool
-    attacker["[U01] Attacker"]
-    attacker --> haz_persistent_access
+    attacker --> modbus_no_auth
+    opc_ua_misconfig["[A02] Misconfigured OPC UA Certificates"]
+    opc_ua_misconfig --> weak_auth_mechanism
+    attacker --> opc_ua_misconfig
+    falsified_sensor_data["[H02] Falsified Sensor Data Injection"]
+    falsified_sensor_data --> spoofing_medical_device
+    unvalidated_input_hmi["[V02] Unvalidated Input at HMI Level"]
+    unvalidated_input_hmi --> falsified_sensor_data
+    hmi_software_vuln["[A03] Vulnerable HMI Software (e.g., CVE-2020-25159)"]
+    hmi_software_vuln --> unvalidated_input_hmi
+    attacker --> hmi_software_vuln
+    tampering_firmware["[H03] Tampering with Medical Device Firmware"]
+    tampering_firmware --> root
+    insecure_fw_update["[V03] Insecure Firmware Update Mechanism"]
+    insecure_fw_update --> tampering_firmware
+    unencrypted_fw_channel["[A04] Unencrypted Firmware Update Channel"]
+    unencrypted_fw_channel --> insecure_fw_update
+    attacker --> unencrypted_fw_channel
+    default_credentials_fw["[A05] Default Credentials in Firmware Update Portal"]
+    default_credentials_fw --> insecure_fw_update
+    attacker --> default_credentials_fw
+    physical_tampering["[H04] Physical Tampering with Medical Devices"]
+    physical_tampering --> tampering_firmware
+    unsecured_usb_ports["[A06] Unsecured USB Ports on Medical Devices"]
+    unsecured_usb_ports --> physical_tampering
+    attacker --> unsecured_usb_ports
+    unlocked_debug_consoles["[A07] Unlocked Debug Consoles (e.g., JTAG, UART)"]
+    unlocked_debug_consoles --> physical_tampering
+    attacker --> unlocked_debug_consoles
+    repudiation_actions["[H05] Repudiation of Malicious Actions"]
+    repudiation_actions --> root
+    insufficient_logging["[V04] Insufficient Logging and Monitoring"]
+    insufficient_logging --> repudiation_actions
+    disabled_audit_logs["[A08] Disabled Audit Logs on Critical Devices"]
+    disabled_audit_logs --> insufficient_logging
+    attacker --> disabled_audit_logs
+    unencrypted_log_storage["[A09] Unencrypted Log Storage"]
+    unencrypted_log_storage --> insufficient_logging
+    attacker --> unencrypted_log_storage
+    compromised_operator_creds["[V05] Compromised Operator Credentials"]
+    compromised_operator_creds --> repudiation_actions
+    weak_password_policies["[A10] Weak Password Policies for OT Access"]
+    weak_password_policies --> compromised_operator_creds
+    attacker --> weak_password_policies
+    info_disclosure["[H06] Unauthorized Information Disclosure"]
+    info_disclosure --> root
+    weak_network_encryption["[V06] Weak Network Encryption"]
+    weak_network_encryption --> info_disclosure
+    outdated_tls_ot["[A11] Outdated TLS in OT Protocols (e.g., Modbus/TLS 1.0)"]
+    outdated_tls_ot --> weak_network_encryption
+    attacker --> outdated_tls_ot
+    exposed_api_endpoints["[V07] Exposed API Endpoints in DMZ"]
+    exposed_api_endpoints --> info_disclosure
+    unauthenticated_opc_ua["[A12] Unauthenticated OPC UA Endpoints"]
+    unauthenticated_opc_ua --> exposed_api_endpoints
+    attacker --> unauthenticated_opc_ua
+    dos_medical_services["[H07] Denial of Service in Medical Services"]
+    dos_medical_services --> root
+    network_flooding["[V08] Network Flooding Vulnerabilities"]
+    network_flooding --> dos_medical_services
+    unsegmented_ot_network["[A13] Unsegmented OT Network Allowing Broadcast Storms"]
+    unsegmented_ot_network --> network_flooding
+    attacker --> unsegmented_ot_network
+    protocol_specific_dos["[V09] Protocol-Specific DoS (e.g., Modbus, DICOM)"]
+    protocol_specific_dos --> dos_medical_services
+    modbus_malformed_packets["[A14] Modbus Malformed Packet Handling Vulnerabilities"]
+    modbus_malformed_packets --> protocol_specific_dos
+    attacker --> modbus_malformed_packets
+    privilege_escalation["[H08] Elevation of Privilege in Medical CPS"]
+    privilege_escalation --> root
+    vulnerable_ot_software["[V10] Vulnerable OT Software (e.g., CVE-2018-14847)"]
+    vulnerable_ot_software --> privilege_escalation
+    unpatched_plc_firmware["[A15] Unpatched PLC Firmware"]
+    unpatched_plc_firmware --> vulnerable_ot_software
+    attacker --> unpatched_plc_firmware
+    misconfigured_rbac["[V11] Misconfigured Role-Based Access Control (RBAC)"]
+    misconfigured_rbac --> privilege_escalation
+    overprivileged_service_accounts["[A16] Overprivileged Service Accounts in OT"]
+    overprivileged_service_accounts --> misconfigured_rbac
+    attacker --> overprivileged_service_accounts
+    lateral_movement["[H09] Lateral Movement Across Purdue Levels"]
+    lateral_movement --> root
+    weak_segmentation["[V12] Weak Segmentation Between IT/OT Zones"]
+    weak_segmentation --> lateral_movement
+    flat_ot_network["[A17] Flat OT Network Topology"]
+    flat_ot_network --> weak_segmentation
+    attacker --> flat_ot_network
+    unmonitored_vlans["[A18] Unmonitored VLANs Between Levels 3 and 2"]
+    unmonitored_vlans --> weak_segmentation
+    attacker --> unmonitored_vlans
+    compromised_gateway["[V13] Compromised IT-OT Gateway (e.g., OPC UA Proxy)"]
+    compromised_gateway --> lateral_movement
+    default_creds_gateway["[A19] Default Credentials on IT-OT Gateway"]
+    default_creds_gateway --> compromised_gateway
+    attacker --> default_creds_gateway
+    supply_chain_risks["[H10] Supply Chain Compromise"]
+    supply_chain_risks --> root
+    third_party_firmware["[V14] Malicious Third-Party Firmware Updates"]
+    third_party_firmware --> supply_chain_risks
+    unverified_vendor_updates["[A20] Unverified Vendor-Signed Firmware"]
+    unverified_vendor_updates --> third_party_firmware
+    attacker --> unverified_vendor_updates
+    pre_compromised_devices["[V15] Pre-Compromised Medical Devices (e.g., Implanted Backdoors)"]
+    pre_compromised_devices --> supply_chain_risks
+    cots_default_backdoors["[A21] Default Backdoors in COTS Medical Devices"]
+    cots_default_backdoors --> pre_compromised_devices
+    attacker --> cots_default_backdoors
+    insider_threats["[H11] Insider Threats (Privileged Access Abuse)"]
+    insider_threats --> root
+    abuse_of_privileged_access["[V16] Abuse of Privileged OT Access"]
+    abuse_of_privileged_access --> insider_threats
+    unmonitored_admin_workstations["[A22] Unmonitored Admin Workstations with OT Access"]
+    unmonitored_admin_workstations --> abuse_of_privileged_access
+    attacker --> unmonitored_admin_workstations
+    social_engineering_ot["[V17] Social Engineering Targeting OT Operators"]
+    social_engineering_ot --> insider_threats
+    phishing_ot_creds["[A23] Phishing for OT Operator Credentials"]
+    phishing_ot_creds --> social_engineering_ot
+    attacker --> phishing_ot_creds
+    wireless_exploitation["[H12] Exploitation of Wireless Medical Interfaces"]
+    wireless_exploitation --> root
+    unsecured_wireless_protocols["[V18] Unsecured Wireless Protocols (e.g., BLE, Zigbee)"]
+    unsecured_wireless_protocols --> wireless_exploitation
+    ble_no_encryption["[A24] BLE Devices Without Encryption"]
+    ble_no_encryption --> unsecured_wireless_protocols
+    attacker --> ble_no_encryption
+    default_zigbee_keys["[A25] Default Zigbee Network Keys"]
+    default_zigbee_keys --> unsecured_wireless_protocols
+    attacker --> default_zigbee_keys
+    rogue_wireless_ap["[V19] Rogue Wireless Access Points in Medical Zones"]
+    rogue_wireless_ap --> wireless_exploitation
+    unauthorized_wifi_iot["[A26] Unauthorized Wi-Fi on Medical IoT Devices"]
+    unauthorized_wifi_iot --> rogue_wireless_ap
+    attacker --> unauthorized_wifi_iot

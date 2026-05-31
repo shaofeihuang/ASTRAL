@@ -1,158 +1,167 @@
 graph BT
-    root["[G00] Disrupt or Stop Cyber-Physical System Operations (Railway CBTC)"]
-    compromise_communication["[G01] Compromise Train-to-Wayside Communication"]
-    compromise_communication --> root
-    wireless_protocols["[A01] Wireless Communication Protocols (IEEE 802.11p, GSM-R, LTE-R)"]
-    wireless_protocols --> compromise_communication
-    protocol_vuln["[V01] Exploit Protocol Vulnerabilities (e.g., CVE-2021-3176, Log4Shell)"]
-    protocol_vuln --> wireless_protocols
-    spoof_train_id["[H01] Spoof Train Identity or Position Data"]
-    spoof_train_id --> protocol_vuln
-    false_signaling["[H02] Cause Incorrect Signaling Leading to Collisions/Derailements"]
-    false_signaling --> spoof_train_id
+    root["[G01] CPS Disruption: Compromise Communications-Based Train Control (CBTC) System Operations"]
+    spoof_train_wireless_comm["[H01] Spoof Train Identity via Wireless Communication Exploits"]
+    spoof_train_wireless_comm --> root
+    weak_auth_wireless_protocol["[V01] Weak Authentication in CBTC Radio Protocol (e.g., IEEE 802.11p)"]
+    weak_auth_wireless_protocol --> spoof_train_wireless_comm
+    false_position_reports["[H02] False Train Position Reports to Zone Controller"]
+    false_position_reports --> weak_auth_wireless_protocol
+    miscalculated_train_separation["[H03] Miscalculation of Train Separation Leading to Collisions"]
+    miscalculated_train_separation --> false_position_reports
     attacker["[U01] Attacker"]
-    attacker --> false_signaling
-    dos_wireless["[H03] Launch DoS on Wireless Channels (Jamming, Flooding)"]
-    dos_wireless --> protocol_vuln
-    comm_loss["[H04] Induce Loss of Train-Ground Communication"]
-    comm_loss --> dos_wireless
-    attacker["[U01] Attacker"]
-    attacker --> comm_loss
-    rogue_base_station["[A02] Deploy Rogue Base Station (Fake GSM-R Tower)"]
-    rogue_base_station --> wireless_protocols
-    mitm_attack["[V02] Perform Man-in-the-Middle (MITM) Attack on Train Comms"]
-    mitm_attack --> rogue_base_station
-    tamper_commands["[H05] Tamper with Movement Authorities or Braking Commands"]
-    tamper_commands --> mitm_attack
-    attacker["[U01] Attacker"]
-    attacker --> tamper_commands
-    compromise_wayside["[G02] Compromise Wayside Infrastructure"]
-    compromise_wayside --> root
-    trackside_assets["[A03] Trackside Assets (Zone Controllers, Signals, Points Machines)"]
-    trackside_assets --> compromise_wayside
-    physical_access["[V03] Gain Unauthorized Physical Access to Trackside Cabinets"]
-    physical_access --> trackside_assets
-    tamper_sensors["[H06] Tamper with Axle Counters/Balises to Spoof Occupancy"]
-    tamper_sensors --> physical_access
-    false_occupancy["[H07] Trigger False Track Occupancy or Clear Signals"]
-    false_occupancy --> tamper_sensors
-    attacker["[U01] Attacker"]
-    attacker --> false_occupancy
-    sabotage_power["[H08] Sabotage Power Supply to Wayside Controllers"]
-    sabotage_power --> physical_access
-    system_failure["[H09] Cause Fail-Safe Mode or System Shutdown"]
-    system_failure --> sabotage_power
-    attacker["[U01] Attacker"]
-    attacker --> system_failure
-    default_creds["[V04] Exploit Default/Hardcoded Credentials in PLCs/Radio Units"]
-    default_creds --> trackside_assets
-    unauth_access["[H10] Gain Unauthorized Remote Access to Wayside Systems"]
-    unauth_access --> default_creds
-    modify_logic["[H11] Modify Interlocking Logic or Signal Timing"]
-    modify_logic --> unauth_access
-    attacker["[U01] Attacker"]
-    attacker --> modify_logic
-    backbone_network["[A04] Backbone Network (Fiber Rings, Switches, Gateways)"]
-    backbone_network --> compromise_wayside
-    network_vuln["[V05] Exploit Network Vulnerabilities (e.g., CVE-2020-25705, RSTP Misconfig)"]
-    network_vuln --> backbone_network
-    dos_network["[H12] Launch DoS on Backbone (MPLS-TE Flooding, ARP Spoofing)"]
-    dos_network --> network_vuln
-    loss_supervision["[H13] Disrupt Central Supervision or Redundancy"]
-    loss_supervision --> dos_network
-    attacker["[U01] Attacker"]
-    attacker --> loss_supervision
-    lateral_movement["[H14] Move Laterally from IT to OT (e.g., via Misconfigured Firewall)"]
-    lateral_movement --> network_vuln
-    compromise_occ["[H15] Compromise Operations Control Center (OCC) Systems"]
-    compromise_occ --> lateral_movement
-    attacker["[U01] Attacker"]
-    attacker --> compromise_occ
-    compromise_trainborne["[G03] Compromise Trainborne Systems"]
-    compromise_trainborne --> root
-    onboard_assets["[A05] Onboard Assets (ATP/ATO Units, Vital Computers, TIU)"]
-    onboard_assets --> compromise_trainborne
-    firmware_vuln["[V06] Exploit Firmware Vulnerabilities (e.g., CVE-2021-34527)"]
-    firmware_vuln --> onboard_assets
-    tamper_atp["[H16] Tamper with ATP Braking Curves or Speed Limits"]
-    tamper_atp --> firmware_vuln
-    unsafe_operation["[H17] Force Unsafe Train Operation (Overspeed, Missed Stops)"]
-    unsafe_operation --> tamper_atp
-    attacker["[U01] Attacker"]
-    attacker --> unsafe_operation
-    maintenance_port["[A06] Onboard Maintenance Ports (USB, Ethernet, Diagnostic Connectors)"]
-    maintenance_port --> onboard_assets
-    unauth_fw_update["[V07] Perform Unauthorized Firmware Update via Port"]
-    unauth_fw_update --> maintenance_port
-    malicious_logic["[H18] Inject Malicious Logic into Vital Computer"]
-    malicious_logic --> unauth_fw_update
-    attacker["[U01] Attacker"]
-    attacker --> malicious_logic
-    gps_spoofing["[A07] GPS Receiver (for Positioning)"]
-    gps_spoofing --> compromise_trainborne
-    spoof_gps["[V08] Spoof GPS Signals to Falsify Train Position"]
-    spoof_gps --> gps_spoofing
-    incorrect_localization["[H19] Cause Incorrect Train Localization (Balise Mismatch)"]
-    incorrect_localization --> spoof_gps
-    signal_violation["[H20] Trigger Signal Violation or Wrong-Route Incursion"]
-    signal_violation --> incorrect_localization
-    attacker["[U01] Attacker"]
-    attacker --> signal_violation
-    compromise_supporting_it["[G04] Compromise Supporting IT Systems"]
-    compromise_supporting_it --> root
-    it_assets["[A08] IT Assets (Maintenance Workstations, Historian Servers, Remote Portals)"]
-    it_assets --> compromise_supporting_it
-    credential_theft["[V09] Steal Credentials via Phishing (e.g., CVE-2019-19781)"]
-    credential_theft --> it_assets
-    unauth_remote_access["[H21] Gain Unauthorized Remote Access via VPN/Jump Host"]
-    unauth_remote_access --> credential_theft
-    modify_schedules["[H22] Modify Train Schedules or Timetables (Non-Vital)"]
-    modify_schedules --> unauth_remote_access
-    attacker["[U01] Attacker"]
-    attacker --> modify_schedules
-    tamper_logs["[H23] Tamper with Historian Logs to Hide Attacks"]
-    tamper_logs --> unauth_remote_access
-    attacker["[U01] Attacker"]
-    attacker --> tamper_logs
-    supply_chain["[A09] Supply Chain (Third-Party Vendors, Firmware Updates)"]
-    supply_chain --> it_assets
-    malicious_update["[V10] Inject Malicious Code in Firmware Update (e.g., via CVE-2021-3806)"]
-    malicious_update --> supply_chain
-    persistent_compromise["[H24] Achieve Persistent Compromise of Wayside/Onboard Systems"]
-    persistent_compromise --> malicious_update
-    attacker["[U01] Attacker"]
-    attacker --> persistent_compromise
-    physical_sabotage["[G05] Physical Sabotage or Tampering"]
-    physical_sabotage --> root
-    physical_assets["[A10] Physical Assets (Tracks, Power Lines, Cabinets)"]
-    physical_assets --> physical_sabotage
-    track_tampering["[H25] Tamper with Tracks (e.g., Remove Fishplates, Obstruct Sensors)"]
-    track_tampering --> physical_assets
-    derailment_risk["[H26] Create Derailment or Collision Risk"]
-    derailment_risk --> track_tampering
-    attacker["[U01] Attacker"]
-    attacker --> derailment_risk
-    power_sabotage["[H27] Sabotage Power Supply (e.g., Cut Cables, Overload Transformers)"]
-    power_sabotage --> physical_assets
-    system_shutdown["[H28] Force Emergency Shutdown of Wayside Systems"]
-    system_shutdown --> power_sabotage
-    attacker["[U01] Attacker"]
-    attacker --> system_shutdown
-    insider_threat["[G06] Insider Threat"]
-    insider_threat --> root
-    authorized_personnel["[A11] Authorized Personnel (Operators, Maintenance, Vendors)"]
-    authorized_personnel --> insider_threat
-    abuse_access["[V11] Abuse Legitimate Access for Malicious Actions"]
-    abuse_access --> authorized_personnel
-    disable_safety["[H29] Disable Safety Systems (e.g., ATP, Door Locks)"]
-    disable_safety --> abuse_access
-    unsafe_operation_insider["[H30] Enable Unsafe Train Operation"]
-    unsafe_operation_insider --> disable_safety
-    attacker["[U01] Attacker"]
-    attacker --> unsafe_operation_insider
-    data_exfiltration["[H31] Exfiltrate Sensitive Data (e.g., Cryptographic Keys, Timetables)"]
-    data_exfiltration --> abuse_access
-    future_attacks["[H32] Enable Future Targeted Attacks"]
-    future_attacks --> data_exfiltration
-    attacker["[U01] Attacker"]
-    attacker --> future_attacks
+    attacker --> miscalculated_train_separation
+    compromised_onboard_systems["[A01] Onboard Train Systems (ATP/ATO Units)"]
+    compromised_onboard_systems --> spoof_train_wireless_comm
+    spoof_vital_signs["[V02] Spoofing Vital Signs (Speed/Direction) via Compromised Onboard Software"]
+    spoof_vital_signs --> compromised_onboard_systems
+    incorrect_movement_authorities["[H04] Incorrect Movement Authorities Issued by Zone Controller"]
+    incorrect_movement_authorities --> spoof_vital_signs
+    derailments_collisions["[H05] Derailments or Collisions Due to False Authorities"]
+    derailments_collisions --> incorrect_movement_authorities
+    attacker --> derailments_collisions
+    tamper_wayside_equipment["[H06] Tamper with Wayside Equipment (Track Circuits/Interlockings)"]
+    tamper_wayside_equipment --> root
+    unauthorized_physical_access["[V03] Unauthorized Physical Access to Wayside Controllers"]
+    unauthorized_physical_access --> tamper_wayside_equipment
+    alter_track_circuit_params["[H07] Alter Track Circuit Parameters to Generate False Occupancy Reports"]
+    alter_track_circuit_params --> unauthorized_physical_access
+    incorrect_train_routing["[H08] Incorrect Train Routing Leading to Collisions"]
+    incorrect_train_routing --> alter_track_circuit_params
+    attacker --> incorrect_train_routing
+    exploit_onboard_software_vuln["[A02] Train Onboard Software (e.g., Communication Stack with CVE-2020-25163)"]
+    exploit_onboard_software_vuln --> tamper_wayside_equipment
+    buffer_overflow_braking_system["[V04] Buffer Overflow in Braking System Control Logic"]
+    buffer_overflow_braking_system --> exploit_onboard_software_vuln
+    alter_braking_params["[H09] Altered Braking Parameters Causing Speed Limit Violations"]
+    alter_braking_params --> buffer_overflow_braking_system
+    derailments_due_to_speed["[H10] Derailments Due to Excessive Speed"]
+    derailments_due_to_speed --> alter_braking_params
+    attacker --> derailments_due_to_speed
+    repudiation_event_data["[H11] Repudiation of Train Event Data (Event Recorder Tampering)"]
+    repudiation_event_data --> root
+    compromised_event_recorder["[A03] Train Event Recorder System"]
+    compromised_event_recorder --> repudiation_event_data
+    unauthorized_data_modification["[V05] Unauthorized Modification of Recorded Event Data"]
+    unauthorized_data_modification --> compromised_event_recorder
+    hindered_incident_investigation["[H12] Hindered Incident Investigations Due to Tampered Logs"]
+    hindered_incident_investigation --> unauthorized_data_modification
+    attacker --> hindered_incident_investigation
+    info_disclosure_wireless["[H13] Information Disclosure via Wireless Protocol Exploits"]
+    info_disclosure_wireless --> root
+    vulnerable_encryption_scheme["[V06] Vulnerable Encryption in CBTC Radio (e.g., CVE-2019-1010218)"]
+    vulnerable_encryption_scheme --> info_disclosure_wireless
+    intercept_train_positions["[H14] Interception of Train Positions and Movement Authorities"]
+    intercept_train_positions --> vulnerable_encryption_scheme
+    targeted_operational_attacks["[H15] Enabled Targeted Attacks Using Intercepted Operational Data"]
+    targeted_operational_attacks --> intercept_train_positions
+    attacker --> targeted_operational_attacks
+    dos_wireless_network["[H16] Denial-of-Service (DoS) on CBTC Wireless Network"]
+    dos_wireless_network --> root
+    wireless_network_vulnerability["[V07] Lack of Anti-Jamming/DoS Protections in CBTC Radio"]
+    wireless_network_vulnerability --> dos_wireless_network
+    overwhelm_communication_links["[H17] Overwhelm Train-to-Wayside Communication Links"]
+    overwhelm_communication_links --> wireless_network_vulnerability
+    loss_situational_awareness["[H18] Loss of Situational Awareness Leading to Collisions"]
+    loss_situational_awareness --> overwhelm_communication_links
+    attacker --> loss_situational_awareness
+    elevation_of_privilege["[H19] Elevation of Privilege in Train Onboard Systems"]
+    elevation_of_privilege --> root
+    onboard_os_vulnerability["[A04] Onboard Operating System (e.g., CVE-2021-31956)"]
+    onboard_os_vulnerability --> elevation_of_privilege
+    privilege_escalation_flaw["[V08] Privilege Escalation Vulnerability in Train Control Software"]
+    privilege_escalation_flaw --> onboard_os_vulnerability
+    unauthorized_control_commands["[H20] Issuance of Unauthorized Control Commands"]
+    unauthorized_control_commands --> privilege_escalation_flaw
+    safety_incidents_from_unauthorized_commands["[H21] Safety Incidents from Unauthorized Commands"]
+    safety_incidents_from_unauthorized_commands --> unauthorized_control_commands
+    attacker --> safety_incidents_from_unauthorized_commands
+    lateral_movement_passenger_systems["[H22] Lateral Movement from Passenger Systems to Train Control"]
+    lateral_movement_passenger_systems --> root
+    weak_segmentation_passenger_network["[V09] Weak Network Segmentation Between Passenger and Control Systems"]
+    weak_segmentation_passenger_network --> lateral_movement_passenger_systems
+    compromised_passenger_info_system["[A05] Passenger Information System (Displays/Announcements)"]
+    compromised_passenger_info_system --> weak_segmentation_passenger_network
+    pivot_to_train_control["[H23] Pivot from Passenger System to Vital Train Control Networks"]
+    pivot_to_train_control --> compromised_passenger_info_system
+    safety_incidents_from_lateral_movement["[H24] Safety Incidents Due to Compromised Train Control"]
+    safety_incidents_from_lateral_movement --> pivot_to_train_control
+    attacker --> safety_incidents_from_lateral_movement
+    time_synchronization_attack["[H25] Time Synchronization Attack (PTP Spoofing)"]
+    time_synchronization_attack --> root
+    compromised_ptp_grandmaster["[A06] PTP Grandmaster Clock"]
+    compromised_ptp_grandmaster --> time_synchronization_attack
+    ptp_spoofing_vulnerability["[V10] Lack of PTP Authentication Enabling Spoofing"]
+    ptp_spoofing_vulnerability --> compromised_ptp_grandmaster
+    desynchronized_train_localization["[H26] Desynchronized Train Localization Leading to Collisions"]
+    desynchronized_train_localization --> ptp_spoofing_vulnerability
+    attacker --> desynchronized_train_localization
+    supply_chain_compromise["[H27] Supply Chain Compromise (Malicious Firmware/Updates)"]
+    supply_chain_compromise --> root
+    third_party_vendor_access["[A07] Third-Party Vendor Update Mechanisms (SFTP/Proprietary Protocols)"]
+    third_party_vendor_access --> supply_chain_compromise
+    trojaned_firmware_updates["[V11] Trojaned Firmware Updates for Wayside/Trainborne Controllers"]
+    trojaned_firmware_updates --> third_party_vendor_access
+    embedded_backdoors_in_critical_systems["[H28] Embedded Backdoors in Safety-Critical Systems"]
+    embedded_backdoors_in_critical_systems --> trojaned_firmware_updates
+    attacker --> embedded_backdoors_in_critical_systems
+    counterfeit_wayside_components["[A08] Counterfeit Wayside Equipment (e.g., Switch Machines)"]
+    counterfeit_wayside_components --> supply_chain_compromise
+    hidden_backdoor_in_hardware["[V12] Hidden Backdoors in Counterfeit Hardware"]
+    hidden_backdoor_in_hardware --> counterfeit_wayside_components
+    unauthorized_control_via_backdoor["[H29] Unauthorized Control of Track Switches/Signals via Backdoor"]
+    unauthorized_control_via_backdoor --> hidden_backdoor_in_hardware
+    attacker --> unauthorized_control_via_backdoor
+    social_engineering_operator["[H30] Social Engineering of Train Operators/Maintenance Personnel"]
+    social_engineering_operator --> root
+    human_factor_vulnerabilities["[V13] Lack of Multi-Factor Authentication (MFA) for Critical HMI Actions"]
+    human_factor_vulnerabilities --> social_engineering_operator
+    unauthorized_manual_overrides["[H31] Unauthorized Manual Overrides of Safety Systems"]
+    unauthorized_manual_overrides --> human_factor_vulnerabilities
+    collisions_due_to_human_error["[H32] Collisions or Derailments Due to Disabled Safeguards"]
+    collisions_due_to_human_error --> unauthorized_manual_overrides
+    attacker --> collisions_due_to_human_error
+    phishing_maintenance_personnel["[V14] Phishing Attacks Targeting Maintenance Personnel Credentials"]
+    phishing_maintenance_personnel --> social_engineering_operator
+    compromised_engineering_workstations["[A09] Engineering Workstations with Configuration Access"]
+    compromised_engineering_workstations --> phishing_maintenance_personnel
+    malicious_configuration_changes["[H33] Malicious Changes to Signal Timing or Train Schedules"]
+    malicious_configuration_changes --> compromised_engineering_workstations
+    operational_disruptions_from_misconfiguration["[H34] Operational Disruptions or Safety Incidents from Misconfigurations"]
+    operational_disruptions_from_misconfiguration --> malicious_configuration_changes
+    attacker --> operational_disruptions_from_misconfiguration
+    remote_access_exploits["[H35] Exploitation of Remote Access Gateways (VPN/Jump Servers)"]
+    remote_access_exploits --> root
+    vulnerable_vpn_implementations["[V15] Unpatched VPN Vulnerabilities (e.g., IPSec Flaws)"]
+    vulnerable_vpn_implementations --> remote_access_exploits
+    unauthorized_remote_command_execution["[H36] Unauthorized Remote Command Execution on Wayside Controllers"]
+    unauthorized_remote_command_execution --> vulnerable_vpn_implementations
+    disrupt_train_routing["[H37] Disruption of Train Routing or Signal Control"]
+    disrupt_train_routing --> unauthorized_remote_command_execution
+    attacker --> disrupt_train_routing
+    credential_stuffing_jump_servers["[V16] Weak Credentials on Jump Servers Enabling Brute Force"]
+    credential_stuffing_jump_servers --> remote_access_exploits
+    compromised_engineering_vlans["[A10] Engineering VLANs with Access to Firmware Deployment Systems"]
+    compromised_engineering_vlans --> credential_stuffing_jump_servers
+    deploy_malicious_firmware["[H38] Deployment of Malicious Firmware to Trainborne Systems"]
+    deploy_malicious_firmware --> compromised_engineering_vlans
+    system-wide_compromise_via_remote_access["[H39] System-Wide Compromise via Remote Access Pathways"]
+    system-wide_compromise_via_remote_access --> deploy_malicious_firmware
+    attacker --> system-wide_compromise_via_remote_access
+    physical_usb_attacks["[H40] Physical USB-Based Attacks on Wayside/Trainborne Systems"]
+    physical_usb_attacks --> root
+    unsecured_usb_ports["[V17] Unsecured USB Ports on Wayside Controllers or Onboard Units"]
+    unsecured_usb_ports --> physical_usb_attacks
+    malicious_firmware_via_usb["[H41] Injection of Malicious Firmware via USB (e.g., BadUSB)"]
+    malicious_firmware_via_usb --> unsecured_usb_ports
+    compromise_vital_control_systems["[H42] Compromise of Vital Control Systems (e.g., ATP/Interlockings)"]
+    compromise_vital_control_systems --> malicious_firmware_via_usb
+    attacker --> compromise_vital_control_systems
+    outdated_av_maintenance_laptops["[A11] Maintenance Laptops with Outdated Antivirus"]
+    outdated_av_maintenance_laptops --> physical_usb_attacks
+    malware_spread_to_engineering_network["[V18] Malware Spread from Maintenance Laptops to Engineering Networks"]
+    malware_spread_to_engineering_network --> outdated_av_maintenance_laptops
+    lateral_movement_to_ccs["[H43] Lateral Movement to Central Control System (CCS)"]
+    lateral_movement_to_ccs --> malware_spread_to_engineering_network
+    system_wide_infection["[H44] System-Wide Infection Leading to Operational Halt"]
+    system_wide_infection --> lateral_movement_to_ccs
+    attacker --> system_wide_infection
