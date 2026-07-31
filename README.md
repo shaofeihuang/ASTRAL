@@ -1,6 +1,6 @@
 <img src="logo.jpeg" alt="ASTRAL Prototype Tool" width="140" height="140" style="display: block; margin: 0 auto 20px;">
 
-# Prototype Tool for demonstrating the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach
+# Prototype Tool for demonstrating the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach.
 
 This interactive web application demonstrates the ASTRAL (Architecture-Centric Security Threat Risk Assessment using LLMs) approach, using multimodal LLMs to support architecture-centric threat risk assessments by generating architectural narrations, threat models, attack trees, and probabilistic risk analysis based on uploaded architecture diagrams.
 
