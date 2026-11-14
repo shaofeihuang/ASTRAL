@@ -15,8 +15,8 @@ model_token_limits = {
     "Gemini:gemini-2.5-flash": {"default": 1048576, "max": 1048576},
 
     # Mistral models
-    "Mistral:mistral-large-latest": {"default": 256000, "max": 256000},
-    "Mistral:mistral-medium-latest": {"default": 128000, "max": 128000},
+    "Mistral:mistral-large-4": {"default": 256000, "max": 256000},
+ #   "Mistral:mistral-medium-3-5": {"default": 128000, "max": 128000},
 
     # OpenAI models
     "OpenAI:gpt-5.4": {"default": 128000, "max": 128000},  
@@ -81,14 +81,15 @@ def select_llm_model():
     )
 
     if model_provider == "Mistral":
-        try:
-            st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
-        except ResourceNotFoundError:
-            st.session_state['api_key'] = st.text_input("Mistral API Key", type="password")
+#        try:
+#            st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
+#        except ResourceNotFoundError:
+        st.session_state['api_key'] = st.text_input("Mistral API Key", type="password")
         
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-            ["mistral-medium-latest", "mistral-large-latest"],
+#            ["mistral-medium-3-5", "mistral-large-4"],
+            ["mistral-large-4"],
             key="selected_model",
             on_change=on_model_selection_change,
             help="Select the model you would like to use."

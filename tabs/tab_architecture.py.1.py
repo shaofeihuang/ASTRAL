@@ -1,5 +1,6 @@
 # Third-party imports
 import streamlit as st
+import base64
 
 # Local application imports
 from llm_functions import init_client
@@ -46,9 +47,13 @@ def tab_architecture():
                             {"role": "user", "content": arch_expl_prompt + f"Architecture description: {st.session_state['arch_text']}"}
                         ]
                     else:
+                        img_b64 = base64.b64encode(st.session_state['image_bytes']).decode("utf-8")
+
                         messages=[
-                            {"role": "user", "content": arch_expl_prompt, "image": st.session_state['image_bytes']}
-                        ]
+                            {"role": "user", "content": [
+                                {"type": "text", "text": arch_expl_prompt},
+                                {"type": "image_url", "image_url": f"data:image/png;base64,{img_b64}",},
+                            ]}]
                     response = client.invoke(messages)
                     st.session_state['arch_narration'] = clean_response(response.content)
 
