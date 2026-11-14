@@ -5,6 +5,7 @@ import logging
 import streamlit as st
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
+from dotenv import load_dotenv
 
 # Local application imports
 from utils import *
@@ -32,7 +33,7 @@ def main():
 
     #---------------------- IMPORTANT!! ---------------------------
     # Uncomment to use .env file for local testing
-    # load_dotenv()
+    load_dotenv()
     #--------------------------------------------------------------
     
     # Initialize LLM model settings

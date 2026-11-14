@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 .DS_Store
 *.csv
-*.env
+.env
 *.mp4
 *.zip
 202*.txt

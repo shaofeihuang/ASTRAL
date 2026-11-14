@@ -1,5 +1,6 @@
 # Third-party imports
 import streamlit as st
+import os
 from azure.core.exceptions import ResourceNotFoundError
 from langchain_mistralai import ChatMistralAI
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -81,14 +82,27 @@ def select_llm_model():
     )
 
     if model_provider == "Mistral":
-#        try:
-#            st.session_state['api_key'] = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
-#        except ResourceNotFoundError:
-        st.session_state['api_key'] = st.text_input("Mistral API Key", type="password")
+        api_key = None
+
+        # 1. Try Azure Key Vault
+        try:
+            api_key = st.session_state['client'].get_secret("MISTRAL-API-KEY").value
+        except (ResourceNotFoundError, KeyError):
+            # Secret not found, or no Key Vault client in session state
+            pass
+
+        # 2. Fall back to environment variable
+        if not api_key:
+            api_key = os.getenv("MISTRAL_API_KEY")
+
+        # 3. Fall back to manual input
+        if not api_key:
+            api_key = st.text_input("Mistral API Key", type="password")
+
+        st.session_state['api_key'] = api_key
         
         selected_model = st.selectbox(
             "Select the model you would like to use:",
-#            ["mistral-medium-3-5", "mistral-large-4"],
             ["mistral-large-4"],
             key="selected_model",
             on_change=on_model_selection_change,
